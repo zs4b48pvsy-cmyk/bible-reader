@@ -306,7 +306,7 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #planSheet .pc-date,#planSheet .pc-sel{border:1px solid var(--rule);border-radius:9px;background:transparent;
   padding:8px 10px;font-family:var(--font-ui);font-size:12.5px;color:var(--ink);max-width:100%;}
 #planSheet .pc-sel{max-width:130px;}
-#planSheet .hint{font-family:var(--font-ui);font-size:11.5px;color:var(--muted);padding:2px 16px 8px;line-height:1.7;}
+#planSheet .hint{font-family:var(--font-ui);font-size:11.5px;color:var(--muted);padding:2px 16px 8px;line-height:1.7;word-break:keep-all;}
 #planSheet .pc-act{justify-content:flex-end;gap:8px;padding-top:4px;}
 #planSheet .pc-btn{border:1px solid var(--rule);background:transparent;border-radius:10px;padding:10px 18px;
   font-family:var(--font-ui);font-size:13px;color:var(--ink2);cursor:pointer;}
@@ -919,7 +919,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 
   <div id="planSheet" role="dialog" aria-modal="true" aria-label="읽기 기준 수정">
     <div class="shbar"><span>읽기 기준</span><span class="sp"></span><button type="button" class="btn icon" id="pcClose" aria-label="닫기">✕</button></div>
-    <div class="row"><span class="lb">기준 날짜</span><input type="date" id="pcBase" class="pc-date" aria-label="기준 날짜"></div>
+    <div class="row"><span class="lb">기준 날짜</span><input type="date" id="pcBase" class="pc-date" lang="ko" aria-label="기준 날짜"></div>
     <div class="row"><span class="lb">그날 시작</span>
       <select id="pcBook" class="pc-sel" aria-label="권"></select>
       <select id="pcChap" class="pc-sel" aria-label="장"></select>
