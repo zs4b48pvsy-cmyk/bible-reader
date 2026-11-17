@@ -29,7 +29,8 @@ function makePage(title, pageNo, seed){
   var hd=document.createElement('div'); hd.className='hd'; hd.textContent=title; d.appendChild(hd);
   var bd=document.createElement('div'); bd.className='bd';
   var out='';
-  for(var v=1;v<21;v++){ out+='<p><b>'+v+'</b>'+SENT[(seed+v)%3]+' '+SENT[(seed+v*2)%3].slice(0,34)+'</p>'; }
+  for(var v=1;v<14;v++){ out+='<p><b>'+v+'</b>'+SENT[(seed+v)%3].slice(0,42)+'</p>'; }
+  out+='<p>— '+title+' · '+pageNo+'</p>';
   bd.innerHTML=out; d.appendChild(bd);
   var ft=document.createElement('div'); ft.className='ft'; ft.textContent=pageNo; d.appendChild(ft);
   return d;
@@ -41,7 +42,7 @@ var P={ curL:makePage('창세기 1장', 12, 1), curR:makePage('창세기 1장', 
 book.appendChild(P.curL); book.appendChild(P.curR);
 
 /* ── paper curl engine ──────────────────────────────────────── */
-var SEGS = 8, ZONE = 0.46, BEND = 40;
+var SEGS = 6, ZONE = 0.46, BEND = 40;
 
 function el(tag, cls){ var e=document.createElement(tag); if(cls) e.className=cls; return e; }
 function clonePage(node, W, H){
