@@ -27,10 +27,8 @@ function makePage(title, pageNo, seed){
   var d=document.createElement('div'); d.className='pg';
   var hd=document.createElement('div'); hd.className='hd'; hd.textContent=title; d.appendChild(hd);
   var bd=document.createElement('div'); bd.className='bd';
-  var s=seed, txt='';
-  for(var i=0;i<220;i++){ s=(s*1103515245+12345)&0x7fffffff; txt+=LOREM[s%LOREM.length]; }
-  var out='', k=0;
-  for(var v=1;v<26;v++){ out+='<p><b>'+v+'</b>'+txt.substr(k,90)+'</p>'; k+=90; }
+  var out='';
+  for(var v=1;v<7;v++){ out+='<p><b>'+v+'</b>'+LOREM[(seed+v)%LOREM.length]+LOREM[(seed+v*3)%LOREM.length]+'</p>'; }
   bd.innerHTML=out; d.appendChild(bd);
   var ft=document.createElement('div'); ft.className='ft'; ft.textContent=pageNo; d.appendChild(ft);
   return d;
