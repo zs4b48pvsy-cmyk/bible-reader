@@ -1819,9 +1819,12 @@ function penHit(x,y){
   if(!sp){
     penWrap(p);
     sp=nearestSpan(p,x,y);
-    if(!sp) return null;
   }
-  return {c:+p.dataset.c, v:+p.dataset.v, s:+sp.getAttribute('data-s'), e:+sp.getAttribute('data-e')};
+  if(sp) return {c:+p.dataset.c, v:+p.dataset.v, s:+sp.getAttribute('data-s'), e:+sp.getAttribute('data-e')};
+  // 두 쪽 모드에서 나뉜 이어짐 조각 등 span 이 없는 곳은 caret 위치로 대신한다
+  var cp=stickyPoint(x,y);
+  if(cp) return {c:cp.c, v:cp.v, s:cp.s, e:cp.s+1};
+  return null;
 }
 function setPenMode(on){
   penMode=!!on;
