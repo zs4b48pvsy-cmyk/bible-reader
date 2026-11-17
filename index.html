@@ -1120,7 +1120,7 @@ function fxApply(a){
     c.sh.style.background=shadeCss(curlAlpha(a,k<=1?0:tilts[k-2],front),curlAlpha(a,th,front),!front);
     if(c.edge){
       var s0=Math.sin(Math.PI*Math.min(1,a/180));
-      c.edge.style.opacity=(0.15+0.72*Math.pow(s0,.7)).toFixed(3);
+      c.edge.style.opacity=(0.80*Math.pow(s0,.7)).toFixed(3);
     }
     X+=w*Math.cos(rad); Z+=w*Math.sin(rad);
   }
@@ -1242,8 +1242,8 @@ function buildFlip(dir){
   // a whisper of light along the free edge (the paper's thickness)
   var edgeEl=el('i','edge');
   edgeEl.style.cssText='position:absolute;top:0;height:100%;width:2px;pointer-events:none;opacity:0;'+
-    (dir>0?'right:-1px;background:linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,.92));'
-          :'left:-1px;background:linear-gradient(to left,rgba(255,255,255,0),rgba(255,255,255,.92));');
+    (dir>0?'right:0;background:linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,.92));'
+          :'left:0;background:linear-gradient(to left,rgba(255,255,255,0),rgba(255,255,255,.92));');
   cards[cards.length-1].el.appendChild(edgeEl);
   cards[cards.length-1].edge=edgeEl;
 
