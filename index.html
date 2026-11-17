@@ -1082,7 +1082,11 @@ function scGoTo(c,v){
   if(v!=null){ for(i=0;i<scVerses.length;i++){ if(scVerses[i].c===c&&scVerses[i].v===+v){ target=scVerses[i]; break; } } }
   if(!target){ for(i=0;i<scVerses.length;i++){ if(scVerses[i].c===c){ target=scVerses[i]; break; } } }
   if(!target){ root.scrollTop=0; return; }
-  root.scrollTop=Math.max(0, target.top - scPadTop() + 6);
+  root.scrollTop=Math.max(0, target.top - scPadTop());
+  /* place it just under the top bar (measured, so fonts and bars do not matter) */
+  var want=safeTop()+62;
+  var r=target.el.getBoundingClientRect();
+  root.scrollTop=Math.max(0, root.scrollTop + (r.top - want));
 }
 function onScrollReading(){
   if(mode!=='scroll'||!reading) return;
