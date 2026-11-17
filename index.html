@@ -307,6 +307,8 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   font-size:10.5px;line-height:1;padding:5px 9px;border-radius:11px;cursor:pointer;white-space:nowrap;}
 .rv-story:active{background:rgba(0,0,0,.055);color:#555C64;}
 .rv-group{margin:0 0 13px;}
+.rv-group.flash .rv-bub{animation:rvFlash 1.2s ease-out 2;}
+@keyframes rvFlash{0%{box-shadow:0 0 0 0 rgba(226,178,58,.50);}70%{box-shadow:0 0 0 8px rgba(226,178,58,0);}100%{box-shadow:0 0 0 0 rgba(226,178,58,0);}}
 .rv-msg{display:flex;align-items:flex-end;justify-content:flex-start;gap:8px;margin:0 0 5px;}
 .rv-msg.last{margin-bottom:0;}
 .rv-bub:not(.tail)::after{display:none;}
@@ -789,7 +791,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <ul>
         <li><b>화면 가장자리</b>를 누르거나 <b>옆으로 밀면</b> 다음 쪽 / 이전 쪽</li>
         <li><b>펜 아이콘</b>을 켜고 첫 글자부터 마지막 글자까지 손가락을 스으윽 훑으면 그대로 칠해져요. 칠한 곳을 톡 누르면 지워져요</li>
-        <li>칠한 뒤 <b>메모 남기기</b>를 누르면 말씀 곁의 작은 메모가 열려요</li>
+        <li>칠한 뒤 <b>메모 남기기</b>를 누르면 왼쪽 목차 창의 <b>메모</b> 카톡방이 바로 열려요. 방금 칠한 구절이 왼쪽 말풍선으로 서고, 아래 입력창에 한 줄씩 보내면 오른쪽에 이어져요</li>
         <li><b>본문 절</b>을 톡 누르면 화면 맨 위·아래 도구 막대만 조용히 여닫혀요</li>
         <li>상단의 <b>담기</b>를 누르면 절을 톡톡 골라 <b>기억하는 말씀</b>에 담을 수 있어요. 담은 말씀은 <b>☰ 목차 → 기억</b>을 누르면 목차 창 안에서 바로 열리는 대화방에서 봐요</li>
         <li><b>☰ 목차 → 메모</b>를 누르면 형광펜 칠한 구절(왼쪽)과 내 메모·단문(오른쪽)이 한 대화방에 모여요. 맨 아래 입력창에 한 줄씩 보내면 카톡처럼 쌓여요</li>
@@ -2132,7 +2134,8 @@ function endStroke(){
       if(t) txt+=(txt?' ':'')+t;
     });
     if(txt){
-      lastStroke={c:segs[0].c,v:segs[0].v,text:txt,col:PI_PEN[s.color]};
+      lastStroke={c:segs[0].c,v:segs[0].v,text:txt,col:PI_PEN[s.color],
+                  segs:segs.map(function(g){ return {c:g.c,v:g.v,s:g.s,e:g.e}; })};
       $('#ptHint').textContent='"'+(txt.length>26?txt.slice(0,26)+'…':txt)+'"';
     } else {
       lastStroke=null;
@@ -2272,7 +2275,10 @@ $('#ptErase').onclick=function(){
 $('#ptUndo').onclick=function(){ undoPen(); };
 $('#ptMemo').onclick=function(){
   if(!lastStroke){ toast('먼저 칠할 글자를 그어 주세요'); return; }
-  openNote(lastStroke.c,lastStroke.v,null,{quote:lastStroke.text,col:lastStroke.col});
+  var st=lastStroke;
+  bumpMemoHighlights(st);            // 방금 칠한 구절이 대화방 맨 아래에 오도록 시각 갱신
+  setPenMode(false);                 // 형광펜 모드·도구 막대를 깔끔히 정리
+  openMemoRoom({focus:true});        // 노란 포스트잇 대신 목차 창의 메모 카톡방
 };
 $('#ptDone').onclick=function(){ setPenMode(false); };
 
@@ -2639,6 +2645,7 @@ function hlDelete(it){
 }
 function rvHlGroup(it){
   var grp=el('div','rv-group');
+  if(it.key) grp.dataset.mkey=it.key;
   var row=el('div','rv-msg last');
   var bub=el('div','rv-bub tail',it.text||'');
   bub.onclick=function(){ if(!rvEditing) rvGoNote(it); };
@@ -2745,6 +2752,7 @@ function rvVerseGroup(it){
 }
 function rvMeGroup(it,hideTime){
   var grp=el('div','rv-group');
+  if(it.kind==='note'&&it.key) grp.dataset.nkey=it.key;
   var row=el('div','rv-msg me last');
   var meta=el('div','rv-meta me');
   if(!hideTime) meta.appendChild(el('span','rv-ref',it.kind==='note' ? (it.ref||'') : rvTimeLabel(it.at)));
@@ -2791,7 +2799,7 @@ function renderRvWall(){
   if(!items.length){
     rvEditing=false; if(eb){ eb.textContent='편집'; eb.classList.remove('on'); }
     body.appendChild(el('div','rv-empty',isMemo
-      ?'아직 남긴 메모가 없어요.\n아래 입력창에 한 줄씩 적거나\n본문 형광펜 옆 메모를 남겨 보세요.'
+      ?'아직 남긴 메모가 없어요.\n본문에 형광펜을 칠한 뒤 메모 남기기를 누르거나\n아래 입력창에 한 줄씩 적어 보세요.'
       :'아직 담은 말씀이 없어요.\n본문 위의 담기 버튼을 누르고\n절을 톡톡 골라 보세요.'));
     syncRvSend();
     return;
@@ -2837,6 +2845,55 @@ function openRvWall(mode){
 function closeRvWall(){
   hideRvPane();
   closeDrawer();
+}
+/* ── 메모 남기기 → 목차 창 메모 카톡방 ─────────────────── */
+function memoVerseKey(c,v){ return curBook+'|'+c+'|'+v; }
+function bumpMemoHighlights(st){          // 방금 칠한 구절을 대화방 맨 아래로
+  if(!st) return;
+  var now=Date.now(), dirty=false;
+  var segs=(st.segs&&st.segs.length)?st.segs:[{c:st.c,v:st.v}];
+  segs.forEach(function(g){
+    var k=memoVerseKey(g.c,g.v);
+    var list=(store.pi&&store.pi[k])||null;
+    var hit=null;
+    if(list&&list.length){
+      for(var i=0;i<list.length;i++){
+        if(g.s!=null&&list[i].s===g.s&&list[i].e===g.e){ hit=list[i]; break; }
+      }
+      if(!hit){                       // 조각이 합쳐지거나 나뉘었으면 그 절의 가장 최근 조각
+        for(var j=0;j<list.length;j++) if(!hit||(list[j].at||0)>=(hit.at||0)) hit=list[j];
+      }
+      if(hit){ hit.at=now; dirty=true; }
+    }
+    if(store.hl&&store.hl[k]){        // 예전 방식으로 절 전체를 칠한 경우도 함께
+      store.hlt=store.hlt||{}; store.hlt[k]=now; dirty=true;
+    }
+  });
+  if(dirty) Store.save(true);
+}
+function scrollMemoNote(key){
+  var body=$('#rvBody'); if(!body) return;
+  var found=null;
+  $$('#rvBody .rv-group').forEach(function(g){ if(g.dataset.nkey===key) found=g; });
+  if(!found){ scrollRvEnd(); return; }
+  var b=body.getBoundingClientRect(), r=found.getBoundingClientRect();
+  body.scrollTop += Math.round((r.top-b.top) - Math.max(18,(body.clientHeight-r.height)/2));
+  found.classList.add('flash');
+  setTimeout(function(){ found.classList.remove('flash'); },2700);
+}
+function openMemoRoom(opts){
+  opts=opts||{};
+  rvEditing=false;
+  if(rvSort!=='old') rvSort='old';        // 방금 남긴 구절이 늘 맨 아래에
+  openDrawer('note');
+  function settle(){
+    if(opts.noteKey) scrollMemoNote(opts.noteKey); else scrollRvEnd();
+    if(opts.focus===false) return;
+    var i=$('#rvInput'); if(!i) return;
+    try{ i.focus({preventScroll:true}); }catch(e){ try{ i.focus(); }catch(e2){} }
+  }
+  setTimeout(settle,110);
+  if(!opts.noteKey) setTimeout(scrollRvEnd,420);
 }
 $('#rvSend').onclick=function(){ sendChat(); };
 $('#rvInput').addEventListener('input', syncRvSend);
@@ -3368,9 +3425,9 @@ bookEl.addEventListener('click',function(e){
     return;
   }
   var nmEl=e.target.closest('.nmark');
-  if(nmEl){
+  if(nmEl){                       // ✎ 표시를 누르면 그 메모가 있는 카톡방으로
     var pv=nmEl.closest('.v');
-    if(pv) openNote(+pv.dataset.c,+pv.dataset.v);
+    if(pv) openMemoRoom({noteKey:memoVerseKey(+pv.dataset.c,+pv.dataset.v),focus:false});
     return;
   }
   // 절을 톡 눌러도 메모 창은 열리지 않는다 — 위·아래 도구 막대만 조용히 여닫힌다
