@@ -473,6 +473,37 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .rv-act button.del{color:#A63D33;border-color:rgba(166,61,51,.24);}
 .rv-empty{padding:60px 18px;margin:auto 0;text-align:center;font-family:var(--font-ui);font-size:12.5px;color:#8E959E;
   line-height:2.0;white-space:pre-line;}
+/* 선택 복사 — 고른 말풍선만 골라 복사 */
+.rv-selbar{flex:0 0 auto;display:none;align-items:center;gap:6px;
+  padding:8px 10px calc(9px + var(--rv-cb, var(--safe-b)));
+  background:var(--rv-bg,#FFFFFF);border-top:1px solid rgba(0,0,0,.07);
+  transition:background .22s ease;}
+.rv-selbar.show{display:flex;}
+.rv-selbar button{border:0;background:transparent;color:#5E646B;font-family:var(--font-ui);font-size:12px;
+  padding:7px 10px;border-radius:15px;cursor:pointer;white-space:nowrap;line-height:1;}
+.rv-selbar button:active{background:rgba(0,0,0,.06);}
+.rv-selbar .rv-selcancel,.rv-selbar .rv-selall{border:1px solid rgba(0,0,0,.12);}
+.rv-selbar .rv-selall.on{background:#2E2A24;color:#F7F4EC;border-color:#2E2A24;}
+.rv-selcount{font-family:var(--font-ui);font-size:12px;color:#71767D;letter-spacing:.01em;
+  white-space:nowrap;padding:0 3px;}
+.rv-selbar .rv-selgo{margin-left:auto;background:var(--rv-bub,#274261);color:var(--rv-ink,#FFFFFF);
+  font-size:13px;font-weight:600;padding:9px 15px;border-radius:17px;}
+.rv-selbar .rv-selgo:disabled{opacity:.34;cursor:default;background:transparent;color:#8E959E;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);}
+.rv-selecting #rvBody .rv-bub{cursor:pointer;}
+.rv-selecting #rvBody .rv-more,.rv-selecting #rvBody .rv-story,.rv-selecting #rvBody .rv-act{display:none;}
+.rv-group.sel .rv-bub{box-shadow:0 0 0 2px var(--rv-bg,#FFFFFF),0 0 0 4px #D8A431 !important;}
+.rv-group.sel .rv-msg.last .rv-bub::before{content:"✓";position:absolute;top:-8px;right:-6px;
+  width:19px;height:19px;border-radius:50%;background:#C8952A;color:#FFFFFF;
+  font-family:var(--font-ui);font-size:11.5px;font-weight:700;line-height:19px;text-align:center;
+  box-shadow:0 0 0 1.5px var(--rv-bg,#FFFFFF);pointer-events:none;}
+.rv-group.sel .rv-msg.me .rv-bub::before{right:auto;left:-6px;}
+@media (max-width:430px){
+  .rv-selbar{gap:4px;padding-left:8px;padding-right:8px;}
+  .rv-selbar button{padding:7px 8px;font-size:11.5px;}
+  .rv-selbar .rv-selgo{padding:9px 12px;font-size:12.5px;}
+  .rv-selcount{font-size:11.5px;}
+}
 
 /* 목차 드로어 — 기억 탭 */
 .tabs .tabbtn{font-size:12.5px;padding:8px 4px;}
@@ -825,6 +856,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
           <span class="rv-title" id="rvTitle">기억하는 말씀 · 0</span>
           <div class="rv-tools">
             <button class="rv-theme" id="rvThemeBtn" aria-label="색상 고르기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><circle cx="8.7" cy="10.2" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="8.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.4" cy="10.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="10.4" cy="15.2" r="1.15" fill="currentColor" stroke="none"/></svg></button>
+            <button class="rv-sort" id="rvCopy" aria-pressed="false" aria-label="고른 구절 복사">복사</button>
             <button class="rv-sort" id="rvEdit">편집</button>
             <button class="rv-sort" id="rvSort">시간순 ▾</button>
             <button class="rv-sort rv-close" id="rvClose" aria-label="닫기">✕</button>
@@ -835,6 +867,12 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
           <div class="pv-row"><span class="pv-lb">말풍선</span><div class="pv-dots" id="pvBub"></div></div>
         </div>
         <div class="rv-body" id="rvBody"></div>
+        <div class="rv-selbar" id="rvSelBar" role="group" aria-label="선택한 구절 복사">
+          <button type="button" class="rv-selall" id="rvSelAll" aria-pressed="false">전체 선택</button>
+          <span class="rv-selcount" id="rvSelCount">0개 선택</span>
+          <button type="button" class="rv-selcancel" id="rvSelCancel">취소</button>
+          <button type="button" class="rv-selgo" id="rvSelGo" disabled>복사하기</button>
+        </div>
       </section>
       <div class="rv-compose" id="rvCompose">
         <input class="rv-input" id="rvInput" type="text" autocomplete="off" enterkeyhint="send"
@@ -941,6 +979,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         <li><b>본문 절</b>을 톡 누르면 화면 맨 위·아래 도구 막대만 조용히 여닫혀요</li>
         <li>상단의 <b>담기</b>를 누르면 절을 톡톡 골라 <b>기억하는 말씀</b>에 담을 수 있어요. 담은 말씀은 <b>☰ 목차 → 기억</b>을 누르면 목차 창 안에서 바로 열리는 대화방에서 봐요</li>
         <li><b>☰ 목차 → 메모</b>를 누르면 형광펜 칠한 구절(왼쪽)과 내 메모·단문(오른쪽)이 한 대화방에 모여요. 맨 아래 입력창에 한 줄씩 보내면 카톡처럼 쌓여요</li>
+        <li>대화방 위 <b>복사</b>를 누르면 말풍선을 톡톡 골라 고른 것만 복사할 수 있어요. <b>전체 선택</b>·<b>취소</b>로 다루고 <b>복사하기</b>를 누르면 구절과 출처가 함께 복사돼요</li>
         <li><b>☰ 목차 → 오늘</b>에서 달력으로 날짜를 골라 그날 읽을 범위(매일 신약 3장 + 잠언 1장)를 보고, 읽은 장은 <b>✓</b>로 표시해 둘 수 있어요. 표지의 <b>오늘의 읽기</b>를 누르면 오늘 첫 장으로 바로 펼쳐져요</li>
         <li><b>가운데 여백</b>을 누르면 위·아래 도구 막대가 나타나요</li>
         <li>가로로 들면 <b>두 쪽 펼침</b>으로 책장이 넘어가고, 세로로 세우면 <b>한 쪽</b>으로 위아래 스크롤하며 읽어요</li>
@@ -2480,6 +2519,7 @@ if(window.visualViewport){
 function showRvPane(mode,host){
   rvMode=(mode==='memo')?'memo':'rv';
   rvEditing=false;
+  rvSelecting=false; rvSel={};
   var pane=$('#rvPane'), body=$('#dbody');
   rvMount(host==='modal'?'modal':'drawer');
   if(body) body.classList.add('in-rv');
@@ -2490,8 +2530,12 @@ function showRvPane(mode,host){
 }
 function hideRvPane(){
   var pane=$('#rvPane'), body=$('#dbody');
+  rvSelecting=false; rvSel={};
   if(body) body.classList.remove('in-rv');
-  if(pane) pane.classList.remove('on');
+  if(pane){ pane.classList.remove('on'); pane.classList.remove('rv-selecting'); }
+  var bar=$('#rvSelBar'), cb=$('#rvCopy');
+  if(bar) bar.classList.remove('show');
+  if(cb){ cb.classList.remove('on'); cb.setAttribute('aria-pressed','false'); }
   var p=$('#rvPalette'), b=$('#rvThemeBtn'), c=$('#rvCompose'), i=$('#rvInput');
   if(p) p.classList.remove('show');
   if(b) b.classList.remove('on');
@@ -3122,9 +3166,10 @@ function hlDelete(it){
 function rvHlGroup(it){
   var grp=el('div','rv-group');
   if(it.key) grp.dataset.mkey=it.key;
+  if(it.id) grp.dataset.selId=it.id;
   var row=el('div','rv-msg last');
   var bub=el('div','rv-bub tail',it.text||'');
-  bub.onclick=function(){ if(!rvEditing) rvGoNote(it); };
+  bub.onclick=function(){ if(rvSelecting){ rvToggleSel(it.id); return; } if(!rvEditing) rvGoNote(it); };
   var meta=el('div','rv-meta');
   meta.appendChild(el('span','rv-ref',it.ref||''));
   var more=null;
@@ -3177,6 +3222,115 @@ function rvParts(it){
   return [it && it.text ? it.text : ''];
 }
 var rvEditing=false;
+/* ── 선택 복사: 저장한 말씀 중 원하는 것만 골라 클립보드로 ──── */
+var rvSelecting=false, rvSel={};
+function rvSelPresent(){
+  return $$('#rvBody .rv-group[data-sel-id]');
+}
+function rvSyncSel(){
+  var n=0, total=0;
+  rvSelPresent().forEach(function(g){
+    var id=g.dataset.selId; total++;
+    var on=!!rvSel[id];
+    if(on) n++;
+    g.classList.toggle('sel',on);
+    $$('.rv-bub',g).forEach(function(b){
+      if(rvSelecting){
+        b.setAttribute('role','checkbox');
+        b.setAttribute('aria-checked',on?'true':'false');
+      } else {
+        b.removeAttribute('role');
+        b.removeAttribute('aria-checked');
+      }
+    });
+  });
+  Object.keys(rvSel).forEach(function(id){        // 화면에서 사라진 항목의 선택은 버린다
+    var found=false;
+    rvSelPresent().forEach(function(g){ if(g.dataset.selId===id) found=true; });
+    if(!found) delete rvSel[id];
+  });
+  var c=$('#rvSelCount'); if(c) c.textContent=n+'개 선택';
+  var go=$('#rvSelGo'); if(go) go.disabled=!n;
+  var all=$('#rvSelAll'); 
+  if(all && rvSelecting){
+    var allOn=(total>0 && n===total);
+    all.classList.toggle('on',allOn);
+    all.setAttribute('aria-pressed',allOn?'true':'false');
+    all.textContent=allOn?'전체 해제':'전체 선택';
+  } else if(all){
+    all.classList.remove('on'); all.setAttribute('aria-pressed','false'); all.textContent='전체 선택';
+  }
+}
+function rvToggleSel(id){
+  if(!id) return;
+  if(rvSel[id]) delete rvSel[id]; else rvSel[id]=true;
+  rvSyncSel();
+}
+function setRvSelecting(on){
+  rvSelecting=!!on;
+  rvSel={};
+  if(rvSelecting) rvEditing=false;         // 편집 모드와 상호 배타
+  renderRvWall();
+  if(rvSelecting){ var b=$('#rvBody'); if(b) b.scrollTop=b.scrollHeight; }
+}
+function rvCopyTextFor(it){
+  var body='', ref='';
+  if(it.kind==='rv'){
+    body=rvParts(it.src).map(function(t){ return String(t||'').trim(); }).filter(Boolean).join(' ');
+    ref=it.src&&it.src.ref?it.src.ref:'';
+  } else {
+    body=String(it.text||'').trim();
+    ref=it.ref||'';
+  }
+  if(!body) return '';
+  return ref ? body+' ('+ref+')' : body;
+}
+function rvLegacyCopy(text){
+  var ok=false, ta=null;
+  try{
+    ta=document.createElement('textarea');
+    ta.value=text;
+    ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;padding:0;margin:0;'+
+      'border:0;outline:none;opacity:0;-webkit-user-select:text;user-select:text;';
+    document.body.appendChild(ta);
+    var sel=window.getSelection?window.getSelection():null;
+    var saved=(sel&&sel.rangeCount)?sel.getRangeAt(0):null;
+    ta.focus();
+    ta.select();
+    if(ta.setSelectionRange){ try{ ta.setSelectionRange(0,text.length); }catch(e){} }
+    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
+    if(ta.parentNode) ta.parentNode.removeChild(ta);
+    if(sel){ sel.removeAllRanges(); if(saved){ try{ sel.addRange(saved); }catch(e){} } }
+  }catch(e){
+    ok=false;
+    if(ta&&ta.parentNode) ta.parentNode.removeChild(ta);
+  }
+  return ok;
+}
+function rvWriteClipboard(text,done){
+  function fallback(){ done(rvLegacyCopy(text)); }
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext!==false){
+      navigator.clipboard.writeText(text).then(function(){ done(true); }, fallback);
+      return;
+    }
+  }catch(e){}
+  fallback();
+}
+function rvCopySelected(){
+  var items=rvTimeline().filter(function(it){ return rvSel[it.id]; });
+  if(!items.length){ toast('복사할 구절을 먼저 골라 주세요'); return; }
+  var text=items.map(rvCopyTextFor).filter(Boolean).join('\n');
+  if(!text){ toast('복사할 내용이 없어요'); return; }
+  var n=items.length, memo=(rvMode==='memo');
+  var btn=$('#rvSelGo'); if(btn) btn.disabled=true;      // 두 번 누름 방지
+  rvWriteClipboard(text,function(ok){
+    if(!ok){ toast('복사하지 못했어요 · 잠시 뒤 다시 해 주세요'); if(btn) btn.disabled=false; return; }
+    toast(memo ? (n+'개를 복사했어요') : (n+'개 구절을 복사했어요'));
+    setRvSelecting(false);
+  });
+}
 function rvDayHeader(dk,at){
   var dayRow=el('div','rv-day');
   dayRow.appendChild(el('span',null,rvDateLabel(at)));
@@ -3191,8 +3345,9 @@ function openActRow(act){
   $$('#rvBody .rv-act').forEach(function(x){ x.hidden=true; });
   act.hidden=wasOpen;
 }
-function rvVerseGroup(it){
+function rvVerseGroup(it,selId){
   var grp=el('div','rv-group');
+  if(selId) grp.dataset.selId=selId;
   var parts=rvParts(it);
   var act=el('div','rv-act'); act.hidden=true;
   var more=null;
@@ -3200,7 +3355,7 @@ function rvVerseGroup(it){
     var isLast=(idx===parts.length-1);
     var row=el('div','rv-msg'+(isLast?' last':''));
     var bub=el('div','rv-bub'+(isLast?' tail':''),pt);
-    bub.onclick=function(){ if(!rvEditing) rvGo(it); };
+    bub.onclick=function(){ if(rvSelecting){ rvToggleSel(selId); return; } if(!rvEditing) rvGo(it); };
     row.appendChild(bub);
     if(isLast){
       var meta=el('div','rv-meta');
@@ -3229,6 +3384,7 @@ function rvVerseGroup(it){
 function rvMeGroup(it,hideTime){
   var grp=el('div','rv-group');
   if(it.kind==='note'&&it.key) grp.dataset.nkey=it.key;
+  if(it.id) grp.dataset.selId=it.id;
   var row=el('div','rv-msg me last');
   var meta=el('div','rv-meta me');
   if(!hideTime) meta.appendChild(el('span','rv-ref',it.kind==='note' ? (it.ref||'') : rvTimeLabel(it.at)));
@@ -3249,8 +3405,11 @@ function rvMeGroup(it,hideTime){
   if(it.kind==='note'){
     if(it.col!=null && PI_BG[it.col]) bub.style.boxShadow='inset -4px 0 0 0 '+PI_BG[it.col]+',0 1px 1px rgba(0,0,0,.045)';
     bub.setAttribute('title','구절 열기');
-    bub.onclick=function(){ if(!rvEditing) rvGoNote(it); };
   }
+  bub.onclick=function(){
+    if(rvSelecting){ rvToggleSel(it.id); return; }
+    if(it.kind==='note' && !rvEditing) rvGoNote(it);
+  };
   row.appendChild(bub);
   grp.appendChild(row);
   if(it.kind==='note'){
@@ -3266,14 +3425,22 @@ function rvMeGroup(it,hideTime){
 function renderRvWall(){
   var items=rvTimeline();
   var isMemo=(rvMode==='memo');
+  var pane=$('#rvPane'), bar=$('#rvSelBar'), cb=$('#rvCopy'), cmp=$('#rvCompose');
+  if(pane) pane.classList.toggle('rv-selecting',rvSelecting);
+  if(bar) bar.classList.toggle('show',rvSelecting);
+  if(cb){ cb.classList.toggle('on',rvSelecting); cb.setAttribute('aria-pressed',rvSelecting?'true':'false'); }
   $('#rvTitle').textContent=(isMemo?'내 메모':'기억하는 말씀')+' · '+items.length;
   $('#rvSort').textContent=(rvSort==='recent'?'최신 위':'시간순')+' ▾';
   var eb=$('#rvEdit'); if(eb){ eb.textContent=rvEditing?'완료':'편집'; eb.classList.toggle('on',rvEditing); }
-  var cmp=$('#rvCompose'); if(cmp) cmp.style.display=isMemo?'flex':'none';
+  if(cmp) cmp.style.display=(isMemo&&!rvSelecting)?'flex':'none';
   applyRvTheme();
   var body=$('#rvBody'); body.innerHTML='';
   if(!items.length){
-    rvEditing=false; if(eb){ eb.textContent='편집'; eb.classList.remove('on'); }
+    rvEditing=false; rvSelecting=false; rvSel={};
+    if(eb){ eb.textContent='편집'; eb.classList.remove('on'); }
+    if(pane) pane.classList.remove('rv-selecting');
+    if(bar) bar.classList.remove('show');
+    if(cb){ cb.classList.remove('on'); cb.setAttribute('aria-pressed','false'); }
     body.appendChild(el('div','rv-empty',isMemo
       ?'아직 남긴 메모가 없어요.\n본문에 형광펜을 칠한 뒤 메모 남기기를 누르거나\n아래 입력창에 한 줄씩 적어 보세요.'
       :'아직 담은 말씀이 없어요.\n본문 위의 담기 버튼을 누르고\n절을 톡톡 골라 보세요.'));
@@ -3287,13 +3454,14 @@ function renderRvWall(){
       lastDay=dk; lastChatKey=null;
       body.appendChild(rvDayHeader(dk,it.at));
     }
-    if(it.kind==='rv'){ lastChatKey=null; body.appendChild(rvVerseGroup(it.src)); return; }
+    if(it.kind==='rv'){ lastChatKey=null; body.appendChild(rvVerseGroup(it.src,it.id)); return; }
     if(it.kind==='hl'){ lastChatKey=null; body.appendChild(rvHlGroup(it)); return; }
     var tkey = it.kind==='chat' ? rvTimeLabel(it.at) : null;
     var hide = (tkey!==null && tkey===lastChatKey);   // 같은 시각이 이어지면 시간은 한 번만
     lastChatKey = tkey;
     body.appendChild(rvMeGroup(it,hide));
   });
+  rvSyncSel();
   syncRvSend();
 }
 function scrollRvEnd(){ var b=$('#rvBody'); if(b) b.scrollTop=b.scrollHeight; }
@@ -3395,7 +3563,21 @@ $('#rvInput').addEventListener('keydown', function(e){
   e.preventDefault();
   sendChat();
 });
-$('#rvEdit').onclick=function(){ rvEditing=!rvEditing; renderRvWall(); };
+$('#rvEdit').onclick=function(){
+  if(rvSelecting) setRvSelecting(false);
+  rvEditing=!rvEditing; renderRvWall();
+};
+$('#rvCopy').onclick=function(){ setRvSelecting(!rvSelecting); };
+$('#rvSelCancel').onclick=function(){ setRvSelecting(false); };
+$('#rvSelAll').onclick=function(){
+  var groups=rvSelPresent(), ids=[];
+  groups.forEach(function(g){ ids.push(g.dataset.selId); });
+  var allOn=ids.length>0 && ids.every(function(id){ return !!rvSel[id]; });
+  rvSel={};
+  if(!allOn) ids.forEach(function(id){ rvSel[id]=true; });
+  rvSyncSel();
+};
+$('#rvSelGo').onclick=function(){ rvCopySelected(); };
 $('#rvSort').onclick=function(){ rvSort=(rvSort==='recent')?'old':'recent'; renderRvWall(); };
 $('#rvThemeBtn').onclick=function(e){
   e.stopPropagation();
@@ -3986,6 +4168,7 @@ window.addEventListener('pointercancel',function(){
 document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA') return;
   if(!reading) return;
+  if(rvSelecting && e.key==='Escape'){ e.preventDefault(); setRvSelecting(false); return; }
   if(mode!=='curl'){ if(e.key==='Escape'){ closeDrawer(); closePop(); sheetEl.classList.remove('show'); closePlanCfg(); $('#help').classList.remove('show'); closeRvWall(); setPickMode(false); setPenMode(false); setChrome(false); } return; }
   if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){ e.preventDefault(); turn(1); }
   else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); turn(-1); }
