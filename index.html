@@ -1226,7 +1226,6 @@ function renderSlots(){
    책넘김 (curl) · 슬라이드 (slide) · 없음 (none) */
 var flipping=false, fxState=null;
 var FLIP_MS=620;      // one soft page turn
-var FLIP_SLIDE_MS=420;
 var CURL_SEGS=7, CURL_ZONE=0.52, CURL_BEND=30;
 /* a soft page-turn curve: gentle start, long settle
    cubic-bezier(.33,.06,.16,1) approximates a hand turning a page */
@@ -1448,26 +1447,7 @@ function buildFlip(dir){
   return fxState;
 }
 
-/* ── the three effects ─────────────────────────────────── */
-function slideTurn(dir){
-  var target=curSpread+dir;
-  if(target<0||target>=totalSpreads()) return false;
-  var tr=$('#track'); if(!tr) return false;
-  flipping=true;
-  var t0=performance.now(), ms=FLIP_SLIDE_MS;
-  function frame(t){
-    var p=Math.min(1,(t-t0)/ms), e=1-Math.pow(1-p,3);
-    tr.style.transform='translate3d('+(-dir*100*e).toFixed(2)+'%,0,0)';
-    if(p<1) requestAnimationFrame(frame);
-    else{
-      tr.style.transform='';
-      curSpread=target; S.forced=null; renderSlots(); updateChrome(); savePos();
-      flipping=false;
-    }
-  }
-  requestAnimationFrame(frame);
-  return true;
-}
+/* ── the page turn ────────────────────────────────────── */
 function turn(dir){
   if(mode!=='curl') return;
   if(flipping) return;
