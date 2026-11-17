@@ -1043,7 +1043,7 @@ function renderSlots(){
 var flipping=false, fxState=null;
 var FLIP_MS=620;      // one soft page turn
 var FLIP_SLIDE_MS=420;
-var CURL_SEGS=7, CURL_ZONE=0.52, CURL_BEND=24;
+var CURL_SEGS=7, CURL_ZONE=0.52, CURL_BEND=30;
 /* a soft page-turn curve: gentle start, long settle
    cubic-bezier(.33,.06,.16,1) approximates a hand turning a page */
 var flipEase=(function(){
@@ -1076,8 +1076,8 @@ function fxPaper(node,W,H){
 /* strip shading: darkness for a strip tilted t (degrees) while the sheet is at a */
 function curlAlpha(a,t,front){
   var c=Math.cos((a+t)*Math.PI/180);
-  return front ? Math.min(.30,(1-Math.max(0,c))*0.24)
-               : Math.min(.30,(1-Math.max(0,-c))*0.18);
+  return front ? Math.min(.38,(1-Math.max(0,c))*0.30)
+               : Math.min(.34,(1-Math.max(0,-c))*0.20);
 }
 function shadeCss(a1,a2,warm){
   var c=warm?'255,250,242':'0,0,0';
@@ -1117,7 +1117,13 @@ function fxApply(a){
     var front=Math.cos((a+th)*Math.PI/180)>=0;
     c.f.style.visibility=front?'visible':'hidden';
     c.b.style.visibility=front?'hidden':'visible';
-    c.sh.style.background=shadeCss(curlAlpha(a,k<=1?0:tilts[k-2],front),curlAlpha(a,th,front),!front);
+    var bg=shadeCss(curlAlpha(a,k<=1?0:tilts[k-2],front),curlAlpha(a,th,front),!front);
+    if(k>=CURL_SEGS-1){
+      var hi=(0.44*Math.pow(Math.sin(Math.PI*Math.min(1,a/180)),0.8)).toFixed(3);
+      var dirn=(k===st.cards.length-1)?(fwd?'to left':'to right'):(fwd?'to left':'to right');
+      bg='linear-gradient('+dirn+',rgba(255,255,255,'+hi+'),rgba(255,255,255,0) 55%),'+bg;
+    }
+    c.sh.style.background=bg;
     if(c.edge){
       var s0=Math.sin(Math.PI*Math.min(1,a/180));
       c.edge.style.opacity=(0.80*Math.pow(s0,.7)).toFixed(3);
