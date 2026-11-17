@@ -93,9 +93,9 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #fx .cast.cl{left:0;background:linear-gradient(to left,rgba(0,0,0,.22),rgba(0,0,0,.08) 22%,rgba(0,0,0,.02) 48%,rgba(0,0,0,0) 78%);}
 #fx .leaf{position:absolute;top:0;height:100%;z-index:4;transform-style:preserve-3d;will-change:transform;}
 #fx .card{position:absolute;top:0;height:100%;overflow:hidden;will-change:transform;}
-#fx .face{position:absolute;inset:0;overflow:hidden;}
+#fx .face{position:absolute;inset:0;overflow:hidden;background:var(--paper);}
 #fx .face.b{visibility:hidden;}
-#fx .bw{position:absolute;top:0;height:100%;transform-origin:50% 50%;transform:scaleX(-1);}
+#fx .bw{position:absolute;top:0;height:100%;transform-origin:50% 50%;transform:scaleX(-1);background:var(--paper);}
 #fx .sh{position:absolute;inset:0;pointer-events:none;background:rgba(0,0,0,0);}
 #fx .lift{position:absolute;top:0;height:100%;left:0;width:120px;margin-left:-60px;z-index:3;pointer-events:none;opacity:0;
   background:radial-gradient(60% 120% at 50% 50%,rgba(20,16,10,.20),rgba(20,16,10,0) 72%);filter:blur(9px);}
@@ -1043,7 +1043,7 @@ function renderSlots(){
 var flipping=false, fxState=null;
 var FLIP_MS=620;      // one soft page turn
 var FLIP_SLIDE_MS=420;
-var CURL_SEGS=6, CURL_ZONE=0.46, CURL_BEND=30;
+var CURL_SEGS=8, CURL_ZONE=0.42, CURL_BEND=26;
 /* a soft page-turn curve: gentle start, long settle
    cubic-bezier(.33,.06,.16,1) approximates a hand turning a page */
 var flipEase=(function(){
