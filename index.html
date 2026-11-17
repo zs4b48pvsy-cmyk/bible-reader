@@ -478,6 +478,12 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #pentool .pt-sw.y{background:#F2DA85;} #pentool .pt-sw.p{background:#EFB6AB;}
 #pentool .pt-sw.g{background:#B9D8BC;} #pentool .pt-sw.s{background:#B4CFE7;}
 #pentool .pt-sw.on{box-shadow:0 0 0 2.5px var(--paper),0 0 0 4px rgba(0,0,0,.5);border-color:transparent;}
+#pentool .pt-tool{height:27px;padding:0 9px;border-radius:14px;border:1px solid rgba(0,0,0,.15);
+  background:transparent;color:var(--ink);font-family:var(--font-ui);font-size:12px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex:0 0 auto;}
+#pentool .pt-tool:active{background:rgba(0,0,0,.06);}
+#pentool .pt-tool.on{background:#2E2A24;color:#F7F4EC;border-color:#2E2A24;}
+#pentool .pt-tool:disabled{opacity:.35;cursor:default;}
 #pentool .pt-sep{width:1px;height:20px;background:var(--rule);flex:0 0 auto;}
 #pentool .pt-hint{font-family:var(--font-ui);font-size:13px;color:var(--ink2);letter-spacing:.01em;
   max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -564,7 +570,6 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
     <button class="btn icon" id="btnPen" aria-label="형광펜"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 19.5l4.2-.9L20 8.3a1.9 1.9 0 0 0 0-2.7l-1.6-1.6a1.9 1.9 0 0 0-2.7 0L5.4 14.3l-.9 4.2Z"/><path d="m13.5 6.5 4 4"/><path d="M4 21.5h16"/></svg></button>
     <button class="btn icon" id="btnHome" aria-label="표지"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.2 12 4.4l8 6.8"/><path d="M6.4 9.6V20h11.2V9.6"/></svg></button>
     <button class="btn icon" id="btnFont" aria-label="글자 크기">Aa</button>
-    <button class="btn icon" id="btnMark" aria-label="책갈피">⚑</button>
   </header>
 
   <footer class="bar" id="bottombar">
@@ -587,7 +592,6 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
     <div class="tabs">
       <button class="tabbtn on" data-tab="books">책</button>
       <button class="tabbtn" data-tab="chap">장</button>
-      <button class="tabbtn" data-tab="bm">책갈피</button>
       <button class="tabbtn" data-tab="hl">형광펜</button>
       <button class="tabbtn" data-tab="note">메모</button>
     </div>
@@ -599,6 +603,8 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
     <button class="pt-sw p on" data-pc="p" aria-label="피치"></button>
     <button class="pt-sw g" data-pc="g" aria-label="세이지"></button>
     <button class="pt-sw s" data-pc="s" aria-label="스카이"></button>
+    <button class="pt-tool" id="ptErase" aria-label="지우개">지우개</button>
+    <button class="pt-tool" id="ptUndo" aria-label="되돌리기" disabled>↩</button>
     <span class="pt-sep"></span>
     <span class="pt-hint" id="ptHint">칠할 글자를 스으윽 훑어 주세요</span>
     <button class="pt-memo" id="ptMemo">메모 남기기</button>
@@ -633,13 +639,14 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
     </div>
     <div class="hr"></div>
     <button class="link" id="lnkImport">내 성경 파일 불러오기 (.txt / .json)</button>
-    <button class="link" id="lnkExport">내 기록 내보내기 (형광펜·책갈피·메모)</button>
-    <button class="link" id="lnkImportData">내 기록 가져오기</button>
+    <button class="link" id="lnkExport">내 기록 따로 저장하기 (형광펜·메모 백업)</button>
+    <button class="link" id="lnkImportData">저장한 기록 불러오기</button>
+    <button class="link" id="lnkClearData" style="color:#A63D33;">내 기록 모두 지우기</button>
     <button class="link" id="lnkHelp">사용 안내</button>
     <div class="srcbox">
       <span class="sclb">본문 정보</span>
       <span class="scline">성경전서 개역한글판 © 대한성서공회 (1961)</span>
-      <span class="scsub">형광펜 · 책갈피 · 메모는 이 기기에만 저장돼요</span>
+      <span class="scsub">형광펜 · 메모는 이 기기에만 저장돼요</span>
     </div>
     <div class="hint" id="srcHint"></div>
     <input type="file" id="fileSrc" accept=".txt,.json,text/plain,application/json" style="display:none">
@@ -659,7 +666,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         <li><b>가운데 여백</b>을 누르면 위·아래 도구 막대가 나타나요</li>
         <li>가로로 들면 <b>두 쪽 펼침</b>으로 책장이 넘어가고, 세로로 세우면 <b>한 쪽</b>으로 위아래 스크롤하며 읽어요</li>
         <li><b>⌕ 찾기</b>에서 구절(요3:16)이나 단어(사랑)로 찾고, <b>⌂</b>를 누르면 표지로 돌아와요</li>
-        <li><b>☰ 목차</b>에서 책·장 이동, 형광펜·책갈피·메모를 모아 보기, <b>Aa</b>에서 배경색·글꼴·크기·줄 간격·여백</li>
+        <li><b>☰ 목차</b>에서 책·장 이동, 형광펜·메모를 모아 보기, <b>Aa</b>에서 배경색·글꼴·크기·줄 간격·여백</li>
       </ul>
       <p class="src">본문 · 성경전서 개역한글판 © 대한성서공회 (1961)</p>
       <button class="go" id="helpGo">읽으러 가기</button>
@@ -805,20 +812,20 @@ var Store = {
       }catch(e){ res(); }
     });
   },
-  save:function(){
+  save:function(immediate){
     var self=this;
     clearTimeout(self.t);
-    self.t=setTimeout(function(){
+    var writeNow=function(){
       var raw=JSON.stringify(self.data);
-      try{ localStorage.setItem('bibleReader.v1',raw); self.mode='local'; return; }catch(e){}
+      try{ localStorage.setItem('bibleReader.v1',raw); self.mode='local'; }catch(e){}
       try{
-        if(self.mode==='idb'||true){
-          var req=indexedDB.open('bibleReader',1);
-          req.onupgradeneeded=function(){ req.result.createObjectStore('kv'); };
-          req.onsuccess=function(){ try{ req.result.transaction('kv','readwrite').objectStore('kv').put(raw,'data'); }catch(e){} };
-        }
+        var req=indexedDB.open('bibleReader',1);
+        req.onupgradeneeded=function(){ req.result.createObjectStore('kv'); };
+        req.onsuccess=function(){ try{ req.result.transaction('kv','readwrite').objectStore('kv').put(raw,'data'); }catch(e){} };
       }catch(e){}
-    },250);
+    };
+    if(immediate){ writeNow(); return; }
+    self.t=setTimeout(writeNow,250);
   }
 };
 var store=Store.data;
@@ -1297,6 +1304,7 @@ function renderPage(pageIdx, side){
             var vnEl=node.querySelector('.vn');
             if(vnEl) vnEl.parentNode.insertBefore(el('span','nmark','✎'),vnEl.nextSibling);
           }
+          paintPartial(node);
         }
         colEl.appendChild(node);
       }
@@ -1642,7 +1650,6 @@ function updateChrome(){
     $('#pageno').textContent=pc2+'%';
     $('#progress .fill').style.width=pc2+'%';
     $('#progress .knob').style.left=pc2+'%';
-    $('#btnMark').classList.toggle('on', isBookmarked(curBook,sc,currentAnchor().v));
     var spc=chapterLabel(curBook,sc-1), snc=chapterLabel(curBook,sc+1);
     $('#btnPrevCh').textContent='‹ '+spc;
     $('#btnNextCh').textContent=snc+' ›';
@@ -1666,7 +1673,6 @@ function updateChrome(){
   var pct=totalSpreads()<=1?100:Math.round((curSpread/(totalSpreads()-1))*100);
   $('#progress .fill').style.width=pct+'%';
   $('#progress .knob').style.left=pct+'%';
-  $('#btnMark').classList.toggle('on', isBookmarked(curBook,c,currentAnchor().v));
   // prev/next chapter labels
   var pc=chapterLabel(curBook,c-1), nc=chapterLabel(curBook,c+1);
   $('#btnPrevCh').textContent='‹ '+pc;
@@ -1826,20 +1832,50 @@ function penHit(x,y){
   if(cp) return {c:cp.c, v:cp.v, s:cp.s, e:cp.s+1};
   return null;
 }
+var penEraseMode=false, penUndoStack=[];
+function updatePenUI(){
+  $$('#pentool .pt-sw').forEach(function(x){ x.classList.toggle('on',!penEraseMode&&x.dataset.pc===penColor); });
+  var er=$('#ptErase'); if(er) er.classList.toggle('on',penEraseMode);
+  var un=$('#ptUndo'); if(un) un.disabled=!penUndoStack.length;
+}
+function pushPenUndo(keys){
+  var items=[];
+  for(var i=0;i<keys.length;i++){
+    var k=keys[i], cur=store.pi&&store.pi[k];
+    items.push({k:k, prev:cur?cur.map(function(m){ return {s:m.s,e:m.e,c:m.c,at:m.at}; }):null});
+  }
+  penUndoStack.push(items);
+  if(penUndoStack.length>40) penUndoStack.shift();
+  updatePenUI();
+}
+function undoPen(){
+  if(!penUndoStack.length) return;
+  var items=penUndoStack.pop();
+  for(var i=0;i<items.length;i++){
+    var it=items[i];
+    if(it.prev&&it.prev.length) store.pi[it.k]=it.prev; else delete store.pi[it.k];
+    var parts=it.k.split('|');
+    if(+parts[0]===curBook) repaintVerse(+parts[1],+parts[2]);
+  }
+  Store.save(true);
+  updatePenUI();
+  toast('방금 작업을 되돌렸어요');
+}
 function setPenMode(on){
   penMode=!!on;
   app.classList.toggle('pen-mode',penMode);
   var b=$('#btnPen'); if(b) b.classList.toggle('on',penMode);
   closePop();
   if(penMode){
-    lastStroke=null; penDown=null;
+    lastStroke=null; penDown=null; penEraseMode=false;
     if(stroke){ stroke=null; }
     $('#ptHint').textContent='칠할 글자를 스으윽 훑어 주세요';
-    $$('#pentool .pt-sw').forEach(function(x){ x.classList.toggle('on',x.dataset.pc===penColor); });
+    updatePenUI();
     updateChrome();
   } else {
     if(stroke) endStroke();
     penClear();
+    Store.save(true);
   }
 }
 function strokeNodes(c,v){
@@ -1886,7 +1922,7 @@ function strokeDraw(){
       if(vt.textContent!==full&&!vt.dataset.pm) continue;
       var list=((store.pi&&store.pi[piKey(seg.c,seg.v)])||[]).filter(function(m){ return !(m.s<seg.e&&m.e>seg.s); });
       list=list.slice();
-      list.push({s:seg.s,e:seg.e,c:stroke.color});
+      if(stroke.color!=='erase') list.push({s:seg.s,e:seg.e,c:stroke.color});
       drawMarks(vt,full,list.sort(function(a,b){ return a.s-b.s; }));
     }
   }
@@ -1896,7 +1932,11 @@ function paintSpans(vt,s,e,col){
   for(var i=0;i<spans.length;i++){
     var sp=spans[i], a=+sp.getAttribute('data-s'), b=+sp.getAttribute('data-e');
     if(a<s||b>e) continue;
-    if(!sp.classList.contains('c-'+col)) sp.className='pch c-'+col;
+    if(col==='erase'){
+      if(sp.className!=='pch') sp.className='pch';
+    } else {
+      if(!sp.classList.contains('c-'+col)) sp.className='pch c-'+col;
+    }
   }
 }
 function repaintVerse(c,v){
@@ -1908,15 +1948,18 @@ function repaintVerse(c,v){
   }
 }
 function strokeCommit(){
-  var keys=Object.keys(stroke.segs);
-  for(var i=0;i<keys.length;i++){
-    var seg=stroke.segs[keys[i]];
+  var keys=Object.keys(stroke.segs), undoKeys=[];
+  for(var i=0;i<keys.length;i++) undoKeys.push(piKey(stroke.segs[keys[i]].c,stroke.segs[keys[i]].v));
+  pushPenUndo(undoKeys);
+  for(var j=0;j<keys.length;j++){
+    var seg=stroke.segs[keys[j]];
     var k=piKey(seg.c,seg.v);
     var list=subtractSeg((store.pi[k]||[]).slice(),seg);
-    list.push({s:seg.s,e:seg.e,c:stroke.color,at:Date.now()});
+    if(stroke.color!=='erase') list.push({s:seg.s,e:seg.e,c:stroke.color,at:Date.now()});
     if(list.length) store.pi[k]=list; else delete store.pi[k];
     repaintVerse(seg.c,seg.v);
   }
+  Store.save(true);
 }
 function subtractSeg(list,seg){
   var out=[];
@@ -1931,9 +1974,10 @@ function subtractSeg(list,seg){
 }
 function setPartial(c,v,s,e){
   var k=piKey(c,v);
+  pushPenUndo([k]);
   var list=subtractSeg((store.pi&&store.pi[k])||[],{s:s,e:e});
   if(list.length) store.pi[k]=list; else delete store.pi[k];
-  Store.save();
+  Store.save(true);
   repaintVerse(c,v);
   toast('표시를 지웠어요');
 }
@@ -1949,8 +1993,13 @@ function endStroke(){
   }
   if(any){
     stroke=s; strokeCommit(); stroke=null;
-    Store.save();
+    Store.save(true);
     suppressClick=true;
+    if(s.color==='erase'){
+      $('#ptHint').textContent='지울 부분을 스으윽 문지르거나 톡 눌러 주세요';
+      toast('칠한 부분을 지웠어요');
+      return;
+    }
     // 방금 칠한 문구를 인용해 메모로 이어간다
     var segs=keys.map(function(k){ return s.segs[k]; }).sort(function(a,b){ return (a.c-b.c)||(a.v-b.v); });
     segs.forEach(function(g){
@@ -1969,30 +2018,45 @@ function endStroke(){
   // 톡 누름: 칠해진 글자면 그 조각을 지운다
   if(d&&d.mark){
     var mk=d.mark, kk=piKey(mk.c,mk.v);
+    pushPenUndo([kk]);
     var rest=(store.pi[kk]||[]).filter(function(m){ return !(m.s<mk.e&&m.e>mk.s); });
     if(rest.length) store.pi[kk]=rest; else delete store.pi[kk];
-    Store.save();
+    Store.save(true);
     repaintVerse(mk.c,mk.v);
     suppressClick=true;
-    if(lastStroke) toast('표시를 지웠어요');
+    toast('표시를 지웠어요');
   }
 }
-bookEl.addEventListener('pointerdown',function(e){
-  if(!penMode||!reading) return;
-  if(e.target.closest('#pentool')||e.target.closest('.bar')) return;
-  if(e.pointerType==='touch'&&e.isPrimary===false) return;
-  e.preventDefault();
-  var info=penHit(e.clientX,e.clientY);
-  penDown={x:e.clientX,y:e.clientY,px:e.clientX,py:e.clientY,moved:false,hit:info,last:info,mark:null};
-  stroke={segs:{},color:penColor,cache:{},moved:false};
+var touchDrawing=false;
+function penStartAt(x,y){
+  if(stroke) endStroke();
+  var info=penHit(x,y);
+  penDown={x:x,y:y,px:x,py:y,moved:false,hit:info,last:info,mark:null};
+  stroke={segs:{},color:penEraseMode?'erase':penColor,cache:{},moved:false};
   if(info){
     var list=(store.pi&&store.pi[piKey(info.c,info.v)])||[];
     for(var i=0;i<list.length;i++){
       if(list[i].s<=info.s&&list[i].e>info.s){ penDown.mark={c:info.c,v:info.v,s:list[i].s,e:list[i].e}; break; }
     }
   }
-  if(bookEl.setPointerCapture){ try{ bookEl.setPointerCapture(e.pointerId); }catch(err){} }
   penEdgeStart();
+}
+function penMoveAt(x,y,ev){
+  if(!penMode||!stroke||!penDown) return;
+  if(!penDown.moved){
+    if(Math.abs(x-penDown.x)<4&&Math.abs(y-penDown.y)<4) return;
+    penDown.moved=true; stroke.moved=true;
+  }
+  if(ev&&ev.cancelable) ev.preventDefault();
+  penDown.px=x; penDown.py=y;
+  penMove(x,y);
+}
+bookEl.addEventListener('pointerdown',function(e){
+  if(!penMode||!reading) return;
+  if(e.pointerType==='touch') return;
+  if(e.target.closest('#pentool')||e.target.closest('.bar')) return;
+  e.preventDefault();
+  penStartAt(e.clientX,e.clientY);
 },true);
 function penMove(x,y){
   if(!penMode||!stroke||!penDown) return;
@@ -2023,35 +2087,64 @@ function penEdgeTick(){
   penEdgeTimer=requestAnimationFrame(penEdgeTick);   // 그리는 동안 계속 지켜본다
 }
 window.addEventListener('pointermove',function(e){
-  if(!penMode||!stroke||!penDown) return;
-  if(!penDown.moved){
-    if(Math.abs(e.clientX-penDown.x)<4&&Math.abs(e.clientY-penDown.y)<4) return;
-    penDown.moved=true; stroke.moved=true;
-  }
-  e.preventDefault();
-  penDown.px=e.clientX; penDown.py=e.clientY;
-  penMove(e.clientX,e.clientY);
+  if(e.pointerType==='touch'||touchDrawing) return;
+  penMoveAt(e.clientX,e.clientY,e);
 },{passive:false});
 window.addEventListener('pointerup',function(e){
+  if(e.pointerType==='touch'||touchDrawing) return;
   if(!stroke||!penDown) return;
   if(penDown.moved) penMove(e.clientX,e.clientY);
   endStroke();
 });
-window.addEventListener('pointercancel',function(){ if(stroke) endStroke(); });
-/* iPad Safari: 펜 모드에서는 터치가 선택·돋보기·스크롤로 새지 않게 막는다 */
-function penTouchLock(e){
+window.addEventListener('pointercancel',function(e){
+  if(e.pointerType==='touch'||touchDrawing) return;
+  if(stroke) endStroke();
+});
+/* iPad Safari: 네이티브 터치 이벤트로 직접 처리해 손가락을 떼면 무조건 저장되게 한다 */
+bookEl.addEventListener('touchstart',function(e){
   if(!penMode||!reading) return;
+  if(e.target.closest('#pentool')||e.target.closest('.bar')) return;
   if(e.touches&&e.touches.length>1) return;
   e.preventDefault();
-}
-bookEl.addEventListener('touchstart',penTouchLock,{passive:false});
-bookEl.addEventListener('touchmove',penTouchLock,{passive:false});
+  touchDrawing=true;
+  var t=e.changedTouches[0]||e.touches[0];
+  if(t) penStartAt(t.clientX,t.clientY);
+},{passive:false});
+window.addEventListener('touchmove',function(e){
+  if(!penMode||!touchDrawing||!stroke||!penDown) return;
+  if(e.touches&&e.touches.length>1) return;
+  if(e.cancelable) e.preventDefault();
+  var t=e.changedTouches[0]||e.touches[0];
+  if(t) penMoveAt(t.clientX,t.clientY,e);
+},{passive:false});
+window.addEventListener('touchend',function(e){
+  if(!touchDrawing) return;
+  touchDrawing=false;
+  var t=e.changedTouches&&e.changedTouches[0];
+  if(t&&penDown&&penDown.moved) penMove(t.clientX,t.clientY);
+  endStroke();
+});
+window.addEventListener('touchcancel',function(){
+  if(!touchDrawing) return;
+  touchDrawing=false;
+  if(stroke) endStroke();
+});
+window.addEventListener('pagehide',function(){ if(stroke) endStroke(); Store.save(true); });
+document.addEventListener('visibilitychange',function(){ if(document.hidden){ if(stroke) endStroke(); Store.save(true); } });
 $$('#pentool .pt-sw').forEach(function(b){
   b.onclick=function(){
     penColor=b.dataset.pc;
-    $$('#pentool .pt-sw').forEach(function(x){ x.classList.toggle('on',x===b); });
+    penEraseMode=false;
+    updatePenUI();
+    $('#ptHint').textContent=lastStroke?('"'+(lastStroke.text.length>26?lastStroke.text.slice(0,26)+'…':lastStroke.text)+'"'):'칠할 글자를 스으윽 훑어 주세요';
   };
 });
+$('#ptErase').onclick=function(){
+  penEraseMode=!penEraseMode;
+  updatePenUI();
+  $('#ptHint').textContent=penEraseMode?'지울 부분을 스으윽 문지르거나 톡 눌러 주세요':'칠할 글자를 스으윽 훑어 주세요';
+};
+$('#ptUndo').onclick=function(){ undoPen(); };
 $('#ptMemo').onclick=function(){
   if(!lastStroke){ toast('먼저 칠할 글자를 그어 주세요'); return; }
   openNote(lastStroke.c,lastStroke.v,null,{quote:lastStroke.text,col:lastStroke.col});
@@ -2607,10 +2700,6 @@ $('#btnCloseDrawer').onclick=closeDrawer;
 scrimEl.onclick=closeDrawer;
 $('#locbtn').onclick=function(){ chapBook=curBook; openDrawer('chap'); };
 $('#btnFont').onclick=function(){ sheetEl.classList.contains('show')?sheetEl.classList.remove('show'):openSheet(); };
-$('#btnMark').onclick=function(){
-  var a=currentAnchor();
-  addBookmark(curBook, a.c, a.v);
-};
 $('#btnPrevCh').onclick=function(){ gotoChapter(-1); };
 $('#btnNextCh').onclick=function(){ gotoChapter(1); };
 $('#progress').onclick=function(e){
@@ -2679,11 +2768,11 @@ $('#srcSel').onchange=function(e){
 };
 $('#qjump').addEventListener('keydown',function(e){ if(e.key==='Enter') quickJump(this.value); });
 $('#lnkExport').onclick=function(){
-  var out={hl:store.hl,bm:store.bm,notes:store.notes,pos:store.pos,settings:store.settings,exported:new Date().toISOString()};
+  var out={hl:store.hl,pi:store.pi,pic:store.pic,notes:store.notes,pos:store.pos,settings:store.settings,exported:new Date().toISOString()};
   var blob=new Blob([JSON.stringify(out,null,1)],{type:'application/json'});
   var a=el('a'); a.href=URL.createObjectURL(blob); a.download='bible-reader-기록.json';
   document.body.appendChild(a); a.click(); setTimeout(function(){document.body.removeChild(a);},400);
-  toast('기록 파일을 내려받았어요');
+  toast('기록 파일을 저장했어요');
 };
 $('#lnkImportData').onclick=function(){ $('#fileData').click(); };
 $('#fileData').onchange=function(e){
@@ -2693,13 +2782,29 @@ $('#fileData').onchange=function(e){
     try{
       var o=JSON.parse(String(rd.result));
       if(o.hl) store.hl=Object.assign(store.hl,o.hl);
-      if(o.bm) store.bm=o.bm.concat(store.bm).slice(0,500);
+      if(o.pi) store.pi=Object.assign(store.pi||{},o.pi);
+      if(o.pic) store.pic=Object.assign(store.pic||{},o.pic);
       if(o.notes) store.notes=Object.assign(store.notes||{},o.notes);
-      Store.save(); renderSlots();
-      toast('기록을 가져왔어요');
+      Store.save(true);
+      if(mode==='scroll') renderScrollBook();
+      renderSlots();
+      toast('저장한 기록을 불러왔어요');
     }catch(err){ toast('파일을 읽지 못했어요'); }
   };
   rd.readAsText(f,'utf-8'); e.target.value='';
+};
+$('#lnkClearData').onclick=function(){
+  if(!confirm('저장된 형광펜과 메모를 모두 지울까요? 되돌릴 수 없어요.')) return;
+  store.hl={}; store.pi={}; store.pic={}; store.bm=[]; store.notes={};
+  penUndoStack=[]; lastStroke=null;
+  Store.save(true);
+  if(mode==='scroll') renderScrollBook();
+  renderSlots();
+  updatePenUI();
+  updateChrome();
+  if(drawerEl.classList.contains('show')) renderDrawer($$('.tabbtn.on')[0]?$$('.tabbtn.on')[0].dataset.tab:'books');
+  sheetEl.classList.remove('show');
+  toast('저장된 기록을 모두 지웠어요');
 };
 
 // resize / orientation
