@@ -144,7 +144,8 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #pageno{font-family:var(--font-ui);font-size:10.5px;color:var(--muted);letter-spacing:.08em;min-width:52px;text-align:right;}
 
 /* ── drawer ──────────────────────────────────────────────── */
-#scrim{position:fixed;inset:0;background:rgba(0,0,0,.26);opacity:0;pointer-events:none;z-index:35;transition:opacity .24s ease;}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.26);opacity:0;pointer-events:none;z-index:35;transition:opacity .24s ease,background .24s ease;}
+#scrim.soft{background:rgba(0,0,0,.09);}   /* 메모·기억 탭: 오른쪽 성경 본문을 읽으며 볼 수 있게 */
 #scrim.show{opacity:1;pointer-events:auto;}
 #drawer{position:fixed;top:0;bottom:0;left:0;width:min(390px,88vw);z-index:40;background:var(--paper);
   display:flex;flex-direction:column;transform:translateX(-101%);transition:transform .28s cubic-bezier(.3,.85,.3,1);
@@ -266,24 +267,25 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   #picktool .pk-save{padding:9px 13px;}
 }
 
-/* ── 기억하는 말씀 (카톡 말풍선 모아보기) ─────────────────── */
-#rvWall{position:fixed;inset:0;z-index:49;display:none;flex-direction:column;overflow:hidden;
-  background:var(--rv-bg,#FFFFFF);
-  --rv-bg:#FFFFFF;--rv-bub:#274261;--rv-ink:#FFFFFF;--rv-me:#EEF0F3;--rv-meink:#22262B;--rv-maxw:74%;
-  transition:background .22s ease;}
-#rvWall.show{display:flex;}
-.rv-bar{position:relative;flex:0 0 auto;z-index:3;display:grid;grid-template-columns:auto minmax(0,1fr) auto;
-  align-items:center;gap:4px;padding:calc(var(--safe-t) + 11px) 10px 10px;
+/* ── 목차 창 안 카톡 방: 메모 · 기억 (전체 화면 덮개 없음) ── */
+#drawer{--rv-bg:#FFFFFF;--rv-bub:#274261;--rv-ink:#FFFFFF;--rv-me:#EEF0F3;--rv-meink:#22262B;--rv-maxw:78%;}
+#dbody.in-rv{display:flex;flex-direction:column;overflow:hidden;padding:0;}
+#dbody.in-rv #dlist{display:none;}
+.rv-pane{display:none;flex:1 1 auto;min-height:0;flex-direction:column;position:relative;
   background:var(--rv-bg,#FFFFFF);transition:background .22s ease;}
-.rv-back,.rv-sort,.rv-theme{border:0;background:transparent;color:#71767D;font-family:var(--font-ui);font-size:12.5px;
+.rv-pane.on{display:flex;}
+.rv-bar{position:relative;flex:0 0 auto;z-index:3;display:grid;grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;gap:2px;padding:4px 4px 3px 6px;
+  background:var(--rv-bg,#FFFFFF);transition:background .22s ease;}
+.rv-back,.rv-sort,.rv-theme{border:0;background:transparent;color:#71767D;font-family:var(--font-ui);font-size:12px;
   padding:6px 7px;border-radius:8px;cursor:pointer;white-space:nowrap;line-height:1;}
 .rv-back:active,.rv-sort:active,.rv-theme:active{background:rgba(0,0,0,.06);}
 .rv-theme{display:inline-flex;align-items:center;justify-content:center;padding:6px;}
 .rv-theme.on{background:rgba(0,0,0,.08);color:#22262B;}
-.rv-title{text-align:center;font-family:var(--font-ui);font-size:13.5px;font-weight:600;color:#22262B;
-  letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rv-tools{display:flex;align-items:center;gap:1px;}
-.rv-palette{position:fixed;z-index:6;top:calc(var(--safe-t) + 46px);right:10px;display:none;
+.rv-title{text-align:left;font-family:var(--font-ui);font-size:13px;font-weight:600;color:#22262B;
+  letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;}
+.rv-tools{display:flex;align-items:center;gap:0;}
+.rv-palette{position:absolute;z-index:6;top:36px;right:6px;display:none;
   padding:12px 15px 13px;border-radius:14px;background:#FFFFFF;
   border:1px solid rgba(0,0,0,.08);box-shadow:0 12px 34px rgba(0,0,0,.16);}
 .rv-palette.show{display:block;}
@@ -295,9 +297,10 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   transition:transform .14s ease;}
 .pv-dot:active{transform:scale(.93);}
 .pv-dot.on{box-shadow:0 0 0 2px #FFFFFF,0 0 0 3.5px rgba(0,0,0,.52);border-color:transparent;}
-.rv-body{flex:1 1 auto;width:100%;max-width:660px;margin:0 auto;padding:10px 18px calc(var(--safe-b) + 16px);
+.rv-body{flex:1 1 auto;width:100%;padding:6px 12px 14px;
   min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  display:flex;flex-direction:column;justify-content:flex-end;}
+  display:flex;flex-direction:column;}
+.rv-body::before{content:"";display:block;margin-top:auto;}
 .rv-day{display:flex;align-items:center;justify-content:center;gap:9px;margin:20px 0 16px;}
 .rv-day span{font-family:var(--font-ui);font-size:11.5px;color:#8E959E;letter-spacing:.03em;}
 .rv-story{border:1px solid rgba(0,0,0,.10);background:transparent;color:#8A9099;font-family:var(--font-ui);
@@ -334,9 +337,9 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .rv-meta.me{padding-bottom:2px;}
 .rv-msg.me .rv-ref{text-align:right;}
 .rv-act.me{justify-content:flex-end;padding-left:0;padding-right:38px;}
-/* 하단 입력창 — 다다다다다닥 */
-.rv-compose{flex:0 0 auto;display:flex;align-items:flex-end;gap:7px;
-  padding:9px 12px calc(9px + var(--safe-b));
+/* 하단 입력창 — 다다다다다닥 (메모 탭일 때만 목차 창 맨 아래에) */
+.rv-compose{flex:0 0 auto;display:none;align-items:flex-end;gap:7px;
+  padding:8px 10px calc(8px + var(--safe-b));
   background:var(--rv-bg,#FFFFFF);border-top:1px solid rgba(0,0,0,.07);
   transition:background .22s ease;}
 .rv-input{flex:1 1 auto;min-width:0;height:40px;box-sizing:border-box;
@@ -355,8 +358,8 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .rv-act button{border:1px solid rgba(0,0,0,.11);background:transparent;color:#5E646B;font-family:var(--font-ui);
   font-size:11.5px;padding:5px 11px;border-radius:14px;cursor:pointer;}
 .rv-act button.del{color:#A63D33;border-color:rgba(166,61,51,.24);}
-.rv-empty{padding:130px 24px;margin:auto 0;text-align:center;font-family:var(--font-ui);font-size:13px;color:#8E959E;
-  line-height:2.1;white-space:pre-line;}
+.rv-empty{padding:60px 18px;margin:auto 0;text-align:center;font-family:var(--font-ui);font-size:12.5px;color:#8E959E;
+  line-height:2.0;white-space:pre-line;}
 
 /* 목차 드로어 — 기억 탭 */
 .tabs .tabbtn{font-size:12.5px;}
@@ -692,7 +695,29 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <button class="tabbtn" data-tab="note">메모</button>
       <button class="tabbtn" data-tab="rv">기억</button>
     </div>
-    <div id="dbody"></div>
+    <div id="dbody">
+      <section class="rv-pane" id="rvPane" aria-label="내 메모 · 기억하는 말씀 대화방">
+        <header class="rv-bar">
+          <span class="rv-title" id="rvTitle">기억하는 말씀 · 0</span>
+          <div class="rv-tools">
+            <button class="rv-theme" id="rvThemeBtn" aria-label="색상 고르기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><circle cx="8.7" cy="10.2" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="8.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.4" cy="10.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="10.4" cy="15.2" r="1.15" fill="currentColor" stroke="none"/></svg></button>
+            <button class="rv-sort" id="rvEdit">편집</button>
+            <button class="rv-sort" id="rvSort">시간순 ▾</button>
+          </div>
+        </header>
+        <div class="rv-palette" id="rvPalette">
+          <div class="pv-row"><span class="pv-lb">배경</span><div class="pv-dots" id="pvBg"></div></div>
+          <div class="pv-row"><span class="pv-lb">말풍선</span><div class="pv-dots" id="pvBub"></div></div>
+        </div>
+        <div class="rv-body" id="rvBody"></div>
+      </section>
+      <div id="dlist"></div>
+    </div>
+    <div class="rv-compose" id="rvCompose">
+      <input class="rv-input" id="rvInput" type="text" autocomplete="off" enterkeyhint="send"
+             maxlength="500" placeholder="오늘의 생각을 보내 보세요" aria-label="내 메모 입력">
+      <button class="rv-send" id="rvSend" disabled>전송</button>
+    </div>
   </aside>
 
   <div id="pentool" role="toolbar" aria-label="형광펜 도구">
@@ -766,8 +791,8 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         <li><b>펜 아이콘</b>을 켜고 첫 글자부터 마지막 글자까지 손가락을 스으윽 훑으면 그대로 칠해져요. 칠한 곳을 톡 누르면 지워져요</li>
         <li>칠한 뒤 <b>메모 남기기</b>를 누르면 말씀 곁의 작은 메모가 열려요</li>
         <li><b>본문 절</b>을 톡 누르면 화면 맨 위·아래 도구 막대만 조용히 여닫혀요</li>
-        <li>상단의 <b>담기</b>를 누르면 절을 톡톡 골라 <b>기억하는 말씀</b>에 담을 수 있어요. 담은 말씀은 <b>☰ 목차 → 기억</b>을 누르면 바로 열리는 대화방에서 봐요</li>
-        <li>대화방 맨 아래 입력창에 내 생각을 보내면 카톡처럼 <b>오른쪽 말풍선</b>으로 쌓여요. 형광펜을 칠해 <b>메모 남기기</b>로 적은 메모도 같은 자리에 올라와요</li>
+        <li>상단의 <b>담기</b>를 누르면 절을 톡톡 골라 <b>기억하는 말씀</b>에 담을 수 있어요. 담은 말씀은 <b>☰ 목차 → 기억</b>을 누르면 목차 창 안에서 바로 열리는 대화방에서 봐요</li>
+        <li><b>☰ 목차 → 메모</b>를 누르면 형광펜 칠한 구절(왼쪽)과 내 메모·단문(오른쪽)이 한 대화방에 모여요. 맨 아래 입력창에 한 줄씩 보내면 카톡처럼 쌓여요</li>
         <li><b>가운데 여백</b>을 누르면 위·아래 도구 막대가 나타나요</li>
         <li>가로로 들면 <b>두 쪽 펼침</b>으로 책장이 넘어가고, 세로로 세우면 <b>한 쪽</b>으로 위아래 스크롤하며 읽어요</li>
         <li><b>⌕ 찾기</b>에서 구절(요3:16)이나 단어(사랑)로 찾고, <b>⌂</b>를 누르면 표지로 돌아와요</li>
@@ -777,27 +802,6 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <button class="go" id="helpGo">읽으러 가기</button>
     </div>
   </div>
-  <section id="rvWall" aria-label="기억하는 말씀">
-    <header class="rv-bar">
-      <button class="rv-back" id="rvBack">← 본문으로</button>
-      <span class="rv-title" id="rvTitle">기억하는 말씀 · 0</span>
-      <div class="rv-tools">
-        <button class="rv-theme" id="rvThemeBtn" aria-label="색상 고르기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><circle cx="8.7" cy="10.2" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="8.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.4" cy="10.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="10.4" cy="15.2" r="1.15" fill="currentColor" stroke="none"/></svg></button>
-        <button class="rv-sort" id="rvEdit">편집</button>
-        <button class="rv-sort" id="rvSort">시간순 ▾</button>
-      </div>
-    </header>
-    <div class="rv-palette" id="rvPalette">
-      <div class="pv-row"><span class="pv-lb">배경</span><div class="pv-dots" id="pvBg"></div></div>
-      <div class="pv-row"><span class="pv-lb">말풍선</span><div class="pv-dots" id="pvBub"></div></div>
-    </div>
-    <div class="rv-body" id="rvBody"></div>
-    <div class="rv-compose" id="rvCompose">
-      <input class="rv-input" id="rvInput" type="text" autocomplete="off" enterkeyhint="send"
-             maxlength="500" placeholder="오늘의 생각을 보내 보세요" aria-label="내 메모 입력">
-      <button class="rv-send" id="rvSend" disabled>전송</button>
-    </div>
-  </section>
 
   <section id="cover">
     <div class="cv-wash" aria-hidden="true"></div>
@@ -2288,17 +2292,45 @@ function addBookmark(b,c,v){
 
 /* ── drawer ────────────────────────────────────────────── */
 var curTab='books', chapBook=null;
-function openDrawer(tab){
-  if(tab==='rv'||tab==='note'){ closeDrawer(); openRvWall(tab==='note'?'memo':'rv'); return; }
-  curTab=tab||'books';
-  $$('.tabbtn').forEach(function(t){ t.classList.toggle('on',t.dataset.tab===curTab); });
-  renderDrawer(curTab);
-  drawerEl.classList.add('show'); scrimEl.classList.add('show');
-  setChrome(true);
+function showRvPane(mode){
+  rvMode=(mode==='memo')?'memo':'rv';
+  rvEditing=false;
+  var pane=$('#rvPane'), body=$('#dbody');
+  if(body) body.classList.add('in-rv');
+  if(pane) pane.classList.add('on');
+  renderRvWall();
+  syncRvSend();
 }
-function closeDrawer(){ drawerEl.classList.remove('show'); scrimEl.classList.remove('show'); setChrome(false); }
+function hideRvPane(){
+  var pane=$('#rvPane'), body=$('#dbody');
+  if(body) body.classList.remove('in-rv');
+  if(pane) pane.classList.remove('on');
+  var p=$('#rvPalette'), b=$('#rvThemeBtn'), c=$('#rvCompose'), i=$('#rvInput');
+  if(p) p.classList.remove('show');
+  if(b) b.classList.remove('on');
+  if(c) c.style.display='none';
+  if(i) i.blur();
+}
+function openDrawer(tab){
+  tab=tab||'books';
+  curTab=tab;
+  $$('.tabbtn').forEach(function(t){ t.classList.toggle('on',t.dataset.tab===curTab); });
+  if(tab==='rv'||tab==='note'){
+    showRvPane(tab==='note'?'memo':'rv');       // 목차 창 안에서 바로 대화방
+  } else {
+    hideRvPane();
+    renderDrawer(tab);
+  }
+  drawerEl.classList.add('show'); scrimEl.classList.add('show');
+  scrimEl.classList.toggle('soft', tab==='rv'||tab==='note');
+  setChrome(true);
+  if(tab==='rv'||tab==='note'){ scrollRvEnd(); setTimeout(scrollRvEnd,40); }
+}
+function closeDrawer(){ hideRvPane(); drawerEl.classList.remove('show'); scrimEl.classList.remove('show'); scrimEl.classList.remove('soft'); setChrome(false); }
 function renderDrawer(tab){
-  var body=$('#dbody'); body.innerHTML='';
+  var body=$('#dlist'); body.innerHTML='';
+  if(tab==='rv'||tab==='note'){ showRvPane(tab==='note'?'memo':'rv'); return; }
+  hideRvPane();
   if(tab==='books'){
     var cur=curBook;
     [['old','구약 · 39권'],['new','신약 · 27권']].forEach(function(sec){
@@ -2349,8 +2381,8 @@ function renderDrawer(tab){
       body.appendChild(row);
     });
   }
-  else if(tab==='hl'||tab==='note'){ renderAnnoList(tab); }
-  // '기억' 탭은 목록을 그리지 않고 곧바로 대화방(#rvWall)을 연다 — switchTab 참고
+  else if(tab==='hl'){ renderAnnoList(tab); }
+  // '기억'·'메모' 탭은 목차 목록 대신 목차 창 안 대화방(#rvPane)을 바로 보여준다
 }
 /* ── 내 형광펜 모아보기 (목록) ── */
 function hlCollect(){
@@ -2486,7 +2518,7 @@ function rvMeFill(){
   return c;
 }
 function applyRvTheme(){
-  var w=$('#rvWall'); if(!w) return;
+  var w=$('#drawer'); if(!w) return;
   var me=rvMeFill();
   w.style.setProperty('--rv-bg',rvBg);
   w.style.setProperty('--rv-bub',rvBubble);
@@ -2800,21 +2832,11 @@ function sendChat(){
   try{ inp.focus({preventScroll:true}); }catch(e){ inp.focus(); }
 }
 function openRvWall(mode){
-  rvMode=(mode==='memo')?'memo':'rv';
-  rvEditing=false;
-  renderRvWall();
-  $('#rvWall').classList.add('show');
-  setChrome(true);
-  syncRvSend();
-  if(rvSort==='old') scrollRvEnd();
+  openDrawer(mode==='memo'?'note':'rv');
 }
 function closeRvWall(){
-  rvEditing=false;
-  $('#rvWall').classList.remove('show');
-  var p=$('#rvPalette'), b=$('#rvThemeBtn');
-  if(p) p.classList.remove('show');
-  if(b) b.classList.remove('on');
-  var i=$('#rvInput'); if(i) i.blur();
+  hideRvPane();
+  closeDrawer();
 }
 $('#rvSend').onclick=function(){ sendChat(); };
 $('#rvInput').addEventListener('input', syncRvSend);
@@ -2824,7 +2846,6 @@ $('#rvInput').addEventListener('keydown', function(e){
   e.preventDefault();
   sendChat();
 });
-$('#rvBack').onclick=closeRvWall;
 $('#rvEdit').onclick=function(){ rvEditing=!rvEditing; renderRvWall(); };
 $('#rvSort').onclick=function(){ rvSort=(rvSort==='recent')?'old':'recent'; renderRvWall(); };
 $('#rvThemeBtn').onclick=function(e){
@@ -3037,7 +3058,7 @@ function saveStory(dayKey){
 window.__rvStory=function(dayKey){ var cv=buildStoryCanvas(dayKey||rvDayKey(Date.now())); return cv?cv.toDataURL('image/png'):''; };
 
 function renderAnnoList(kind){
-  var body=$('#dbody');
+  var body=$('#dlist');
   if(kind==='hl'){
     body.appendChild(el('div','sect','내 형광펜'));
     var items=hlCollect();
@@ -3088,10 +3109,7 @@ function renderAnnoList(kind){
   });
 }
 function switchTab(t){
-  if(t==='rv'||t==='note'){ closeDrawer(); openRvWall(t==='note'?'memo':'rv'); return; }
-  curTab=t;
-  $$('.tabbtn').forEach(function(b){ b.classList.toggle('on',b.dataset.tab===t); });
-  renderDrawer(t);
+  openDrawer(t);
 }
 
 /* ── quick jump ────────────────────────────────────────── */
