@@ -757,7 +757,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <div class="rv-tools">
         <button class="rv-theme" id="rvThemeBtn" aria-label="색상 고르기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><circle cx="8.7" cy="10.2" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="8.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.4" cy="10.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="10.4" cy="15.2" r="1.15" fill="currentColor" stroke="none"/></svg></button>
         <button class="rv-sort" id="rvEdit">편집</button>
-        <button class="rv-sort" id="rvSort">최신순 ▾</button>
+        <button class="rv-sort" id="rvSort">시간순 ▾</button>
       </div>
     </header>
     <div class="rv-palette" id="rvPalette">
@@ -2436,7 +2436,7 @@ function savePick(){
 /* 색: 배경 5색 × 말풍선 5색 (말풍선은 글자색을 알아서 고른다) */
 var RV_BG=[['#FFFFFF','순백'],['#F7F3EA','웜아이보리'],['#D9E5F0','카톡스카이'],['#E5ECE6','세이지미스트'],['#F2E8E8','더스티로즈']];
 var RV_BUB=[['#274261','딥네이비'],['#FEE500','카톡엘로우'],['#3F5E4D','올리브그린'],['#353330','차콜먹색'],['#8B5A5A','로즈우드']];
-var rvSort='recent', rvBg='#FFFFFF', rvBubble='#274261';
+var rvSort='old', rvBg='#FFFFFF', rvBubble='#274261';
 function inkFor(hex){
   var h=String(hex||'').replace('#','');
   if(h.length!==6) return '#FFFFFF';
@@ -2493,7 +2493,7 @@ var rvEditing=false;
 function renderRvWall(){
   var items=rvItems();
   $('#rvTitle').textContent='기억하는 말씀 · '+items.length;
-  $('#rvSort').textContent=(rvSort==='recent'?'최신순':'오래된순')+' ▾';
+  $('#rvSort').textContent=(rvSort==='recent'?'최신 위':'시간순')+' ▾';
   var eb=$('#rvEdit'); if(eb){ eb.textContent=rvEditing?'완료':'편집'; eb.classList.toggle('on',rvEditing); }
   applyRvTheme();
   var body=$('#rvBody'); body.innerHTML='';
@@ -2547,7 +2547,7 @@ function renderRvWall(){
     }
   });
 }
-function openRvWall(){ rvEditing=false; renderRvWall(); $('#rvWall').classList.add('show'); setChrome(true); }
+function openRvWall(){ rvEditing=false; renderRvWall(); $('#rvWall').classList.add('show'); setChrome(true); if(rvSort==='old'){ var b=$('#rvBody'); if(b) b.scrollTop=b.scrollHeight; } }
 function closeRvWall(){
   rvEditing=false;
   $('#rvWall').classList.remove('show');
