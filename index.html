@@ -3768,7 +3768,7 @@ function buildStoryCanvas(dayKey){
   return drawStoryCanvas(storyTimelineOf(dayKey),{date:true});
 }
 function buildCaptureCanvas(item){
-  return drawStoryCanvas(item?[item]:[],{date:false});
+  return drawStoryCanvas(item?[item]:[],{date:true});
 }
 function downloadBlob(blob,name){
   var url=URL.createObjectURL(blob);
