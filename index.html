@@ -2696,28 +2696,27 @@ function saveStory(dayKey){
   try{ cv=buildStoryCanvas(dayKey); }catch(err){ cv=null; }
   if(!cv){ toast('저장할 말씀이 없어요'); return; }
   var fname='bible-story-'+dayKey+'.png';
-  var done=function(blob){
-    if(!blob){ toast('이미지를 만들지 못했어요'); return; }
-    var file=null;
-    try{ file=new File([blob],fname,{type:'image/png'}); }catch(e){ file=null; }
-    if(file&&navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){
-      try{
-        navigator.share({files:[file],title:'기억하는 말씀'})['catch'](function(err){
-          if(err&&err.name==='AbortError') return;
-          downloadBlob(blob,fname);
-        });
-        toast('스토리 이미지를 공유해 사진에 저장해 보세요');
-        return;
-      }catch(e2){}
-    }
-    downloadBlob(blob,fname);
-    toast('스토리 이미지(1080×1920)를 저장했어요');
-  };
-  if(cv.toBlob){ cv.toBlob(done,'image/png'); return; }
-  var data=cv.toDataURL('image/png');
-  var bin=atob(data.split(',')[1]), arr=new Uint8Array(bin.length);
-  for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
-  done(new Blob([arr],{type:'image/png'}));
+  /* iOS는 손가락을 뗀 그 순간 안에서 공유를 열어야 하므로,
+     캔버스 → Blob 을 동기로 다 만든 뒤 바로 share/download 로 넘긴다 */
+  var blob=null;
+  try{
+    var data=cv.toDataURL('image/png');
+    var bin=atob(data.split(',')[1]), arr=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    blob=new Blob([arr],{type:'image/png'});
+  }catch(e){ blob=null; }
+  if(!blob){ toast('이미지를 만들지 못했어요'); return; }
+  var file=null;
+  try{ file=new File([blob],fname,{type:'image/png'}); }catch(e2){ file=null; }
+  if(file&&navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){
+    try{
+      navigator.share({files:[file],title:'기억하는 말씀'})['catch'](function(){});
+      toast('공유 시트에서 《사진에 저장》을 골라 주세요');
+      return;
+    }catch(e3){}
+  }
+  downloadBlob(blob,fname);
+  toast('스토리 이미지(1080×1920)를 저장했어요');
 }
 window.__rvStory=function(dayKey){ var cv=buildStoryCanvas(dayKey||rvDayKey(Date.now())); return cv?cv.toDataURL('image/png'):''; };
 
