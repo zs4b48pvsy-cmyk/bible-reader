@@ -2289,7 +2289,7 @@ function addBookmark(b,c,v){
 /* ── drawer ────────────────────────────────────────────── */
 var curTab='books', chapBook=null;
 function openDrawer(tab){
-  if(tab==='rv'){ closeDrawer(); openRvWall(); return; }
+  if(tab==='rv'||tab==='memo'){ closeDrawer(); openRvWall(tab); return; }
   curTab=tab||'books';
   $$('.tabbtn').forEach(function(t){ t.classList.toggle('on',t.dataset.tab===curTab); });
   renderDrawer(curTab);
@@ -2543,17 +2543,21 @@ function noteTimelineItems(){
   });
   return out;
 }
-function timelineAll(){
-  var arr=[], seq=0, first=null;
-  (store.rv||[]).forEach(function(it){
-    arr.push({kind:'rv', id:it.id||('rv'+(seq+1)), at:+it.at||0, src:it, seq:seq++});
-  });
-  noteTimelineItems().forEach(function(it){ it.seq=seq++; arr.push(it); });
-  (store.chat||[]).forEach(function(it){
-    if(!it||!String(it.text||'').trim()) return;
-    arr.push({kind:'chat', id:it.id||('c'+(seq+1)), at:+it.at||0, text:String(it.text),
-              src:it, seq:seq++});
-  });
+var rvMode='rv';
+function timelineAll(mode){
+  var m=mode||rvMode, arr=[], seq=0, first=null;
+  if(m==='rv'){
+    (store.rv||[]).forEach(function(it){
+      arr.push({kind:'rv', id:it.id||('rv'+(seq+1)), at:+it.at||0, src:it, seq:seq++});
+    });
+  } else {
+    noteTimelineItems().forEach(function(it){ it.seq=seq++; arr.push(it); });
+    (store.chat||[]).forEach(function(it){
+      if(!it||!String(it.text||'').trim()) return;
+      arr.push({kind:'chat', id:it.id||('c'+(seq+1)), at:+it.at||0, text:String(it.text),
+                src:it, seq:seq++});
+    });
+  }
   arr.forEach(function(x){ if(x.at && (first===null||x.at<first)) first=x.at; });
   if(first===null) first=Date.now();
   arr.forEach(function(x){ if(!x.at) x.at=first; });   // 시각을 모르는 예전 메모는 맨 앞에
@@ -2700,14 +2704,18 @@ function rvMeGroup(it,hideTime){
 }
 function renderRvWall(){
   var items=rvTimeline();
-  $('#rvTitle').textContent='기억하는 말씀 · '+((store.rv||[]).length);
+  var isMemo=(rvMode==='memo');
+  $('#rvTitle').textContent=(isMemo?'내 메모':'기억하는 말씀')+' · '+items.length;
   $('#rvSort').textContent=(rvSort==='recent'?'최신 위':'시간순')+' ▾';
   var eb=$('#rvEdit'); if(eb){ eb.textContent=rvEditing?'완료':'편집'; eb.classList.toggle('on',rvEditing); }
+  var cmp=$('#rvCompose'); if(cmp) cmp.style.display=isMemo?'flex':'none';
   applyRvTheme();
   var body=$('#rvBody'); body.innerHTML='';
   if(!items.length){
     rvEditing=false; if(eb){ eb.textContent='편집'; eb.classList.remove('on'); }
-    body.appendChild(el('div','rv-empty','아직 담은 말씀이 없어요.\n본문 위의 담기 버튼을 누르고\n절을 톡톡 골라 보세요.\n\n아래에 오늘의 생각을 보내면\n말씀과 나눈 대화처럼 쌓여요.'));
+    body.appendChild(el('div','rv-empty',isMemo
+      ?'아직 남긴 메모가 없어요.\n아래 입력창에 한 줄씩 적거나\n본문 형광펜 옆 메모를 남겨 보세요.'
+      :'아직 담은 말씀이 없어요.\n본문 위의 담기 버튼을 누르고\n절을 톡톡 골라 보세요.'));
     syncRvSend();
     return;
   }
@@ -2745,7 +2753,8 @@ function sendChat(){
   scrollRvEnd();
   try{ inp.focus({preventScroll:true}); }catch(e){ inp.focus(); }
 }
-function openRvWall(){
+function openRvWall(mode){
+  rvMode=(mode==='memo')?'memo':'rv';
   rvEditing=false;
   renderRvWall();
   $('#rvWall').classList.add('show');
@@ -3031,7 +3040,7 @@ function renderAnnoList(kind){
   });
 }
 function switchTab(t){
-  if(t==='rv'){ closeDrawer(); openRvWall(); return; }   // 기억 = 말씀과 나의 대화방
+  if(t==='rv'||t==='memo'){ closeDrawer(); openRvWall(t); return; }
   curTab=t;
   $$('.tabbtn').forEach(function(b){ b.classList.toggle('on',b.dataset.tab===t); });
   renderDrawer(t);
