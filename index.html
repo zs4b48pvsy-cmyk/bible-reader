@@ -267,12 +267,12 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 }
 
 /* ── 기억하는 말씀 (카톡 말풍선 모아보기) ─────────────────── */
-#rvWall{position:fixed;inset:0;z-index:49;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;
+#rvWall{position:fixed;inset:0;z-index:49;display:none;flex-direction:column;overflow:hidden;
   background:var(--rv-bg,#FFFFFF);
-  --rv-bg:#FFFFFF;--rv-bub:#274261;--rv-ink:#FFFFFF;--rv-maxw:74%;
+  --rv-bg:#FFFFFF;--rv-bub:#274261;--rv-ink:#FFFFFF;--rv-me:#EEF0F3;--rv-meink:#22262B;--rv-maxw:74%;
   transition:background .22s ease;}
-#rvWall.show{display:block;}
-.rv-bar{position:sticky;top:0;z-index:3;display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+#rvWall.show{display:flex;}
+.rv-bar{position:relative;flex:0 0 auto;z-index:3;display:grid;grid-template-columns:auto minmax(0,1fr) auto;
   align-items:center;gap:4px;padding:calc(var(--safe-t) + 11px) 10px 10px;
   background:var(--rv-bg,#FFFFFF);transition:background .22s ease;}
 .rv-back,.rv-sort,.rv-theme{border:0;background:transparent;color:#71767D;font-family:var(--font-ui);font-size:12.5px;
@@ -295,8 +295,9 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   transition:transform .14s ease;}
 .pv-dot:active{transform:scale(.93);}
 .pv-dot.on{box-shadow:0 0 0 2px #FFFFFF,0 0 0 3.5px rgba(0,0,0,.52);border-color:transparent;}
-.rv-body{max-width:660px;margin:0 auto;padding:10px 18px calc(var(--safe-b) + 70px);
-  min-height:calc(100vh - 108px);display:flex;flex-direction:column;justify-content:flex-end;}
+.rv-body{flex:1 1 auto;width:100%;max-width:660px;margin:0 auto;padding:10px 18px calc(var(--safe-b) + 16px);
+  min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;justify-content:flex-end;}
 .rv-day{display:flex;align-items:center;justify-content:center;gap:9px;margin:20px 0 16px;}
 .rv-day span{font-family:var(--font-ui);font-size:11.5px;color:#8E959E;letter-spacing:.03em;}
 .rv-story{border:1px solid rgba(0,0,0,.10);background:transparent;color:#8A9099;font-family:var(--font-ui);
@@ -323,6 +324,32 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   background:inherit;border-bottom-left-radius:2px;
   clip-path:polygon(100% 0,0 52%,84% 100%);}
 .rv-bub:active{opacity:.92;}
+/* 나(오른쪽) 말풍선 — 메모·단문 채팅 */
+.rv-msg.me{justify-content:flex-end;}
+.rv-bub.me{background:var(--rv-me);color:var(--rv-meink);cursor:default;
+  box-shadow:0 1px 1px rgba(0,0,0,.045),inset 0 0 0 1px rgba(0,0,0,.035);}
+.rv-bub.me::after{left:auto;right:-7px;border-bottom-left-radius:0;border-bottom-right-radius:2px;
+  clip-path:polygon(0 0,100% 52%,16% 100%);}
+.rv-bub.me.note{cursor:pointer;}
+.rv-meta.me{padding-bottom:2px;}
+.rv-msg.me .rv-ref{text-align:right;}
+.rv-act.me{justify-content:flex-end;padding-left:0;padding-right:38px;}
+/* 하단 입력창 — 다다다다다닥 */
+.rv-compose{flex:0 0 auto;display:flex;align-items:flex-end;gap:7px;
+  padding:9px 12px calc(9px + var(--safe-b));
+  background:var(--rv-bg,#FFFFFF);border-top:1px solid rgba(0,0,0,.07);
+  transition:background .22s ease;}
+.rv-input{flex:1 1 auto;min-width:0;height:40px;box-sizing:border-box;
+  border:1px solid rgba(0,0,0,.11);border-radius:20px;background:rgba(255,255,255,.72);
+  padding:0 15px;color:#22262B;font-family:var(--font-ui);font-size:16px;line-height:1.4;
+  -webkit-appearance:none;appearance:none;outline:none;}
+.rv-input::placeholder{color:#A2A8B0;}
+.rv-input:focus{border-color:rgba(0,0,0,.22);background:#FFFFFF;}
+.rv-send{flex:0 0 auto;height:40px;padding:0 16px;border:0;border-radius:20px;
+  background:var(--rv-bub);color:var(--rv-ink);font-family:var(--font-ui);font-size:13.5px;font-weight:600;
+  cursor:pointer;transition:opacity .16s ease,background .22s ease,color .22s ease;}
+.rv-send:disabled{opacity:.34;cursor:default;}
+.rv-send:not(:disabled):active{opacity:.86;}
 .rv-act{display:flex;justify-content:flex-start;gap:7px;margin:-3px 0 12px;padding-left:38px;}
 .rv-act[hidden]{display:none;}
 .rv-act button{border:1px solid rgba(0,0,0,.11);background:transparent;color:#5E646B;font-family:var(--font-ui);
@@ -332,10 +359,6 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   line-height:2.1;white-space:pre-line;}
 
 /* 목차 드로어 — 기억 탭 */
-.rv-open{display:block;width:calc(100% - 8px);margin:8px 4px 10px;padding:13px;border-radius:10px;
-  border:1px solid var(--rule);background:rgba(0,0,0,.03);color:var(--ink);
-  font-family:var(--font-ui);font-size:13px;cursor:pointer;text-align:left;line-height:1.5;}
-.rv-open:active{background:rgba(0,0,0,.07);}
 .tabs .tabbtn{font-size:12.5px;}
 @media (max-width:400px){ .tabs .tabbtn{font-size:12px;padding:8px 3px;} }
 
@@ -743,7 +766,8 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         <li><b>펜 아이콘</b>을 켜고 첫 글자부터 마지막 글자까지 손가락을 스으윽 훑으면 그대로 칠해져요. 칠한 곳을 톡 누르면 지워져요</li>
         <li>칠한 뒤 <b>메모 남기기</b>를 누르면 말씀 곁의 작은 메모가 열려요</li>
         <li><b>본문 절</b>을 톡 누르면 화면 맨 위·아래 도구 막대만 조용히 여닫혀요</li>
-        <li>상단의 <b>담기</b>를 누르면 절을 톡톡 골라 <b>기억하는 말씀</b>에 담을 수 있어요. 담은 말씀은 <b>☰ 목차 → 기억</b>에서 카톡 말풍선처럼 모아 봐요</li>
+        <li>상단의 <b>담기</b>를 누르면 절을 톡톡 골라 <b>기억하는 말씀</b>에 담을 수 있어요. 담은 말씀은 <b>☰ 목차 → 기억</b>을 누르면 바로 열리는 대화방에서 봐요</li>
+        <li>대화방 맨 아래 입력창에 내 생각을 보내면 카톡처럼 <b>오른쪽 말풍선</b>으로 쌓여요. 형광펜을 칠해 <b>메모 남기기</b>로 적은 메모도 같은 자리에 올라와요</li>
         <li><b>가운데 여백</b>을 누르면 위·아래 도구 막대가 나타나요</li>
         <li>가로로 들면 <b>두 쪽 펼침</b>으로 책장이 넘어가고, 세로로 세우면 <b>한 쪽</b>으로 위아래 스크롤하며 읽어요</li>
         <li><b>⌕ 찾기</b>에서 구절(요3:16)이나 단어(사랑)로 찾고, <b>⌂</b>를 누르면 표지로 돌아와요</li>
@@ -768,6 +792,11 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <div class="pv-row"><span class="pv-lb">말풍선</span><div class="pv-dots" id="pvBub"></div></div>
     </div>
     <div class="rv-body" id="rvBody"></div>
+    <div class="rv-compose" id="rvCompose">
+      <input class="rv-input" id="rvInput" type="text" autocomplete="off" enterkeyhint="send"
+             maxlength="500" placeholder="오늘의 생각을 보내 보세요" aria-label="내 메모 입력">
+      <button class="rv-send" id="rvSend" disabled>전송</button>
+    </div>
   </section>
 
   <section id="cover">
@@ -874,7 +903,7 @@ function clamp(v,a,b){return v<a?a:(v>b?b:v);}
 
 /* ── storage (localStorage → IndexedDB → memory) ────────── */
 var Store = {
-  data:{settings:{},pos:null,hl:{},pi:{},pic:{},bm:[],notes:{},rv:[],src:'builtin',help:false},
+  data:{settings:{},pos:null,hl:{},pi:{},pic:{},bm:[],notes:{},rv:[],chat:[],nat:{},src:'builtin',help:false},
   mode:'mem', t:null,
   load:function(){
     var self=this;
@@ -2260,6 +2289,7 @@ function addBookmark(b,c,v){
 /* ── drawer ────────────────────────────────────────────── */
 var curTab='books', chapBook=null;
 function openDrawer(tab){
+  if(tab==='rv'){ closeDrawer(); openRvWall(); return; }
   curTab=tab||'books';
   $$('.tabbtn').forEach(function(t){ t.classList.toggle('on',t.dataset.tab===curTab); });
   renderDrawer(curTab);
@@ -2320,26 +2350,7 @@ function renderDrawer(tab){
     });
   }
   else if(tab==='hl'||tab==='note'){ renderAnnoList(tab); }
-  else if(tab==='rv'){
-    var rvAll=store.rv||[];
-    var openBtn=el('button','rv-open','기억하는 말씀 열기 — 카톡 말풍선 '+rvAll.length+'개');
-    openBtn.onclick=function(){ closeDrawer(); openRvWall(); };
-    body.appendChild(openBtn);
-    if(!rvAll.length){
-      body.appendChild(el('div','empty','아직 담은 말씀이 없어요.\n상단의 담기 버튼을 누르고\n절을 톡톡 골라 보세요.'));
-      return;
-    }
-    var rvSorted=rvAll.slice().sort(function(a,b){ return (b.at||0)-(a.at||0); });
-    rvSorted.forEach(function(it){
-      var row=el('div','bm');
-      var left=el('div'); left.style.flex='1 1 auto'; left.style.minWidth='0';
-      left.appendChild(el('div','bmloc',it.ref||''));
-      left.appendChild(el('div','bmtxt',String(it.text||'').slice(0,120)));
-      row.appendChild(left);
-      row.onclick=function(){ closeDrawer(); rvGo(it); };
-      body.appendChild(row);
-    });
-  }
+  // '기억' 탭은 목록을 그리지 않고 곧바로 대화방(#rvWall)을 연다 — switchTab 참고
 }
 /* ── 내 형광펜 모아보기 (목록) ── */
 function hlCollect(){
@@ -2443,16 +2454,45 @@ var rvSort='old', rvBg='#FFFFFF', rvBubble='#274261';
 function inkFor(hex){
   var h=String(hex||'').replace('#','');
   if(h.length!==6) return '#FFFFFF';
-  function ch(i){ return parseInt(h.slice(i,i+2),16)/255; }
-  function lin(x){ return x<=0.03928 ? x/12.92 : Math.pow((x+0.055)/1.055,2.4); }
+  function ch(i){ return parseInt(h.slice(i,i+2),16); }
+  function lin(x){ x=x/255; return x<=0.03928 ? x/12.92 : Math.pow((x+0.055)/1.055,2.4); }
   var L=0.2126*lin(ch(0))+0.7152*lin(ch(2))+0.0722*lin(ch(4));
   return L>0.55 ? '#222222' : '#FFFFFF';
 }
+function lumHex(hex){
+  var h=String(hex||'').replace('#','');
+  if(h.length!==6) return 1;
+  function ch(i){ return parseInt(h.slice(i,i+2),16); }
+  function lin(x){ x=x/255; return x<=0.03928 ? x/12.92 : Math.pow((x+0.055)/1.055,2.4); }
+  return 0.2126*lin(ch(0))+0.7152*lin(ch(2))+0.0722*lin(ch(4));
+}
+function contrastColor(hex){
+  var L=lumHex(hex), dark='#1F2328', light='#FFFFFF';
+  function ratio(a,b){ var hi=Math.max(a,b), lo=Math.min(a,b); return (hi+0.05)/(lo+0.05); }
+  return ratio(L,lumHex(dark))>=ratio(L,lumHex(light)) ? dark : light;
+}
+function mixHex(a,b,t){
+  function p(s,i){ return parseInt(String(s).replace('#','').slice((i-1)*2,i*2),16)||0; }
+  function hx(n){ n=Math.max(0,Math.min(255,Math.round(n))).toString(16); return n.length<2?'0'+n:n; }
+  return '#'+hx(p(a,1)+(p(b,1)-p(a,1))*t)+hx(p(a,2)+(p(b,2)-p(a,2))*t)+hx(p(a,3)+(p(b,3)-p(a,3))*t);
+}
+/* 내 말풍선: 고른 말씀 말풍선 색을 배경 쪽으로 살짝 눕힌 톤 — 배경과 겹치면 조금 더 진하게 */
+function rvMeFill(){
+  var bg=/^#[0-9a-fA-F]{6}$/.test(rvBg||'')?rvBg:'#FFFFFF';
+  var bub=/^#[0-9a-fA-F]{6}$/.test(rvBubble||'')?rvBubble:'#274261';
+  var c=mixHex(bg,bub,0.20);
+  if(Math.abs(lumHex(c)-lumHex(bg))<0.05) c=mixHex(bg,bub,0.32);
+  if(Math.abs(lumHex(c)-lumHex(bg))<0.05) c='#EFECE6';
+  return c;
+}
 function applyRvTheme(){
   var w=$('#rvWall'); if(!w) return;
+  var me=rvMeFill();
   w.style.setProperty('--rv-bg',rvBg);
   w.style.setProperty('--rv-bub',rvBubble);
   w.style.setProperty('--rv-ink',inkFor(rvBubble));
+  w.style.setProperty('--rv-me',me);
+  w.style.setProperty('--rv-meink',contrastColor(me));
   $$('#pvBg .pv-dot').forEach(function(d){ d.classList.toggle('on',d.dataset.v===rvBg); });
   $$('#pvBub .pv-dot').forEach(function(d){ d.classList.toggle('on',d.dataset.v===rvBubble); });
 }
@@ -2480,6 +2520,58 @@ function rvItems(){
   });
   return arr;
 }
+/* ── 대화방 타임라인: 말씀(왼쪽) + 내 메모.단문(오른쪽) ─────── */
+function chatId(){ return 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function rvTimeLabel(ts){
+  var d=new Date(ts), h=d.getHours(), m=d.getMinutes();
+  var ap=h<12?'오전':'오후', hh=h%12; if(hh===0) hh=12;
+  return ap+' '+hh+':'+(m<10?'0':'')+m;
+}
+function noteTimelineItems(){
+  var out=[], notes=store.notes||{}, nat=store.nat||{}, hlt=store.hlt||{};
+  Object.keys(notes).forEach(function(k){
+    var t=String(notes[k]==null?'':notes[k]).trim(); if(!t) return;
+    var p=k.split('|'), b=+p[0], c=+p[1], v=+p[2];
+    var at=nat[k]?+nat[k]:(hlt[k]?+hlt[k]:0);
+    if(!at){                        // 예전 메모: 형광펜 친 시각으로 추정
+      var pi=(store.pi&&store.pi[k])||[];
+      for(var i=0;i<pi.length;i++){ var s=(pi[i]&&pi[i].at)||0; if(s>at) at=s; }
+    }
+    out.push({kind:'note', id:'n:'+k, key:k, b:b, c:c, v:v, text:t, at:at,
+              ref:abbr(b)+' '+c+':'+v,
+              col:(store.pic&&store.pic[k]!=null)?+store.pic[k]:pickColorIdx(k)});
+  });
+  return out;
+}
+function timelineAll(){
+  var arr=[], seq=0, first=null;
+  (store.rv||[]).forEach(function(it){
+    arr.push({kind:'rv', id:it.id||('rv'+(seq+1)), at:+it.at||0, src:it, seq:seq++});
+  });
+  noteTimelineItems().forEach(function(it){ it.seq=seq++; arr.push(it); });
+  (store.chat||[]).forEach(function(it){
+    if(!it||!String(it.text||'').trim()) return;
+    arr.push({kind:'chat', id:it.id||('c'+(seq+1)), at:+it.at||0, text:String(it.text),
+              src:it, seq:seq++});
+  });
+  arr.forEach(function(x){ if(x.at && (first===null||x.at<first)) first=x.at; });
+  if(first===null) first=Date.now();
+  arr.forEach(function(x){ if(!x.at) x.at=first; });   // 시각을 모르는 예전 메모는 맨 앞에
+  return arr;
+}
+function rvTimeline(){
+  var arr=timelineAll();
+  arr.sort(function(a,b){
+    var d=rvSort==='recent' ? (b.at-a.at) : (a.at-b.at);
+    return d || (a.seq-b.seq);
+  });
+  return arr;
+}
+function rvGoNote(it){
+  closeRvWall(); closeDrawer();
+  jumpTo(it.b,it.c,it.v||null);
+  setTimeout(function(){ savePos(); },60);
+}
 function rvGo(it){
   closeRvWall(); closeDrawer();
   jumpTo(it.b,it.c,(it.vs&&it.vs.length)?it.vs[0]:null);
@@ -2491,6 +2583,23 @@ function rvDelete(it){
   Store.save(true);
   renderRvWall();
   toast('말씀을 지웠어요');
+}
+function meDelete(it){
+  if(it.kind==='note'){
+    if(!confirm('이 메모를 지울까요?\n'+(it.ref||'')+'\n되돌릴 수 없어요.')) return;
+    if(store.notes) delete store.notes[it.key];
+    if(store.nat) delete store.nat[it.key];
+    if(store.pic) delete store.pic[it.key];
+    Store.save(true);
+    renderSlots(); renderRvWall();
+    toast('메모를 지웠어요');
+    return;
+  }
+  if(!confirm('이 메시지를 지울까요?\n되돌릴 수 없어요.')) return;
+  store.chat=(store.chat||[]).filter(function(x){ return x.id!==it.id; });
+  Store.save(true);
+  renderRvWall();
+  toast('메시지를 지웠어요');
 }
 function rvParts(it){
   if(it && Array.isArray(it.vs) && it.vs.length && it.b && it.c){
@@ -2504,81 +2613,162 @@ function rvParts(it){
   return [it && it.text ? it.text : ''];
 }
 var rvEditing=false;
+function rvDayHeader(dk,at){
+  var dayRow=el('div','rv-day');
+  dayRow.appendChild(el('span',null,rvDateLabel(at)));
+  var sb=el('button','rv-story','스토리 저장');
+  sb.setAttribute('aria-label',rvDateLabel(at)+' 말씀을 이야기 이미지로 저장');
+  sb.onclick=function(){ saveStory(dk); };
+  dayRow.appendChild(sb);
+  return dayRow;
+}
+function openActRow(act){
+  var wasOpen=!act.hidden;
+  $$('#rvBody .rv-act').forEach(function(x){ x.hidden=true; });
+  act.hidden=wasOpen;
+}
+function rvVerseGroup(it){
+  var grp=el('div','rv-group');
+  var parts=rvParts(it);
+  var act=el('div','rv-act'); act.hidden=true;
+  var more=null;
+  parts.forEach(function(pt,idx){
+    var isLast=(idx===parts.length-1);
+    var row=el('div','rv-msg'+(isLast?' last':''));
+    var bub=el('div','rv-bub'+(isLast?' tail':''),pt);
+    bub.onclick=function(){ if(!rvEditing) rvGo(it); };
+    row.appendChild(bub);
+    if(isLast){
+      var meta=el('div','rv-meta');
+      meta.appendChild(el('span','rv-ref',it.ref||''));
+      if(rvEditing){
+        var db=el('button','rv-delpill','삭제');
+        db.setAttribute('aria-label','이 말씀 삭제');
+        db.onclick=function(){ rvDelete(it); };
+        meta.appendChild(db);
+      } else {
+        more=el('button','rv-more','⋯');
+        more.setAttribute('aria-label','말씀 관리');
+        meta.appendChild(more);
+      }
+      row.appendChild(meta);
+    }
+    grp.appendChild(row);
+  });
+  var go=el('button',null,'구절 열기'); go.onclick=function(){ rvGo(it); };
+  var del=el('button','del','삭제'); del.onclick=function(){ rvDelete(it); };
+  act.appendChild(go); act.appendChild(del);
+  grp.appendChild(act);
+  if(!rvEditing && more){ more.onclick=function(){ openActRow(act); }; }
+  return grp;
+}
+function rvMeGroup(it,hideTime){
+  var grp=el('div','rv-group');
+  var row=el('div','rv-msg me last');
+  var meta=el('div','rv-meta me');
+  if(!hideTime) meta.appendChild(el('span','rv-ref',it.kind==='note' ? (it.ref||'') : rvTimeLabel(it.at)));
+  var act=el('div','rv-act me'); act.hidden=true;
+  var more=null;
+  if(rvEditing){
+    var db=el('button','rv-delpill','삭제');
+    db.setAttribute('aria-label', it.kind==='note'?'이 메모 삭제':'이 메시지 삭제');
+    db.onclick=function(){ meDelete(it); };
+    meta.appendChild(db);
+  } else {
+    more=el('button','rv-more','⋯');
+    more.setAttribute('aria-label', it.kind==='note'?'메모 관리':'메시지 관리');
+    meta.appendChild(more);
+  }
+  row.appendChild(meta);
+  var bub=el('div','rv-bub me tail'+(it.kind==='note'?' note':''), it.text);
+  if(it.kind==='note'){
+    if(it.col!=null && PI_BG[it.col]) bub.style.boxShadow='inset -4px 0 0 0 '+PI_BG[it.col]+',0 1px 1px rgba(0,0,0,.045)';
+    bub.setAttribute('title','구절 열기');
+    bub.onclick=function(){ if(!rvEditing) rvGoNote(it); };
+  }
+  row.appendChild(bub);
+  grp.appendChild(row);
+  if(it.kind==='note'){
+    var go=el('button',null,'구절 열기'); go.onclick=function(){ rvGoNote(it); };
+    act.appendChild(go);
+  }
+  var del=el('button','del','삭제'); del.onclick=function(){ meDelete(it); };
+  act.appendChild(del);
+  grp.appendChild(act);
+  if(!rvEditing && more){ more.onclick=function(){ openActRow(act); }; }
+  return grp;
+}
 function renderRvWall(){
-  var items=rvItems();
-  $('#rvTitle').textContent='기억하는 말씀 · '+items.length;
+  var items=rvTimeline();
+  $('#rvTitle').textContent='기억하는 말씀 · '+((store.rv||[]).length);
   $('#rvSort').textContent=(rvSort==='recent'?'최신 위':'시간순')+' ▾';
   var eb=$('#rvEdit'); if(eb){ eb.textContent=rvEditing?'완료':'편집'; eb.classList.toggle('on',rvEditing); }
   applyRvTheme();
   var body=$('#rvBody'); body.innerHTML='';
   if(!items.length){
     rvEditing=false; if(eb){ eb.textContent='편집'; eb.classList.remove('on'); }
-    body.appendChild(el('div','rv-empty','아직 담은 말씀이 없어요.\n본문 위의 담기 버튼을 누르고\n절을 톡톡 골라 보세요.'));
+    body.appendChild(el('div','rv-empty','아직 담은 말씀이 없어요.\n본문 위의 담기 버튼을 누르고\n절을 톡톡 골라 보세요.\n\n아래에 오늘의 생각을 보내면\n말씀과 나눈 대화처럼 쌓여요.'));
+    syncRvSend();
     return;
   }
-  var lastDay=null;
+  var lastDay=null, lastChatKey=null;
   items.forEach(function(it){
-    var at=it.at||Date.now();
-    var dk=rvDayKey(at);
+    var dk=rvDayKey(it.at);
     if(dk!==lastDay){                    // 같은 날짜는 한 번만 구분선을 둔다
-      lastDay=dk;
-      var dayRow=el('div','rv-day');
-      dayRow.appendChild(el('span',null,rvDateLabel(at)));
-      var sb=el('button','rv-story','스토리 저장');
-      sb.setAttribute('aria-label',rvDateLabel(at)+' 말씀을 이야기 이미지로 저장');
-      sb.onclick=function(){ saveStory(dk); };
-      dayRow.appendChild(sb);
-      body.appendChild(dayRow);
+      lastDay=dk; lastChatKey=null;
+      body.appendChild(rvDayHeader(dk,it.at));
     }
-    var grp=el('div','rv-group');
-    var parts=rvParts(it);
-    var act=el('div','rv-act'); act.hidden=true;
-    var more=null;
-    parts.forEach(function(pt,idx){
-      var isLast=(idx===parts.length-1);
-      var row=el('div','rv-msg'+(isLast?' last':''));
-      var bub=el('div','rv-bub'+(isLast?' tail':''),pt);
-      bub.onclick=function(){ if(!rvEditing) rvGo(it); };
-      row.appendChild(bub);
-      if(isLast){
-        var meta=el('div','rv-meta');
-        meta.appendChild(el('span','rv-ref',it.ref||''));
-        if(rvEditing){
-          var db=el('button','rv-delpill','삭제');
-          db.setAttribute('aria-label','이 말씀 삭제');
-          db.onclick=function(){ rvDelete(it); };
-          meta.appendChild(db);
-        } else {
-          more=el('button','rv-more','⋯');
-          more.setAttribute('aria-label','말씀 관리');
-          meta.appendChild(more);
-        }
-        row.appendChild(meta);
-      }
-      grp.appendChild(row);
-    });
-    body.appendChild(grp);
-    var go=el('button',null,'구절 열기'); go.onclick=function(){ rvGo(it); };
-    var del=el('button','del','삭제'); del.onclick=function(){ rvDelete(it); };
-    act.appendChild(go); act.appendChild(del);
-    body.appendChild(act);
-    if(!rvEditing && more){
-      more.onclick=function(){
-        var wasOpen=!act.hidden;
-        $$('#rvBody .rv-act').forEach(function(x){ x.hidden=true; });
-        act.hidden=wasOpen;
-      };
-    }
+    if(it.kind==='rv'){ lastChatKey=null; body.appendChild(rvVerseGroup(it.src)); return; }
+    var tkey = it.kind==='chat' ? rvTimeLabel(it.at) : null;
+    var hide = (tkey!==null && tkey===lastChatKey);   // 같은 시각이 이어지면 시간은 한 번만
+    lastChatKey = tkey;
+    body.appendChild(rvMeGroup(it,hide));
   });
+  syncRvSend();
 }
-function openRvWall(){ rvEditing=false; renderRvWall(); $('#rvWall').classList.add('show'); setChrome(true); if(rvSort==='old'){ var b=$('#rvBody'); if(b) b.scrollTop=b.scrollHeight; } }
+function scrollRvEnd(){ var b=$('#rvBody'); if(b) b.scrollTop=b.scrollHeight; }
+function syncRvSend(){
+  var i=$('#rvInput'), s=$('#rvSend'); if(!s) return;
+  s.disabled=!i || !String(i.value||'').trim();
+}
+function sendChat(){
+  var inp=$('#rvInput'); if(!inp) return;
+  var t=String(inp.value||'').replace(/^[\s\u200b]+|[\s\u200b]+$/g,'');
+  if(!t){ inp.value=''; syncRvSend(); return; }
+  if(!store.chat) store.chat=[];
+  store.chat.push({id:chatId(), text:t, at:Date.now()});
+  Store.save(true);
+  inp.value='';
+  if(rvSort!=='old') rvSort='old';        // 방금 보낸 말은 늘 맨 아래에
+  renderRvWall();
+  syncRvSend();
+  scrollRvEnd();
+  try{ inp.focus({preventScroll:true}); }catch(e){ inp.focus(); }
+}
+function openRvWall(){
+  rvEditing=false;
+  renderRvWall();
+  $('#rvWall').classList.add('show');
+  setChrome(true);
+  syncRvSend();
+  if(rvSort==='old') scrollRvEnd();
+}
 function closeRvWall(){
   rvEditing=false;
   $('#rvWall').classList.remove('show');
   var p=$('#rvPalette'), b=$('#rvThemeBtn');
   if(p) p.classList.remove('show');
   if(b) b.classList.remove('on');
+  var i=$('#rvInput'); if(i) i.blur();
 }
+$('#rvSend').onclick=function(){ sendChat(); };
+$('#rvInput').addEventListener('input', syncRvSend);
+$('#rvInput').addEventListener('keydown', function(e){
+  if(e.key!=='Enter') return;
+  if(e.isComposing||e.keyCode===229) return;      // 한글 조합 중에는 보내지 않음
+  e.preventDefault();
+  sendChat();
+});
 $('#rvBack').onclick=closeRvWall;
 $('#rvEdit').onclick=function(){ rvEditing=!rvEditing; renderRvWall(); };
 $('#rvSort').onclick=function(){ rvSort=(rvSort==='recent')?'old':'recent'; renderRvWall(); };
@@ -2641,23 +2831,32 @@ function storyWrap(ctx,text,maxW){
 }
 function storyLayout(ctx,items,fs){
   var padX=Math.round(STORY_W*0.075);
-  var refW=Math.round(fs*2.9);            // 오른쪽 아래 약어 자리
+  var refW=Math.round(fs*3.2);            // 말풍선 옆 약어·시간 자리
   var boxPadX=Math.round(fs*0.78), boxPadY=Math.round(fs*0.62);
   var lh=Math.round(fs*1.56), innerGap=Math.round(fs*0.28), gap=Math.round(fs*0.80), radius=Math.round(fs*0.86);
   var maxTextW=Math.round(STORY_W-padX*2-refW-boxPadX*2);
   ctx.font='500 '+fs+'px '+STORY_FONT;
   var y=0, blocks=[], lastGap=0;
   for(var i=0;i<items.length;i++){
-    var parts=rvParts(items[i]);
-    for(var k=0;k<parts.length;k++){
-      var isLast=(k===parts.length-1);
-      var lines=storyWrap(ctx,parts[k],maxTextW);
+    var it=items[i], segs=[];
+    if(it.kind==='rv'){
+      var parts=rvParts(it.src);
+      for(var k=0;k<parts.length;k++){
+        segs.push({text:parts[k], side:'l', label:(k===parts.length-1?(it.src.ref||''):'')});
+      }
+    } else {
+      segs.push({text:it.text, side:'r',
+                 label:(it.kind==='note'?(it.ref||''):rvTimeLabel(it.at))});
+    }
+    for(var s2=0;s2<segs.length;s2++){
+      var sg=segs[s2], isLastSeg=(s2===segs.length-1);
+      var lines=storyWrap(ctx,sg.text,maxTextW);
       var w=0;
       for(var j=0;j<lines.length;j++){ var m=ctx.measureText(lines[j]).width; if(m>w) w=m; }
       w=Math.min(Math.ceil(w)+boxPadX*2,maxTextW+boxPadX*2);
       var h=lines.length*lh+boxPadY*2;
-      blocks.push({lines:lines,w:w,h:h,y:y,ref:isLast?(items[i].ref||''):'',tail:isLast});
-      lastGap=isLast?gap:innerGap;
+      blocks.push({lines:lines,w:w,h:h,y:y,ref:sg.label,tail:isLastSeg,side:sg.side});
+      lastGap=isLastSeg?gap:innerGap;
       y+=h+lastGap;
     }
   }
@@ -2674,14 +2873,17 @@ function storyRoundRect(ctx,x,y,w,h,r){
   ctx.lineTo(x,y+r); ctx.arc(x+r,y+r,r,Math.PI,Math.PI*1.5);
   ctx.closePath();
 }
+function storyTimelineOf(dayKey){
+  return timelineAll().filter(function(x){ return rvDayKey(x.at)===dayKey; })
+    .sort(function(a,b){ return (a.at-b.at)||(a.seq-b.seq); });
+}
 function buildStoryCanvas(dayKey){
-  var items=(store.rv||[]).filter(function(x){ return rvDayKey(x.at||Date.now())===dayKey; })
-                         .sort(function(a,b){ return (a.at||0)-(b.at||0); });
+  var items=storyTimelineOf(dayKey);
   if(!items.length) return null;
   var cv=document.createElement('canvas');
   cv.width=STORY_W; cv.height=STORY_H;
   var ctx=cv.getContext('2d');
-  var sizes=[44,40,36,33,30,27], lay=null;
+  var sizes=[44,40,36,33,30,27,24,21], lay=null;
   for(var s=0;s<sizes.length;s++){
     lay=storyLayout(ctx,items,sizes[s]);
     if(lay.height<=STORY_H-560) break;
@@ -2700,22 +2902,31 @@ function buildStoryCanvas(dayKey){
   ctx.font='500 30px '+STORY_FONT;
   ctx.fillText(label,STORY_W/2,startY);
   var top=startY+dateGap;
-  var ink=inkFor(rvBubble);
+  var inkL=inkFor(rvBubble), meFill=rvMeFill(), inkR=contrastColor(meFill);
   for(var i=0;i<lay.blocks.length;i++){
-    var b=lay.blocks[i], x=lay.padX, y=top+b.y, w=b.w, h=b.h;
+    var b=lay.blocks[i], y=top+b.y, w=b.w, h=b.h;
+    var isMe=(b.side==='r');
+    var x=isMe ? (STORY_W-lay.padX-w) : lay.padX;
+    var fill=isMe?meFill:rvBubble, ink=isMe?inkR:inkL;
     var tw=Math.round(lay.fs*0.46), tw2=Math.round(lay.fs*0.30), th=Math.round(lay.fs*1.0);
-    // 꼬리 (왼쪽 아래) — 마지막 말풍선에만 붙인다
+    // 꼬리 — 말씀은 왼쪽 아래, 내 말은 오른쪽 아래 (묶음의 마지막에만)
     if(b.tail){
-      ctx.fillStyle=rvBubble;
+      ctx.fillStyle=fill;
       ctx.beginPath();
-      ctx.moveTo(x+tw2*1.5,y+h-th*0.92);
-      ctx.quadraticCurveTo(x-tw*0.55,y+h-th*0.55,x-tw,y+h-th*0.16);
-      ctx.quadraticCurveTo(x-tw*0.25,y+h+th*0.04,x+tw2*0.35,y+h+2);
+      if(isMe){
+        ctx.moveTo(x+w-tw2*1.5,y+h-th*0.92);
+        ctx.quadraticCurveTo(x+w+tw*0.55,y+h-th*0.55,x+w+tw,y+h-th*0.16);
+        ctx.quadraticCurveTo(x+w+tw*0.25,y+h+th*0.04,x+w-tw2*0.35,y+h+2);
+      } else {
+        ctx.moveTo(x+tw2*1.5,y+h-th*0.92);
+        ctx.quadraticCurveTo(x-tw*0.55,y+h-th*0.55,x-tw,y+h-th*0.16);
+        ctx.quadraticCurveTo(x-tw*0.25,y+h+th*0.04,x+tw2*0.35,y+h+2);
+      }
       ctx.closePath();
       ctx.fill();
     }
     storyRoundRect(ctx,x,y,w,h,lay.radius);
-    ctx.fillStyle=rvBubble; ctx.fill();
+    ctx.fillStyle=fill; ctx.fill();
     // 본문
     ctx.fillStyle=ink;
     ctx.textAlign='left';
@@ -2723,12 +2934,12 @@ function buildStoryCanvas(dayKey){
     for(var j=0;j<b.lines.length;j++){
       ctx.fillText(b.lines[j],x+lay.boxPadX,y+lay.boxPadY+lay.fs*1.06+j*lay.lh);
     }
-    // 오른쪽 아래 약어
+    // 약어·시간 — 말씀은 오른쪽 아래, 내 말은 왼쪽 아래
     if(b.ref){
       ctx.fillStyle='#8E959E';
       ctx.font='400 '+Math.round(lay.fs*0.66)+'px '+STORY_FONT;
-      ctx.textAlign='left';
-      ctx.fillText(b.ref,x+w+18,y+h-Math.round(lay.fs*0.18));
+      if(isMe){ ctx.textAlign='right'; ctx.fillText(b.ref,x-18,y+h-Math.round(lay.fs*0.18)); }
+      else { ctx.textAlign='left'; ctx.fillText(b.ref,x+w+18,y+h-Math.round(lay.fs*0.18)); }
     }
   }
   return cv;
@@ -2820,6 +3031,7 @@ function renderAnnoList(kind){
   });
 }
 function switchTab(t){
+  if(t==='rv'){ closeDrawer(); openRvWall(); return; }   // 기억 = 말씀과 나의 대화방
   curTab=t;
   $$('.tabbtn').forEach(function(b){ b.classList.toggle('on',b.dataset.tab===t); });
   renderDrawer(t);
@@ -3235,7 +3447,7 @@ $('#srcSel').onchange=function(e){
 };
 $('#qjump').addEventListener('keydown',function(e){ if(e.key==='Enter') quickJump(this.value); });
 $('#lnkExport').onclick=function(){
-  var out={hl:store.hl,pi:store.pi,pic:store.pic,notes:store.notes,rv:store.rv,pos:store.pos,settings:store.settings,exported:new Date().toISOString()};
+  var out={hl:store.hl,pi:store.pi,pic:store.pic,notes:store.notes,nat:store.nat,rv:store.rv,chat:store.chat,pos:store.pos,settings:store.settings,exported:new Date().toISOString()};
   var blob=new Blob([JSON.stringify(out,null,1)],{type:'application/json'});
   var a=el('a'); a.href=URL.createObjectURL(blob); a.download='bible-reader-기록.json';
   document.body.appendChild(a); a.click(); setTimeout(function(){document.body.removeChild(a);},400);
@@ -3252,6 +3464,13 @@ $('#fileData').onchange=function(e){
       if(o.pi) store.pi=Object.assign(store.pi||{},o.pi);
       if(o.pic) store.pic=Object.assign(store.pic||{},o.pic);
       if(o.notes) store.notes=Object.assign(store.notes||{},o.notes);
+      if(o.nat) store.nat=Object.assign(store.nat||{},o.nat);
+      if(Array.isArray(o.chat)){
+        if(!store.chat) store.chat=[];
+        var seenC={};
+        store.chat.forEach(function(x){ seenC[x.id]=1; });
+        o.chat.forEach(function(x){ if(x&&x.text&&!seenC[x.id]){ store.chat.push(x); seenC[x.id]=1; } });
+      }
       if(Array.isArray(o.rv)){
         if(!store.rv) store.rv=[];
         var seen={};
@@ -3261,18 +3480,20 @@ $('#fileData').onchange=function(e){
       Store.save(true);
       if(mode==='scroll') renderScrollBook();
       renderSlots();
+      renderRvWall();
       toast('저장한 기록을 불러왔어요');
     }catch(err){ toast('파일을 읽지 못했어요'); }
   };
   rd.readAsText(f,'utf-8'); e.target.value='';
 };
 $('#lnkClearData').onclick=function(){
-  if(!confirm('저장된 형광펜·메모·기억 구절을 모두 지울까요? 되돌릴 수 없어요.')) return;
-  store.hl={}; store.pi={}; store.pic={}; store.bm=[]; store.notes={}; store.rv=[];
+  if(!confirm('저장된 형광펜·메모·기억 구절·대화를 모두 지울까요? 되돌릴 수 없어요.')) return;
+  store.hl={}; store.pi={}; store.pic={}; store.bm=[]; store.notes={}; store.rv=[]; store.chat=[]; store.nat={};
   penUndoStack=[]; lastStroke=null;
   Store.save(true);
   if(mode==='scroll') renderScrollBook();
   renderSlots();
+  renderRvWall();
   updatePenUI();
   updateChrome();
   if(drawerEl.classList.contains('show')) renderDrawer($$('.tabbtn.on')[0]?$$('.tabbtn.on')[0].dataset.tab:'books');
@@ -3557,6 +3778,8 @@ function commitNote(silent){
   var k=noteKey(noteTarget.b,noteTarget.c,noteTarget.v);
   var t=$('#ntText').value.trim();
   if(t) store.notes[k]=t; else delete store.notes[k];
+  store.nat=store.nat||{};
+  if(t) store.nat[k]=Date.now(); else delete store.nat[k];   // 대화방 타임라인용 시각
   Store.save();
   renderSlots();
   if(silent){ $('#ntSaved').textContent=t?'저장됨':''; }
