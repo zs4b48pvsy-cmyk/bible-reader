@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>curl lab</title>
+<style>
+  html,body{margin:0;height:100%;background:#efeae1;font-family:-apple-system,"Apple SD Gothic Neo",sans-serif;overflow:hidden}
+  #book{position:fixed;inset:0;display:flex;background:#fff}
+  .pg{position:relative;width:50%;height:100%;overflow:hidden;background:#fff}
+  .pg .hd{position:absolute;top:18px;left:0;right:0;text-align:center;font-size:10px;color:#9c9c9c;letter-spacing:.1em}
+  .pg .bd{position:absolute;top:52px;bottom:40px;left:40px;right:40px;font-size:15px;line-height:1.8;color:#191919;text-align:justify}
+  .pg .bd p{margin:0 0 .3em}
+  .pg .bd b{font-size:.6em;color:#9c9c9c;margin-right:.4em;vertical-align:super;font-weight:500}
+  .pg .ft{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:10px;color:#9c9c9c}
+  #hud{position:fixed;left:10px;bottom:10px;z-index:99;background:rgba(0,0,0,.78);color:#fff;padding:7px 10px;border-radius:8px;font:11px/1.4 ui-monospace,monospace}
+  #hud input{width:190px;vertical-align:middle}
+  #hud button{margin-left:4px;font:11px ui-monospace,monospace;background:#333;color:#fff;border:0;border-radius:4px;padding:2px 6px}
+</style>
+</head>
+<body>
+<div id="book"></div>
+<div id="hud">각도 <input id="ang" type="range" min="0" max="180" value="0" step="1"><span id="angv">0</span>°</div>
+<script>
+var LOREM = "태초에 하나님이 천지를 창조하시니라 땅이 혼돈하고 공허하며 흑암이 깊음 위에 있고 하나님의 신은 수면에 운행하시니라 하나님이 가라사대 빛이 있으라 하시매 빛이 있었고 그 빛이 하나님의 보시기에 좋았더라 하나님이 빛과 어두움을 나누사".split(" ");
+
+function makePage(title, pageNo, seed){
+  var d=document.createElement('div'); d.className='pg';
+  var hd=document.createElement('div'); hd.className='hd'; hd.textContent=title; d.appendChild(hd);
+  var bd=document.createElement('div'); bd.className='bd';
+  var s=seed, txt='';
+  for(var i=0;i<220;i++){ s=(s*1103515245+12345)&0x7fffffff; txt+=LOREM[s%LOREM.length]; }
+  var out='', k=0;
+  for(var v=1;v<26;v++){ out+='<p><b>'+v+'</b>'+txt.substr(k,90)+'</p>'; k+=90; }
+  bd.innerHTML=out; d.appendChild(bd);
+  var ft=document.createElement('div'); ft.className='ft'; ft.textContent=pageNo; d.appendChild(ft);
+  return d;
+}
+
+var book=document.getElementById('book');
+var P={ curL:makePage('창세기 1장', 12, 3), curR:makePage('창세기 1장', 13, 7),
+        tgtL:makePage('창세기 2장', 14, 21), tgtR:makePage('창세기 2장', 15, 33) };
+book.appendChild(P.curL); book.appendChild(P.curR);
+
+/* ── paper curl engine ──────────────────────────────────────── */
+var SEGS = 7, ZONE = 0.50, BEND = 42;
+
+function el(tag, cls){ var e=document.createElement(tag); if(cls) e.className=cls; return e; }
+function clonePage(node, W, H){
+  var n=node.cloneNode(true);
+  n.style.position='absolute'; n.style.left='0'; n.style.top='0';
+  n.style.width=W+'px'; n.style.height=H+'px'; n.style.margin='0';
+  return n;
+}
+
+var F = { root:null, leaf:null, cards:[], under:[], cover:null, cast:[], W:0, H:0, forward:true, single:false };
+
+function buildCurl(){
+  var W = Math.round(window.innerWidth*(F.single?1:0.5)), H = window.innerHeight;
+  F.W=W; F.H=H;
+  var root = el('div','flip');
+  root.style.cssText='position:fixed;inset:0;z-index:50;pointer-events:none;overflow:hidden;'+
+    'perspective:'+Math.round(Math.max(1400, W*2.6))+'px;perspective-origin:50% 50%;';
+
+  // under-layer: the incoming spread
+  var ul = el('div','under l'), ur = el('div','under r');
+  var baseCss='position:absolute;top:0;height:100%;overflow:hidden;background:#fff;';
+  ul.style.cssText=baseCss+'left:0;width:'+(F.single?W+'px':'50%');
+  ur.style.cssText=baseCss+'right:0;width:'+(F.single?W+'px':'50%');
+  if(!F.single){ ul.appendChild(clonePage(P.tgtL, W, H)); ur.appendChild(clonePage(P.tgtR, W, H)); }
+  else { ul.style.width='100%'; ur.style.display='none'; ul.appendChild(clonePage(P.tgtL, W, H)); }
+  root.appendChild(ul); root.appendChild(ur);
+
+  // the page that stays put on the far half
+  if(!F.single){
+    var cov = el('div','cover');
+    cov.style.cssText = 'position:absolute;top:0;height:100%;width:50%;overflow:hidden;background:#fff;z-index:2;'+
+      (F.forward?'left:0;':'right:0;');
+    cov.appendChild(clonePage(F.forward?P.curL:P.curR, W, H));
+    root.appendChild(cov); F.cover=cov;
+  }
+
+  // the turning leaf
+  var leaf = el('div','leaf');
+  leaf.style.cssText='position:absolute;top:0;height:100%;width:'+(F.single?'100%':'50%')+';z-index:4;'+
+    'transform-style:preserve-3d;will-change:transform;'+
+    (F.forward ? 'left:'+(F.single?0:W)+'px;transform-origin:0 50%;'
+               : 'left:0;transform-origin:100% 50%;');
+  F.cards=[];
+  var flatW = W*ZONE, sw=(W-flatW)/SEGS;
+  for(var i=0;i<=SEGS;i++){
+    var w = i===0 ? flatW : sw;
+    var card = el('div','card');
+    card.style.cssText='position:absolute;top:0;height:100%;overflow:hidden;'+
+      'backface-visibility:hidden;transform-style:flat;will-change:transform;';
+    card.style.width=(w+1.2)+'px';
+    card.style.transformOrigin = F.forward ? '0 50%' : '100% 50%';
+    // front face: the page being turned
+    var f=el('div','face f');
+    f.style.cssText='position:absolute;inset:0;overflow:hidden;';
+    var fp=clonePage(F.forward?P.curR:P.curL, W, H);
+    f.appendChild(fp);
+    // back face: the page underneath, mirrored about the card's own slice
+    var b=el('div','face b');
+    b.style.cssText='position:absolute;inset:0;overflow:hidden;';
+    var bw=el('div','bw');
+    bw.style.cssText='position:absolute;top:0;left:0;width:'+W+'px;height:100%;transform-origin:50% 50%;';
+    var bp=clonePage(F.forward?P.tgtL:P.tgtR, W, H);
+    bw.appendChild(bp); b.appendChild(bw);
+    var sh=el('div','sh');
+    sh.style.cssText='position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;';
+    card.appendChild(f); card.appendChild(b); card.appendChild(sh);
+    leaf.appendChild(card);
+    F.cards.push({el:card, f:f, b:b, bw:bw, sh:sh, w:w});
+  }
+  root.appendChild(leaf); F.leaf=leaf;
+  document.body.appendChild(root);
+  F.root=root;
+  return F;
+}
+
+function applyCurl(a){
+  if(!F.root) return;
+  var A=a*Math.PI/180;
+  F.leaf.style.transform='rotateY('+(F.forward?-a:a)+'deg)';
+
+  var bend = BEND*Math.pow(Math.sin(Math.PI*Math.min(1,a/180)),0.78);
+  // cumulative tilt per strip, weighted toward the free edge
+  var ws=[], sum=0;
+  for(var i=1;i<=SEGS;i++){ var v=Math.pow(i,1.35); ws.push(v); sum+=v; }
+  var tilts=[], acc=0;
+  for(var i=0;i<SEGS;i++){ acc += bend*ws[i]/sum; tilts.push(acc); }
+
+  var X=0, Z=0;
+  for(var k=0;k<F.cards.length;k++){
+    var c=F.cards[k];
+    var th = k===0 ? 0 : tilts[k-1];
+    var rad=th*Math.PI/180;
+    var w=c.w;
+    var x = F.forward ? X : (F.W - X - w);
+    c.el.style.transform='translate3d('+(F.forward?X:-X)+'px,0,'+Z+'px) rotateY('+(F.forward?-th:th)+'deg)';
+    // place faces
+    c.f.firstChild.style.left=(-x)+'px';
+    c.bw.style.left=(-x)+'px';
+    // world tilt of this strip
+    var wt = (F.forward ? a + th : a + th);   // degrees from flat
+    var cf = Math.cos(wt*Math.PI/180);
+    var front = cf >= 0;
+    c.f.style.visibility = front?'visible':'hidden';
+    c.b.style.visibility = front?'hidden':'visible';
+    var bright = front ? Math.max(0,cf) : Math.max(0,-cf);
+    c.sh.style.opacity = ((1-bright)*0.42).toFixed(3);
+    X += w*Math.cos(rad);
+    Z += w*Math.sin(rad);
+  }
+}
+
+document.getElementById('ang').addEventListener('input', function(e){
+  var a=+e.target.value;
+  document.getElementById('angv').textContent=a;
+  applyCurl(a);
+});
+buildCurl();
+applyCurl(0);
+window.__lab={apply:applyCurl, build:buildCurl, F:F};
+</script>
+</body></html>
