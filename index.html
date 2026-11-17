@@ -305,9 +305,13 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .rv-msg{display:flex;align-items:flex-end;justify-content:flex-start;gap:8px;margin:0 0 11px;}
 .rv-meta{display:flex;align-items:center;gap:5px;flex:0 0 auto;padding-bottom:2px;}
 .rv-ref{font-family:var(--font-ui);font-size:11px;color:#8E959E;letter-spacing:.01em;white-space:nowrap;}
-.rv-more{border:0;background:transparent;color:#CFD4DA;font-family:var(--font-ui);font-size:13px;line-height:1;
-  padding:1px 2px;cursor:pointer;}
-.rv-more:active{color:#8E959E;}
+.rv-more{border:0;background:transparent;color:#9BA2AA;font-family:var(--font-ui);font-size:13px;line-height:1;
+  padding:2px 5px;cursor:pointer;}
+.rv-more:active{color:#5E646B;}
+.rv-delpill{border:1px solid rgba(166,61,51,.28);background:rgba(166,61,51,.07);color:#A63D33;
+  font-family:var(--font-ui);font-size:11px;line-height:1;padding:4px 8px;border-radius:99px;cursor:pointer;}
+.rv-delpill:active{background:rgba(166,61,51,.15);}
+.rv-sort.on{background:#2E2A24;color:#F7F4EC;border-color:#2E2A24;border-radius:99px;padding:3px 9px;}
 .rv-bub{position:relative;max-width:var(--rv-maxw);background:var(--rv-bub);color:var(--rv-ink);
   font-family:var(--font-ui);font-size:14.5px;line-height:1.64;letter-spacing:-.005em;
   padding:11px 15px 12px;border-radius:16px;word-break:keep-all;overflow-wrap:break-word;
@@ -752,6 +756,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <span class="rv-title" id="rvTitle">기억하는 말씀 · 0</span>
       <div class="rv-tools">
         <button class="rv-theme" id="rvThemeBtn" aria-label="색상 고르기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><circle cx="8.7" cy="10.2" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="8.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.4" cy="10.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="10.4" cy="15.2" r="1.15" fill="currentColor" stroke="none"/></svg></button>
+        <button class="rv-sort" id="rvEdit">편집</button>
         <button class="rv-sort" id="rvSort">최신순 ▾</button>
       </div>
     </header>
@@ -2484,13 +2489,16 @@ function rvDelete(it){
   renderRvWall();
   toast('말씀을 지웠어요');
 }
+var rvEditing=false;
 function renderRvWall(){
   var items=rvItems();
   $('#rvTitle').textContent='기억하는 말씀 · '+items.length;
   $('#rvSort').textContent=(rvSort==='recent'?'최신순':'오래된순')+' ▾';
+  var eb=$('#rvEdit'); if(eb){ eb.textContent=rvEditing?'완료':'편집'; eb.classList.toggle('on',rvEditing); }
   applyRvTheme();
   var body=$('#rvBody'); body.innerHTML='';
   if(!items.length){
+    rvEditing=false; if(eb){ eb.textContent='편집'; eb.classList.remove('on'); }
     body.appendChild(el('div','rv-empty','아직 담은 말씀이 없어요.\n본문 위의 담기 버튼을 누르고\n절을 톡톡 골라 보세요.'));
     return;
   }
@@ -2510,12 +2518,19 @@ function renderRvWall(){
     }
     var row=el('div','rv-msg');
     var meta=el('div','rv-meta');
-    var more=el('button','rv-more','⋯');
-    more.setAttribute('aria-label','말씀 관리');
     meta.appendChild(el('span','rv-ref',it.ref||''));
-    meta.appendChild(more);
+    if(rvEditing){
+      var db=el('button','rv-delpill','삭제');
+      db.setAttribute('aria-label','이 말씀 삭제');
+      db.onclick=function(){ rvDelete(it); };
+      meta.appendChild(db);
+    } else {
+      var more=el('button','rv-more','⋯');
+      more.setAttribute('aria-label','말씀 관리');
+      meta.appendChild(more);
+    }
     var bub=el('div','rv-bub',it.text||'');
-    bub.onclick=function(){ rvGo(it); };
+    bub.onclick=function(){ if(!rvEditing) rvGo(it); };
     row.appendChild(bub); row.appendChild(meta);
     body.appendChild(row);
     var act=el('div','rv-act'); act.hidden=true;
@@ -2523,21 +2538,25 @@ function renderRvWall(){
     var del=el('button','del','삭제'); del.onclick=function(){ rvDelete(it); };
     act.appendChild(go); act.appendChild(del);
     body.appendChild(act);
-    more.onclick=function(){
-      var wasOpen=!act.hidden;
-      $$('#rvBody .rv-act').forEach(function(x){ x.hidden=true; });
-      act.hidden=wasOpen;
-    };
+    if(!rvEditing && more){
+      more.onclick=function(){
+        var wasOpen=!act.hidden;
+        $$('#rvBody .rv-act').forEach(function(x){ x.hidden=true; });
+        act.hidden=wasOpen;
+      };
+    }
   });
 }
-function openRvWall(){ renderRvWall(); $('#rvWall').classList.add('show'); setChrome(true); }
+function openRvWall(){ rvEditing=false; renderRvWall(); $('#rvWall').classList.add('show'); setChrome(true); }
 function closeRvWall(){
+  rvEditing=false;
   $('#rvWall').classList.remove('show');
   var p=$('#rvPalette'), b=$('#rvThemeBtn');
   if(p) p.classList.remove('show');
   if(b) b.classList.remove('on');
 }
 $('#rvBack').onclick=closeRvWall;
+$('#rvEdit').onclick=function(){ rvEditing=!rvEditing; renderRvWall(); };
 $('#rvSort').onclick=function(){ rvSort=(rvSort==='recent')?'old':'recent'; renderRvWall(); };
 $('#rvThemeBtn').onclick=function(e){
   e.stopPropagation();
