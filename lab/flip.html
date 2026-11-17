@@ -92,7 +92,7 @@ function buildCurl(){
     var w = i===0 ? flatW : sw;
     var card = el('div','card');
     card.style.cssText='position:absolute;top:0;height:100%;overflow:hidden;'+
-      'backface-visibility:hidden;will-change:transform;';
+      'will-change:transform;';
     card.style.width=(w+1.5)+'px';
     card.style.transformOrigin = F.forward ? '0 50%' : '100% 50%';
     var f=el('div','face f');
