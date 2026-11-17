@@ -60,7 +60,7 @@ function buildCurl(){
   F.W=W; F.H=H;
   var root = el('div','flip');
   root.style.cssText='position:fixed;inset:0;z-index:50;pointer-events:none;overflow:hidden;'+
-    'perspective:'+Math.round(Math.max(2800, W*4.4))+'px;perspective-origin:50% 50%;';
+    'perspective:'+Math.round(Math.max(4200, W*9))+'px;perspective-origin:50% 50%;';
 
   var baseCss='position:absolute;top:0;height:100%;overflow:hidden;background:#fff;';
   var ul = el('div','under l'), ur = el('div','under r');
@@ -101,7 +101,7 @@ function buildCurl(){
     var b=el('div','face b');
     b.style.cssText='position:absolute;inset:0;overflow:hidden;';
     var bw=el('div','bw');
-    bw.style.cssText='position:absolute;top:0;left:0;width:'+W+'px;height:100%;transform-origin:50% 50%;';
+    bw.style.cssText='position:absolute;top:0;left:0;width:'+W+'px;height:100%;transform-origin:50% 50%;transform:scaleX(-1);';
     bw.appendChild(clonePage(F.forward?P.tgtL:P.tgtR, W, H));
     b.appendChild(bw);
     var sh=el('div','sh');
