@@ -2698,10 +2698,6 @@ function buildStoryCanvas(dayKey){
     ctx.textAlign='left';
     ctx.fillText(b.ref,x+w+18,y+h-Math.round(lay.fs*0.18));
   }
-  ctx.textAlign='center';
-  ctx.fillStyle='rgba(0,0,0,.22)';
-  ctx.font='500 24px '+STORY_FONT;
-  ctx.fillText('기억하는 말씀',STORY_W/2,STORY_H-96);
   return cv;
 }
 function downloadBlob(blob,name){
