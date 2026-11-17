@@ -2289,7 +2289,7 @@ function addBookmark(b,c,v){
 /* ── drawer ────────────────────────────────────────────── */
 var curTab='books', chapBook=null;
 function openDrawer(tab){
-  if(tab==='rv'||tab==='memo'){ closeDrawer(); openRvWall(tab); return; }
+  if(tab==='rv'||tab==='note'){ closeDrawer(); openRvWall(tab==='note'?'memo':'rv'); return; }
   curTab=tab||'books';
   $$('.tabbtn').forEach(function(t){ t.classList.toggle('on',t.dataset.tab===curTab); });
   renderDrawer(curTab);
@@ -3040,7 +3040,7 @@ function renderAnnoList(kind){
   });
 }
 function switchTab(t){
-  if(t==='rv'||t==='memo'){ closeDrawer(); openRvWall(t); return; }
+  if(t==='rv'||t==='note'){ closeDrawer(); openRvWall(t==='note'?'memo':'rv'); return; }
   curTab=t;
   $$('.tabbtn').forEach(function(b){ b.classList.toggle('on',b.dataset.tab===t); });
   renderDrawer(t);
