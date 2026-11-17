@@ -2885,12 +2885,16 @@ function openMemoRoom(opts){
   opts=opts||{};
   rvEditing=false;
   if(rvSort!=='old') rvSort='old';        // 방금 남긴 구절이 늘 맨 아래에
-  openDrawer('note');
+  openDrawer('note');                    // 동기: 누른 순간 방과 입력창이 바로 선다
+  function focusInput(){
+    var i=$('#rvInput'); if(!i) return;
+    try{ i.focus({preventScroll:true}); }catch(e){ try{ i.focus(); }catch(e2){} }
+  }
+  if(opts.focus!==false) focusInput();   // 손가락이 닿은 그 순간에 포커스(iOS 키보드가 올라오도록)
   function settle(){
     if(opts.noteKey) scrollMemoNote(opts.noteKey); else scrollRvEnd();
     if(opts.focus===false) return;
-    var i=$('#rvInput'); if(!i) return;
-    try{ i.focus({preventScroll:true}); }catch(e){ try{ i.focus(); }catch(e2){} }
+    focusInput();
   }
   setTimeout(settle,110);
   if(!opts.noteKey) setTimeout(scrollRvEnd,420);
