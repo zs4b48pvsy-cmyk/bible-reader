@@ -184,6 +184,74 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .empty{color:var(--muted);font-family:var(--font-ui);font-size:13px;padding:26px 14px;text-align:center;line-height:1.7;}
 .dback{border:0;background:transparent;color:var(--ink2);font-size:14px;padding:8px 10px;cursor:pointer;}
 
+/* ── 목차 '오늘' 탭 — 미니 달력 · 오늘의 읽기 범위 ─────────── */
+#drawer .tabs{border-bottom:1px solid var(--rule);}
+#planFoot{display:none;flex:0 0 auto;align-items:center;gap:10px;padding:11px 16px calc(11px + var(--safe-b));
+  border-top:1px solid var(--rule);font-family:var(--font-ui);font-size:11.5px;color:var(--muted);letter-spacing:.01em;}
+#planFoot.show{display:flex;}
+#planFoot .pf-txt{flex:1 1 auto;}
+#planFoot button{border:0;background:transparent;padding:2px 0;color:var(--ink2);font-family:var(--font-ui);
+  font-size:11.5px;letter-spacing:.02em;text-decoration:underline;text-underline-offset:3px;cursor:pointer;white-space:nowrap;}
+#planFoot button:active{color:var(--ink);}
+
+.plan{padding:2px 2px 6px;}
+.pl-cal{padding:6px 6px 8px;}
+.pl-calbar{display:flex;align-items:center;justify-content:space-between;padding:0 2px 6px;}
+.pl-calbar .pl-m{font-family:var(--font-ui);font-size:13px;font-weight:600;letter-spacing:.03em;color:var(--ink);}
+.pl-nav{border:0;background:transparent;color:var(--muted);font-family:var(--font-ui);font-size:15px;line-height:1;
+  padding:6px 8px;border-radius:7px;cursor:pointer;}
+.pl-nav:active{background:rgba(0,0,0,.06);}
+.app.night .pl-nav:active{background:rgba(255,255,255,.08);}
+.pl-grid{display:grid;grid-template-columns:repeat(7,1fr);}
+.pl-dow{text-align:center;font-family:var(--font-ui);font-size:9.5px;letter-spacing:.10em;color:var(--muted);padding:0 0 4px;}
+.pl-dow:first-child{color:rgba(166,61,51,.62);}
+.pl-cell{height:32px;}
+.pl-day{position:relative;height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  border:0;background:transparent;padding:0;border-radius:9px;cursor:pointer;
+  font-family:var(--font-ui);font-size:12px;color:var(--ink2);}
+.pl-day .n{width:23px;height:23px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:1;}
+.pl-day.today .n{box-shadow:inset 0 0 0 1px rgba(0,0,0,.22);color:var(--ink);font-weight:600;}
+.app.night .pl-day.today .n{box-shadow:inset 0 0 0 1px rgba(255,255,255,.30);}
+.pl-day.sel .n{background:var(--accent);color:var(--paper);font-weight:600;box-shadow:none;}
+.pl-day .dot{width:4px;height:4px;border-radius:50%;background:transparent;}
+.pl-day.done .dot{background:var(--ink2);opacity:.85;}
+.pl-day.part .dot{box-shadow:inset 0 0 0 1px var(--muted);opacity:.55;}
+.pl-day.sel .dot{opacity:.9;}
+.pl-day:hover .n{box-shadow:inset 0 0 0 1px rgba(0,0,0,.16);}
+.pl-day.sel:hover .n{box-shadow:none;}
+
+.pl-day-panel{padding:0 6px 0;}
+.pl-dh{display:flex;align-items:baseline;gap:8px;padding:0 2px 2px;}
+.pl-date{font-family:var(--font-ui);font-size:14.5px;font-weight:600;letter-spacing:.01em;color:var(--ink);}
+.pl-badge{font-family:var(--font-ui);font-size:9.5px;letter-spacing:.06em;color:var(--ink2);background:rgba(0,0,0,.055);
+  border-radius:10px;padding:3px 8px;transform:translateY(-1px);}
+.app.night .pl-badge{background:rgba(255,255,255,.09);}
+.pl-count{margin-left:auto;font-family:var(--font-ui);font-size:10.5px;letter-spacing:.04em;color:var(--muted);}
+.pl-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:7px 2px;}
+.pl-row+.pl-row{border-top:1px solid var(--rule);}
+.pl-range{flex:1 1 auto;min-width:0;font-family:var(--font-ui);font-size:13px;color:var(--ink);letter-spacing:.01em;
+  word-break:keep-all;overflow-wrap:anywhere;line-height:1.45;}
+.pl-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;flex:0 0 auto;margin-left:auto;}
+.pl-ch{display:inline-flex;align-items:stretch;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:transparent;}
+.pl-ch button{border:0;background:transparent;font-family:var(--font-ui);font-size:12.5px;color:var(--ink2);cursor:pointer;}
+.pl-ch .pl-n{padding:7px 9px;min-width:34px;line-height:1;}
+.pl-ch .pl-k{padding:7px 6px;font-size:10.5px;line-height:1;color:var(--muted);opacity:.5;border-left:1px solid var(--rule);}
+.pl-ch.done{border-color:var(--accent);background:var(--accent);}
+.pl-ch.done .pl-n{color:var(--paper);font-weight:600;}
+.pl-ch.done .pl-k{color:var(--paper);opacity:.92;border-left-color:rgba(255,255,255,.26);}
+
+.pl-near{border-top:1px solid var(--rule);margin:6px 6px 0;}
+.pl-nrow{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;text-align:left;
+  padding:8px 2px;border-bottom:1px solid var(--rule);cursor:pointer;}
+.pl-nrow:active{background:rgba(0,0,0,.03);}
+.pl-nrow .nl{flex:1 1 auto;min-width:0;}
+.pl-nd{font-family:var(--font-ui);font-size:12.5px;color:var(--ink2);letter-spacing:.01em;}
+.pl-nr{font-family:var(--font-ui);font-size:11px;color:var(--muted);margin-top:2px;line-height:1.45;}
+.pl-nrow .nr{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto;}
+.pl-tag{font-family:var(--font-ui);font-size:10px;letter-spacing:.06em;color:var(--muted);}
+.pl-st{font-family:var(--font-ui);font-size:10px;letter-spacing:.04em;color:var(--muted);}
+.pl-st.done{color:var(--ink2);}
+
 /* ── settings sheet ──────────────────────────────────────── */
 #sheet{position:fixed;z-index:50;left:50%;bottom:calc(12px + var(--safe-b));transform:translate(-50%,120%);
   width:min(440px,92vw);background:var(--paper);border-radius:16px;border:1px solid var(--rule);
@@ -224,6 +292,26 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #sheet .srcbox .scsub{display:block;margin-top:3px;font-family:var(--font-ui);font-size:11px;color:var(--muted);line-height:1.55;}
 
 /* ── toast / help ────────────────────────────────────────── */
+/* ── 읽기 기준 시트 ─────────────────────────────────────── */
+#planSheet{position:fixed;z-index:60;left:50%;bottom:calc(12px + var(--safe-b));transform:translate(-50%,130%);
+  width:min(420px,92vw);background:var(--paper);border-radius:16px;border:1px solid var(--rule);
+  box-shadow:0 12px 40px rgba(0,0,0,.14);transition:transform .3s cubic-bezier(.3,.85,.3,1);
+  padding:8px 4px 12px;max-height:86vh;overflow-y:auto;}
+#planSheet.show{transform:translate(-50%,0);}
+#planSheet .shbar{display:flex;align-items:center;gap:4px;padding:6px 8px 2px 18px;
+  font-family:var(--font-ui);font-size:11.5px;letter-spacing:.20em;color:var(--muted);}
+#planSheet .shbar .sp{flex:1 1 auto;}
+#planSheet .row{display:flex;align-items:center;gap:8px;padding:10px 16px;}
+#planSheet .row .lb{font-family:var(--font-ui);font-size:13.5px;color:var(--ink);flex:1 1 auto;}
+#planSheet .pc-date,#planSheet .pc-sel{border:1px solid var(--rule);border-radius:9px;background:transparent;
+  padding:8px 10px;font-family:var(--font-ui);font-size:12.5px;color:var(--ink);max-width:100%;}
+#planSheet .pc-sel{max-width:130px;}
+#planSheet .hint{font-family:var(--font-ui);font-size:11.5px;color:var(--muted);padding:2px 16px 8px;line-height:1.7;}
+#planSheet .pc-act{justify-content:flex-end;gap:8px;padding-top:4px;}
+#planSheet .pc-btn{border:1px solid var(--rule);background:transparent;border-radius:10px;padding:10px 18px;
+  font-family:var(--font-ui);font-size:13px;color:var(--ink2);cursor:pointer;}
+#planSheet .pc-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--paper);font-weight:600;}
+
 #toast{position:fixed;left:50%;bottom:calc(64px + var(--safe-b));transform:translate(-50%,20px);z-index:70;
   background:rgba(24,24,24,.92);color:#FAFAFA;font-family:var(--font-ui);font-size:12.5px;padding:9px 15px;border-radius:10px;
   opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis;}
@@ -387,8 +475,8 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   line-height:2.0;white-space:pre-line;}
 
 /* 목차 드로어 — 기억 탭 */
-.tabs .tabbtn{font-size:12.5px;}
-@media (max-width:400px){ .tabs .tabbtn{font-size:12px;padding:8px 3px;} }
+.tabs .tabbtn{font-size:12.5px;padding:8px 4px;}
+@media (max-width:400px){ .tabs .tabbtn{font-size:11.5px;padding:8px 2px;} }
 
 /* ── cover: faded film print on linen (표지) ─────────────── */
 #cover{position:fixed;inset:0;z-index:45;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
@@ -479,6 +567,15 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   color:var(--cv-ink2);transition:color .16s ease;}
 .cv-resume-btn:hover{color:var(--cv-ink);}
 .cv-resume-btn em{font-style:normal;color:var(--cv-ink3);}
+.cv-today{display:inline-flex;align-items:center;gap:9px;margin-top:14px;border:0;border-radius:999px;
+  background:rgba(255,255,255,.93);padding:12px 20px;cursor:pointer;
+  box-shadow:0 1px 2px rgba(38,37,35,.06),0 8px 22px rgba(38,37,35,.07);
+  font-family:var(--font-ui);font-size:12px;letter-spacing:.03em;color:var(--cv-ink);
+  transition:background .18s ease,box-shadow .18s ease,transform .18s ease;}
+.cv-today:hover{background:#fff;box-shadow:0 1px 2px rgba(38,37,35,.06),0 10px 26px rgba(38,37,35,.09);}
+.cv-today:active{transform:translateY(1px);}
+.cv-today i{width:5px;height:5px;border-radius:50%;background:#5E7F63;flex:0 0 auto;}
+.cv-today span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}@media (max-width:400px){.cv-today{font-size:11px;padding:11px 15px;}}
 
 .cv-results{margin:26px 0 0;border-top:1px solid var(--cv-line);max-height:32vh;overflow-y:auto;
   -webkit-overflow-scrolling:touch;}
@@ -716,9 +813,10 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
     <div class="tabs">
       <button class="tabbtn on" data-tab="books">책</button>
       <button class="tabbtn" data-tab="chap">장</button>
-      <button class="tabbtn" data-tab="hl">형광펜</button>
+      <button class="tabbtn" data-tab="today">오늘</button>
       <button class="tabbtn" data-tab="note">메모</button>
       <button class="tabbtn" data-tab="rv">기억</button>
+      <button class="tabbtn" data-tab="hl">형광펜</button>
     </div>
     <div id="dbody">
       <div id="rvRoom">
@@ -745,6 +843,10 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       </div>
       </div>
       <div id="dlist"></div>
+    </div>
+    <div id="planFoot">
+      <span class="pf-txt" id="planFootTxt">매일 신약 3장 + 잠언 1장</span>
+      <button type="button" id="planCfgBtn">기준 수정</button>
     </div>
   </aside>
 
@@ -815,6 +917,20 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 
   <div id="toast"></div>
 
+  <div id="planSheet" role="dialog" aria-modal="true" aria-label="읽기 기준 수정">
+    <div class="shbar"><span>읽기 기준</span><span class="sp"></span><button type="button" class="btn icon" id="pcClose" aria-label="닫기">✕</button></div>
+    <div class="row"><span class="lb">기준 날짜</span><input type="date" id="pcBase" class="pc-date" aria-label="기준 날짜"></div>
+    <div class="row"><span class="lb">그날 시작</span>
+      <select id="pcBook" class="pc-sel" aria-label="권"></select>
+      <select id="pcChap" class="pc-sel" aria-label="장"></select>
+    </div>
+    <div class="row"><span class="lb">하루 신약 장수</span>
+      <div class="stepper"><button type="button" id="pcNMinus" aria-label="한 장 줄이기">−</button><span class="val" id="pcNVal">3</span><button type="button" id="pcNPlus" aria-label="한 장 늘리기">+</button></div>
+    </div>
+    <div class="hint" id="pcHint">기준 날짜에 이 권·장부터 시작해 하루 정한 장수만큼 신약을 이어 읽고, 잠언은 그날 날짜(일)에 맞춰 1장을 읽어요.</div>
+    <div class="row pc-act"><button type="button" class="pc-btn" id="pcCancel">취소</button><button type="button" class="pc-btn primary" id="pcSave">저장</button></div>
+  </div>
+
   <div id="help">
     <div class="card">
       <h3>이렇게 읽어요</h3>
@@ -825,6 +941,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         <li><b>본문 절</b>을 톡 누르면 화면 맨 위·아래 도구 막대만 조용히 여닫혀요</li>
         <li>상단의 <b>담기</b>를 누르면 절을 톡톡 골라 <b>기억하는 말씀</b>에 담을 수 있어요. 담은 말씀은 <b>☰ 목차 → 기억</b>을 누르면 목차 창 안에서 바로 열리는 대화방에서 봐요</li>
         <li><b>☰ 목차 → 메모</b>를 누르면 형광펜 칠한 구절(왼쪽)과 내 메모·단문(오른쪽)이 한 대화방에 모여요. 맨 아래 입력창에 한 줄씩 보내면 카톡처럼 쌓여요</li>
+        <li><b>☰ 목차 → 오늘</b>에서 달력으로 날짜를 골라 그날 읽을 범위(매일 신약 3장 + 잠언 1장)를 보고, 읽은 장은 <b>✓</b>로 표시해 둘 수 있어요. 표지의 <b>오늘의 읽기</b>를 누르면 오늘 첫 장으로 바로 펼쳐져요</li>
         <li><b>가운데 여백</b>을 누르면 위·아래 도구 막대가 나타나요</li>
         <li>가로로 들면 <b>두 쪽 펼침</b>으로 책장이 넘어가고, 세로로 세우면 <b>한 쪽</b>으로 위아래 스크롤하며 읽어요</li>
         <li><b>⌕ 찾기</b>에서 구절(요3:16)이나 단어(사랑)로 찾고, <b>⌂</b>를 누르면 표지로 돌아와요</li>
@@ -865,6 +982,9 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
           <button class="cv-chip" data-ref="요한복음 3:16">요한복음 3:16</button>
         </div>
         <button class="cv-primary" id="cvGo">성경 펼치기</button>
+        <button class="cv-today" id="cvToday" type="button" aria-label="오늘의 읽기 범위로 펼치기">
+          <i aria-hidden="true"></i><span id="cvTodayTxt">오늘의 읽기</span>
+        </button>
         <div class="cv-resume" id="cvResumeWrap" hidden>
           <button class="cv-resume-btn" id="cvResume"><span id="cvResumeTxt"></span><em>→</em></button>
         </div>
@@ -939,7 +1059,7 @@ function clamp(v,a,b){return v<a?a:(v>b?b:v);}
 
 /* ── storage (localStorage → IndexedDB → memory) ────────── */
 var Store = {
-  data:{settings:{},pos:null,hl:{},pi:{},pic:{},bm:[],notes:{},rv:[],chat:[],nat:{},src:'builtin',help:false},
+  data:{settings:{},pos:null,hl:{},pi:{},pic:{},bm:[],notes:{},rv:[],chat:[],nat:{},src:'builtin',help:false,plan:{},planCfg:null},
   mode:'mem', t:null,
   load:function(){
     var self=this;
@@ -2392,12 +2512,14 @@ function openDrawer(tab){
   }
   drawerEl.classList.add('show'); scrimEl.classList.add('show');
   scrimEl.classList.toggle('soft', tab==='rv'||tab==='note');
+  planFootShow(tab==='today');
   setChrome(true);
   if(tab==='rv'||tab==='note'){ scrollRvEnd(); setTimeout(scrollRvEnd,40); }
 }
-function closeDrawer(){ hideRvPane(); drawerEl.classList.remove('show'); scrimEl.classList.remove('show'); scrimEl.classList.remove('soft'); setChrome(false); }
+function closeDrawer(){ hideRvPane(); closePlanCfg(); drawerEl.classList.remove('show'); scrimEl.classList.remove('show'); scrimEl.classList.remove('soft'); planFootShow(false); setChrome(false); }
 function renderDrawer(tab){
   var body=$('#dlist'); body.innerHTML='';
+  planFootShow(tab==='today');
   if(tab==='rv'||tab==='note'){ showRvPane(tab==='note'?'memo':'rv'); return; }
   hideRvPane();
   if(tab==='books'){
@@ -2451,8 +2573,298 @@ function renderDrawer(tab){
     });
   }
   else if(tab==='hl'){ renderAnnoList(tab); }
+  else if(tab==='today'){ renderToday(); }
   // '기억'·'메모' 탭은 목차 목록 대신 목차 창 안 대화방(#rvPane)을 바로 보여준다
 }
+/* ── 오늘의 읽기 (매일 신약 N장 + 잠언 1장) ─────────────────
+   기준: 2026-11-17 = 로마서 7~9장. 신약 순서로 하루 N장씩 이어 읽고
+   계시록 끝 다음은 마태복음으로 돌아간다. 잠언은 그날 날짜(일) 장.          */
+var PLAN_BASE='2026-11-17', PLAN_BOOK=45, PLAN_CHAP=7, PLAN_N=3;
+var PLAN_DOW=['일','월','화','수','목','금','토'];
+var planSel=null, planYM=null, NT_KINDS=null;
+
+function pad2(n){ return (n<10?'0':'')+n; }
+function dateKey(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function keyDate(k){
+  var p=String(k||'').split('-');
+  if(p.length!==3) return null;
+  var d=new Date(+p[0],+p[1]-1,+p[2]);
+  return isNaN(d.getTime())?null:d;
+}
+function dayGap(a,b){            // b - a (로컬 날짜 기준 일수)
+  if(!a||!b) return 0;
+  var A=Date.UTC(a.getFullYear(),a.getMonth(),a.getDate());
+  var B=Date.UTC(b.getFullYear(),b.getMonth(),b.getDate());
+  return Math.round((B-A)/86400000);
+}
+function dayAdd(d,n){ var x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()+n); return x; }
+function bookName(b){ return BOOKS[b-1]?BOOKS[b-1].n:''; }
+function bookShort(b){ var bk=BOOKS[b-1]; return bk?((bk.a&&bk.a[0])||bk.n):''; }
+
+function planCfg(){
+  var raw=(store.planCfg&&typeof store.planCfg==='object')?store.planCfg:{};
+  var base=/^\d{4}-\d{2}-\d{2}$/.test(raw.base||'')?raw.base:PLAN_BASE;
+  var b=+raw.b, c=+raw.c, n=+raw.n;
+  if(!(b>=45&&b<=66)||!BOOKS[b-1]) b=PLAN_BOOK;
+  if(!(c>=1&&c<=BOOKS[b-1].c)) c=(b===PLAN_BOOK)?PLAN_CHAP:1;
+  if(!(n>=1&&n<=6)) n=PLAN_N;
+  return {base:base,b:b,c:c,n:n};
+}
+function ntList(){
+  if(NT_KINDS) return NT_KINDS;
+  var out=[];
+  for(var b=45;b<=66;b++){
+    var bk=BOOKS[b-1]; if(!bk) continue;
+    for(var c=1;c<=bk.c;c++) out.push({b:b,c:c});
+  }
+  NT_KINDS=out; return out;
+}
+function ntAt(b,c){
+  var L=ntList();
+  for(var i=0;i<L.length;i++) if(L[i].b===b&&L[i].c===c) return i;
+  return -1;
+}
+function planOf(key){
+  var cfg=planCfg(), d=keyDate(key)||new Date();
+  var L=ntList(), i0=ntAt(cfg.b,cfg.c); if(i0<0) i0=0;
+  var gap=dayGap(keyDate(cfg.base),d), nt=[];
+  for(var k=0;k<cfg.n;k++){
+    var idx=i0+gap*cfg.n+k;
+    idx=((idx%L.length)+L.length)%L.length;
+    nt.push(L[idx]);
+  }
+  var bkP=BOOKS[19];                         // 잠언 (20번째 책, 31장)
+  var pc=clamp(d.getDate(),1,bkP?bkP.c:31);
+  return {key:key,cfg:cfg,nt:nt,proverbs:[{b:20,c:pc}]};
+}
+/* 같은 권에서 이어지는 장은 '로마서 10~12장'처럼 묶어 쓴다 */
+function chapRun(items,short){
+  var runs=[];
+  for(var i=0;i<items.length;i++){
+    var it=items[i], last=runs[runs.length-1];
+    if(last&&last.b===it.b&&it.c===last.c1+1) last.c1=it.c;
+    else runs.push({b:it.b,c0:it.c,c1:it.c});
+  }
+  var out=[];
+  for(var j=0;j<runs.length;j++){
+    var r=runs[j], nm=short?bookShort(r.b):bookName(r.b);
+    out.push(nm+' '+(r.c0===r.c1?r.c0+'장':r.c0+'~'+r.c1+'장'));
+  }
+  return out.join(' · ');
+}
+function planChapters(key){ var p=planOf(key); return p.nt.concat(p.proverbs); }
+function planRec(key){
+  var r=store.plan&&store.plan[key];
+  return (r&&typeof r==='object')?r:null;
+}
+function planHas(key,b,c){
+  var r=planRec(key);
+  return !!(r&&r.ch&&r.ch[b+':'+c]);
+}
+function planStat(key){
+  var list=planChapters(key), got=0;
+  for(var i=0;i<list.length;i++) if(planHas(key,list[i].b,list[i].c)) got++;
+  var rec=planRec(key), total=list.length;
+  var all=!!(rec&&rec.all)||(total>0&&got>=total);
+  return {total:total,got:got,all:all,part:got>0&&!all};
+}
+function planSet(key,b,c,on){
+  if(!store.plan) store.plan={};
+  var r=planRec(key);
+  if(!r){ r={ch:{},all:0}; }
+  if(!r.ch||typeof r.ch!=='object') r.ch={};
+  if(on) r.ch[b+':'+c]=1; else delete r.ch[b+':'+c];
+  var list=planChapters(key), got=0;
+  for(var i=0;i<list.length;i++) if(r.ch[list[i].b+':'+list[i].c]) got++;
+  r.all=(list.length>0&&got>=list.length)?1:0;
+  if(Object.keys(r.ch).length) store.plan[key]=r; else delete store.plan[key];
+  Store.save(true);
+}
+function planFootShow(on){ var f=$('#planFoot'); if(f) f.classList.toggle('show',!!on); }
+function planFootText(){
+  var t=$('#planFootTxt'); if(!t) return;
+  var n=planCfg().n;
+  t.textContent='매일 신약 '+n+'장 + 잠언 1장';
+}
+function planJump(b,c){
+  if(!SRC||!SRC.books[b]||!SRC.books[b].chapters[c]){ toast('그 장을 찾지 못했어요'); return; }
+  if(!reading){ closeSearch(); closeNote(); coverEl.classList.add('open'); reading=true; }
+  closeDrawer();
+  jumpTo(b,c,null);
+  updateChrome(); savePos();
+}
+
+/* 미니 월간 달력 */
+function planCalendar(){
+  var box=el('div','pl-cal'), tk=dateKey(new Date());
+  var y=planYM.y, m=planYM.m;
+  var bar=el('div','pl-calbar');
+  var prev=el('button','pl-nav','‹'); prev.type='button'; prev.setAttribute('aria-label','지난 달');
+  var next=el('button','pl-nav','›'); next.type='button'; next.setAttribute('aria-label','다음 달');
+  var title=el('span','pl-m',y+'년 '+(m+1)+'월');
+  prev.onclick=function(){ planYM={y:(m===0?y-1:y),m:(m===0?11:m-1)}; renderToday(); };
+  next.onclick=function(){ planYM={y:(m===11?y+1:y),m:(m===11?0:m+1)}; renderToday(); };
+  bar.appendChild(prev); bar.appendChild(title); bar.appendChild(next);
+  box.appendChild(bar);
+  var dow=el('div','pl-grid'), names=['일','월','화','수','목','금','토'];
+  for(var i=0;i<7;i++) dow.appendChild(el('span','pl-dow',names[i]));
+  box.appendChild(dow);
+  var grid=el('div','pl-grid');
+  var dim=new Date(y,m+1,0).getDate(), lead=new Date(y,m,1).getDay();
+  for(var s=0;s<lead;s++) grid.appendChild(el('span','pl-cell'));
+  for(var d=1;d<=dim;d++){
+    var key=y+'-'+pad2(m+1)+'-'+pad2(d), st=planStat(key), cls='pl-day';
+    if(key===tk) cls+=' today';
+    if(key===planSel) cls+=' sel';
+    if(st.all) cls+=' done'; else if(st.part) cls+=' part';
+    var btn=el('button',cls); btn.type='button'; btn.dataset.key=key;
+    btn.setAttribute('aria-label',(m+1)+'월 '+d+'일 '+PLAN_DOW[new Date(y,m,d).getDay()]+'요일'+
+      (key===tk?' · 오늘':'')+(st.all?' · 다 읽음':(st.part?' · '+st.got+'/'+st.total+' 읽음':'')));
+    if(key===planSel) btn.setAttribute('aria-pressed','true');
+    btn.appendChild(el('span','n',String(d)));
+    btn.appendChild(el('span','dot'));
+    btn.onclick=function(){ planSel=this.dataset.key; planYM={y:+this.dataset.key.slice(0,4),m:+this.dataset.key.slice(5,7)-1}; renderToday(); };
+    grid.appendChild(btn);
+  }
+  box.appendChild(grid);
+  return box;
+}
+
+/* 고른 날의 읽기 범위 */
+function planRow(items){
+  var row=el('div','pl-row');
+  row.appendChild(el('span','pl-range',chapRun(items,false)));
+  var chips=el('div','pl-chips');
+  items.forEach(function(x){
+    var done=planHas(planSel,x.b,x.c);
+    var ch=el('div','pl-ch'+(done?' done':''));
+    ch.dataset.k=x.b+':'+x.c;
+    var nb=el('button','pl-n',String(x.c)); nb.type='button';
+    nb.setAttribute('aria-label',bookName(x.b)+' '+x.c+'장 열기');
+    nb.onclick=function(){ planJump(x.b,x.c); };
+    var kb=el('button','pl-k','✓'); kb.type='button';
+    kb.setAttribute('aria-pressed',done?'true':'false');
+    kb.setAttribute('aria-label',bookName(x.b)+' '+x.c+'장 '+(done?'읽음 해제':'읽음 표시'));
+    kb.onclick=function(){ planSet(planSel,x.b,x.c,!planHas(planSel,x.b,x.c)); renderToday(); };
+    ch.appendChild(nb); ch.appendChild(kb);
+    chips.appendChild(ch);
+  });
+  row.appendChild(chips);
+  return row;
+}
+function planDayPanel(){
+  var key=planSel, d=keyDate(key)||new Date(), tk=dateKey(new Date());
+  var p=planOf(key), st=planStat(key);
+  var box=el('div','pl-day-panel');
+  var head=el('div','pl-dh');
+  head.appendChild(el('span','pl-date',(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+PLAN_DOW[d.getDay()]+')'));
+  if(key===tk) head.appendChild(el('span','pl-badge','오늘'));
+  head.appendChild(el('span','pl-count',st.all?'완료 ✓':(st.got?st.got+'/'+st.total+' 읽음':'')));
+  box.appendChild(head);
+  box.appendChild(planRow(p.nt));
+  box.appendChild(planRow(p.proverbs));
+  return box;
+}
+/* 어제 · 내일 · 모레 — 옅은 선형 목록 */
+function planNearList(){
+  var box=el('div','pl-near'), sd=keyDate(planSel)||new Date(), today=new Date();
+  var offs=[-1,1,2];
+  for(var i=0;i<offs.length;i++){
+    (function(o){
+      var d=dayAdd(sd,o), key=dateKey(d), gap=dayGap(today,d), st=planStat(key), p=planOf(key);
+      var row=el('button','pl-nrow'); row.type='button'; row.dataset.key=key;
+      var left=el('div','nl');
+      left.appendChild(el('div','pl-nd',(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+PLAN_DOW[d.getDay()]+')'));
+      left.appendChild(el('div','pl-nr',chapRun(p.nt,false)+' · '+chapRun(p.proverbs,false)));
+      row.appendChild(left);
+      var right=el('div','nr');
+      var tag=(gap===-2?'그제':gap===-1?'어제':gap===0?'오늘':gap===1?'내일':gap===2?'모레':
+        (gap>2?gap+'일 뒤':(-gap)+'일 전'));
+      right.appendChild(el('span','pl-tag',tag));
+      if(st.all) right.appendChild(el('span','pl-st done','완료'));
+      else if(st.got) right.appendChild(el('span','pl-st',st.got+'/'+st.total));
+      row.appendChild(right);
+      row.onclick=function(){ planSel=key; planYM={y:d.getFullYear(),m:d.getMonth()}; renderToday(); };
+      box.appendChild(row);
+    })(offs[i]);
+  }
+  return box;
+}
+function renderToday(){
+  var list=$('#dlist'); if(!list) return;
+  var body=$('#dbody'), keep=body?body.scrollTop:0;
+  if(!planSel||!keyDate(planSel)) planSel=dateKey(new Date());
+  var sd=keyDate(planSel);
+  if(!planYM) planYM={y:sd.getFullYear(),m:sd.getMonth()};
+  list.innerHTML='';
+  var wrap=el('div','plan');
+  wrap.appendChild(planCalendar());
+  wrap.appendChild(planDayPanel());
+  wrap.appendChild(planNearList());
+  list.appendChild(wrap);
+  planFootShow(true); planFootText();
+  if(body) body.scrollTop=keep;
+}
+/* 표지의 '오늘의 읽기' — 오늘 범위를 짧게 */
+function renderCoverToday(){
+  var t=$('#cvTodayTxt'); if(!t) return;
+  var p=planOf(dateKey(new Date()));
+  t.textContent='오늘의 읽기 · '+chapRun(p.nt,true)+' · '+chapRun(p.proverbs,true);
+  var b=$('#cvToday');
+  if(b) b.setAttribute('aria-label','오늘의 읽기 '+chapRun(p.nt,false)+', '+chapRun(p.proverbs,false)+' 펼치기');
+}
+
+/* 기준 수정 시트 */
+var pcN=PLAN_N;
+function pcFillBooks(sel){
+  var bs=$('#pcBook'); if(!bs) return;
+  bs.innerHTML='';
+  for(var b=45;b<=66;b++){
+    var o=el('option',null,bookName(b)); o.value=String(b); bs.appendChild(o);
+  }
+  if(sel) bs.value=String(sel);
+  pcFillChaps();
+}
+function pcChapCount(b){
+  if(SRC&&SRC.books[b]&&SRC.books[b].chapters) return SRC.books[b].chapters.length-1;
+  return BOOKS[b-1]?BOOKS[b-1].c:1;
+}
+function pcFillChaps(sel){
+  var cs=$('#pcChap'); if(!cs) return;
+  var b=+$('#pcBook').value||PLAN_BOOK, n=pcChapCount(b);
+  cs.innerHTML='';
+  for(var c=1;c<=n;c++){ var o=el('option',null,c+'장'); o.value=String(c); cs.appendChild(o); }
+  if(sel&&sel<=n) cs.value=String(sel);
+}
+function openPlanCfg(){
+  var cfg=planCfg();
+  $('#pcBase').value=cfg.base;
+  pcFillBooks(cfg.b);
+  pcFillChaps(cfg.c);
+  pcN=cfg.n; $('#pcNVal').textContent=String(pcN);
+  $('#planSheet').classList.add('show');
+}
+function closePlanCfg(){ $('#planSheet').classList.remove('show'); }
+$('#planCfgBtn').onclick=openPlanCfg;
+$('#pcClose').onclick=closePlanCfg;
+$('#pcCancel').onclick=closePlanCfg;
+$('#pcBook').onchange=function(){ pcFillChaps(1); };
+$('#pcNMinus').onclick=function(){ pcN=clamp(pcN-1,1,6); $('#pcNVal').textContent=String(pcN); };
+$('#pcNPlus').onclick=function(){ pcN=clamp(pcN+1,1,6); $('#pcNVal').textContent=String(pcN); };
+$('#pcSave').onclick=function(){
+  var base=$('#pcBase').value;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(base)||!keyDate(base)){ toast('기준 날짜를 확인해 주세요'); return; }
+  var b=+$('#pcBook').value, c=+$('#pcChap').value;
+  if(!(b>=45&&b<=66)||!BOOKS[b-1]) b=PLAN_BOOK;
+  if(!(c>=1&&c<=pcChapCount(b))) c=1;
+  store.planCfg={base:base,b:b,c:c,n:clamp(pcN,1,6)};
+  Store.save(true);
+  closePlanCfg();
+  if(!planSel) planSel=dateKey(new Date());
+  renderToday(); renderCoverToday();
+  toast('읽기 기준을 바꿨어요');
+};
+
 /* ── 내 형광펜 모아보기 (목록) ── */
 function hlCollect(){
   var out={};
@@ -3574,12 +3986,12 @@ window.addEventListener('pointercancel',function(){
 document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA') return;
   if(!reading) return;
-  if(mode!=='curl'){ if(e.key==='Escape'){ closeDrawer(); closePop(); sheetEl.classList.remove('show'); $('#help').classList.remove('show'); closeRvWall(); setPickMode(false); setPenMode(false); setChrome(false); } return; }
+  if(mode!=='curl'){ if(e.key==='Escape'){ closeDrawer(); closePop(); sheetEl.classList.remove('show'); closePlanCfg(); $('#help').classList.remove('show'); closeRvWall(); setPickMode(false); setPenMode(false); setChrome(false); } return; }
   if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){ e.preventDefault(); turn(1); }
   else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); turn(-1); }
   else if(e.key==='ArrowDown'){ e.preventDefault(); gotoChapter(1); }
   else if(e.key==='ArrowUp'){ e.preventDefault(); gotoChapter(-1); }
-  else if(e.key==='Escape'){ closeDrawer(); closePop(); sheetEl.classList.remove('show'); $('#help').classList.remove('show'); closeRvWall(); setPickMode(false); setPenMode(false); setChrome(false); }
+  else if(e.key==='Escape'){ closeDrawer(); closePop(); sheetEl.classList.remove('show'); closePlanCfg(); $('#help').classList.remove('show'); closeRvWall(); setPickMode(false); setPenMode(false); setChrome(false); }
 });
 
 // toolbar
@@ -3660,7 +4072,7 @@ $('#srcSel').onchange=function(e){
 };
 $('#qjump').addEventListener('keydown',function(e){ if(e.key==='Enter') quickJump(this.value); });
 $('#lnkExport').onclick=function(){
-  var out={hl:store.hl,pi:store.pi,pic:store.pic,notes:store.notes,nat:store.nat,rv:store.rv,chat:store.chat,pos:store.pos,settings:store.settings,exported:new Date().toISOString()};
+  var out={hl:store.hl,pi:store.pi,pic:store.pic,notes:store.notes,nat:store.nat,rv:store.rv,chat:store.chat,pos:store.pos,settings:store.settings,plan:store.plan||{},planCfg:store.planCfg||planCfg(),exported:new Date().toISOString()};
   var blob=new Blob([JSON.stringify(out,null,1)],{type:'application/json'});
   var a=el('a'); a.href=URL.createObjectURL(blob); a.download='bible-reader-기록.json';
   document.body.appendChild(a); a.click(); setTimeout(function(){document.body.removeChild(a);},400);
@@ -3690,6 +4102,19 @@ $('#fileData').onchange=function(e){
         store.rv.forEach(function(x){ seen[x.id]=1; });
         o.rv.forEach(function(x){ if(x&&!seen[x.id]){ store.rv.push(x); seen[x.id]=1; } });
       }
+      if(o.plan&&typeof o.plan==='object'){          // 날짜별 읽기 기록도 함께 합칩니다
+        if(!store.plan) store.plan={};
+        Object.keys(o.plan).forEach(function(dk){
+          var src=o.plan[dk]; if(!src||typeof src!=='object') return;
+          var dst=store.plan[dk];
+          if(!dst||typeof dst!=='object') dst={ch:{},all:0};
+          if(!dst.ch||typeof dst.ch!=='object') dst.ch={};
+          if(src.ch&&typeof src.ch==='object') Object.keys(src.ch).forEach(function(kk){ if(src.ch[kk]) dst.ch[kk]=1; });
+          if(src.all) dst.all=1;
+          store.plan[dk]=dst;
+        });
+      }
+      if(o.planCfg&&typeof o.planCfg==='object') store.planCfg=o.planCfg;
       Store.save(true);
       if(mode==='scroll') renderScrollBook();
       renderSlots();
@@ -3700,8 +4125,9 @@ $('#fileData').onchange=function(e){
   rd.readAsText(f,'utf-8'); e.target.value='';
 };
 $('#lnkClearData').onclick=function(){
-  if(!confirm('저장된 형광펜·메모·기억 구절·대화를 모두 지울까요? 되돌릴 수 없어요.')) return;
+  if(!confirm('저장된 형광펜·메모·기억 구절·대화·읽기 기록을 모두 지울까요? 되돌릴 수 없어요.')) return;
   store.hl={}; store.pi={}; store.pic={}; store.bm=[]; store.notes={}; store.rv=[]; store.chat=[]; store.nat={};
+  store.plan={}; store.planCfg=null; planSel=null; planYM=null;   // 읽기 기록·기준도 기본값으로
   penUndoStack=[]; lastStroke=null;
   Store.save(true);
   if(mode==='scroll') renderScrollBook();
@@ -3892,6 +4318,7 @@ function fillCover(){
   });
   $('#cvResults').hidden=true; $('#cvResults').innerHTML='';
   $('#cvInput').value='';
+  renderCoverToday();
 }
 function coverFind(){
   var q=$('#cvInput').value.trim(); if(!q) return;
@@ -3931,6 +4358,11 @@ $('#cvInput').addEventListener('keydown',function(e){
 });
 $('#cvResume').onclick=function(){
   if(store.pos) openFromCover(store.pos.b,store.pos.c,store.pos.v);
+};
+$('#cvToday').onclick=function(){
+  var first=planOf(dateKey(new Date())).nt[0];
+  if(!first){ toast('읽을 범위를 찾지 못했어요'); return; }
+  openFromCover(first.b,first.c,null);
 };
 $$('#cvChips [data-ref]').forEach(function(btn){
   btn.onclick=function(){
