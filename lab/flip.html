@@ -29,7 +29,7 @@ function makePage(title, pageNo, seed){
   var hd=document.createElement('div'); hd.className='hd'; hd.textContent=title; d.appendChild(hd);
   var bd=document.createElement('div'); bd.className='bd';
   var out='';
-  for(var v=1;v<14;v++){ out+='<p><b>'+v+'</b>'+SENT[(seed+v)%3].slice(0,42)+'</p>'; }
+  for(var v=1;v<5;v++){ out+='<p><b>'+v+'</b>'+SENT[(seed+v)%3].slice(0,42)+'</p>'; }
   out+='<p>— '+title+' · '+pageNo+'</p>';
   bd.innerHTML=out; d.appendChild(bd);
   var ft=document.createElement('div'); ft.className='ft'; ft.textContent=pageNo; d.appendChild(ft);
