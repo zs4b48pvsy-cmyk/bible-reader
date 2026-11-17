@@ -2975,6 +2975,9 @@ $('#rvScrim').onclick=function(){
 };
 $('#rvInput').addEventListener('input', syncRvSend);
 $('#rvInput').addEventListener('keydown', function(e){
+  if(e.key==='Escape'){ e.preventDefault(); closeRvWall(); }   // 하드웨어 키보드: 입력 중에도 Esc 로 닫기
+});
+$('#rvInput').addEventListener('keydown', function(e){
   if(e.key!=='Enter') return;
   if(e.isComposing||e.keyCode===229) return;      // 한글 조합 중에는 보내지 않음
   e.preventDefault();
