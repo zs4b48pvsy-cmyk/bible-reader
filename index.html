@@ -2543,6 +2543,13 @@ function noteTimelineItems(){
   });
   return out;
 }
+function hlTimelineItems(){
+  return hlCollect().map(function(it){
+    var k=it.b+'|'+it.c+'|'+it.v;
+    return {kind:'hl', id:'h:'+k, key:k, b:it.b, c:it.c, v:it.v,
+            text:verseText(it.b,it.c,it.v)||'', ref:abbr(it.b)+' '+it.c+':'+it.v, at:it.date||0};
+  });
+}
 var rvMode='rv';
 function timelineAll(mode){
   var m=mode||rvMode, arr=[], seq=0, first=null;
@@ -2551,6 +2558,7 @@ function timelineAll(mode){
       arr.push({kind:'rv', id:it.id||('rv'+(seq+1)), at:+it.at||0, src:it, seq:seq++});
     });
   } else {
+    hlTimelineItems().forEach(function(it){ it.seq=seq++; arr.push(it); });
     noteTimelineItems().forEach(function(it){ it.seq=seq++; arr.push(it); });
     (store.chat||[]).forEach(function(it){
       if(!it||!String(it.text||'').trim()) return;
@@ -2587,6 +2595,43 @@ function rvDelete(it){
   Store.save(true);
   renderRvWall();
   toast('말씀을 지웠어요');
+}
+function hlDelete(it){
+  if(!confirm('이 형광펜 구절을 지울까요?\n'+(it.ref||'')+'\n본문 형광펜도 함께 지워져요.')) return;
+  if(store.hl) delete store.hl[it.key];
+  if(store.pi) delete store.pi[it.key];
+  if(store.hlt) delete store.hlt[it.key];
+  Store.save(true);
+  renderSlots(); renderRvWall();
+  toast('형광펜을 지웠어요');
+}
+function rvHlGroup(it){
+  var grp=el('div','rv-group');
+  var row=el('div','rv-msg last');
+  var bub=el('div','rv-bub tail',it.text||'');
+  bub.onclick=function(){ if(!rvEditing) rvGoNote(it); };
+  var meta=el('div','rv-meta');
+  meta.appendChild(el('span','rv-ref',it.ref||''));
+  var more=null;
+  if(rvEditing){
+    var db=el('button','rv-delpill','삭제');
+    db.setAttribute('aria-label','이 형광펜 삭제');
+    db.onclick=function(){ hlDelete(it); };
+    meta.appendChild(db);
+  } else {
+    more=el('button','rv-more','⋯');
+    more.setAttribute('aria-label','형광펜 관리');
+    meta.appendChild(more);
+  }
+  row.appendChild(bub); row.appendChild(meta);
+  grp.appendChild(row);
+  var act=el('div','rv-act'); act.hidden=true;
+  var go=el('button',null,'구절 열기'); go.onclick=function(){ rvGoNote(it); };
+  var del=el('button','del','삭제'); del.onclick=function(){ hlDelete(it); };
+  act.appendChild(go); act.appendChild(del);
+  grp.appendChild(act);
+  if(!rvEditing && more){ more.onclick=function(){ openActRow(act); }; }
+  return grp;
 }
 function meDelete(it){
   if(it.kind==='note'){
@@ -2727,6 +2772,7 @@ function renderRvWall(){
       body.appendChild(rvDayHeader(dk,it.at));
     }
     if(it.kind==='rv'){ lastChatKey=null; body.appendChild(rvVerseGroup(it.src)); return; }
+    if(it.kind==='hl'){ lastChatKey=null; body.appendChild(rvHlGroup(it)); return; }
     var tkey = it.kind==='chat' ? rvTimeLabel(it.at) : null;
     var hide = (tkey!==null && tkey===lastChatKey);   // 같은 시각이 이어지면 시간은 한 번만
     lastChatKey = tkey;
@@ -2853,6 +2899,8 @@ function storyLayout(ctx,items,fs){
       for(var k=0;k<parts.length;k++){
         segs.push({text:parts[k], side:'l', label:(k===parts.length-1?(it.src.ref||''):'')});
       }
+    } else if(it.kind==='hl'){
+      segs.push({text:it.text, side:'l', label:it.ref||''});
     } else {
       segs.push({text:it.text, side:'r',
                  label:(it.kind==='note'?(it.ref||''):rvTimeLabel(it.at))});
