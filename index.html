@@ -302,7 +302,10 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .rv-story{border:1px solid rgba(0,0,0,.10);background:transparent;color:#8A9099;font-family:var(--font-ui);
   font-size:10.5px;line-height:1;padding:5px 9px;border-radius:11px;cursor:pointer;white-space:nowrap;}
 .rv-story:active{background:rgba(0,0,0,.055);color:#555C64;}
-.rv-msg{display:flex;align-items:flex-end;justify-content:flex-start;gap:8px;margin:0 0 11px;}
+.rv-group{margin:0 0 13px;}
+.rv-msg{display:flex;align-items:flex-end;justify-content:flex-start;gap:8px;margin:0 0 5px;}
+.rv-msg.last{margin-bottom:0;}
+.rv-bub:not(.tail)::after{display:none;}
 .rv-meta{display:flex;align-items:center;gap:5px;flex:0 0 auto;padding-bottom:2px;}
 .rv-ref{font-family:var(--font-ui);font-size:11px;color:#8E959E;letter-spacing:.01em;white-space:nowrap;}
 .rv-more{border:0;background:transparent;color:#9BA2AA;font-family:var(--font-ui);font-size:13px;line-height:1;
@@ -2489,6 +2492,17 @@ function rvDelete(it){
   renderRvWall();
   toast('말씀을 지웠어요');
 }
+function rvParts(it){
+  if(it && Array.isArray(it.vs) && it.vs.length && it.b && it.c){
+    var out=[];
+    for(var i=0;i<it.vs.length;i++){
+      var t=verseText(it.b,it.c,it.vs[i]);
+      if(t) out.push(t);
+    }
+    if(out.length) return out;
+  }
+  return [it && it.text ? it.text : ''];
+}
 var rvEditing=false;
 function renderRvWall(){
   var items=rvItems();
@@ -2516,24 +2530,34 @@ function renderRvWall(){
       dayRow.appendChild(sb);
       body.appendChild(dayRow);
     }
-    var row=el('div','rv-msg');
-    var meta=el('div','rv-meta');
-    meta.appendChild(el('span','rv-ref',it.ref||''));
-    if(rvEditing){
-      var db=el('button','rv-delpill','삭제');
-      db.setAttribute('aria-label','이 말씀 삭제');
-      db.onclick=function(){ rvDelete(it); };
-      meta.appendChild(db);
-    } else {
-      var more=el('button','rv-more','⋯');
-      more.setAttribute('aria-label','말씀 관리');
-      meta.appendChild(more);
-    }
-    var bub=el('div','rv-bub',it.text||'');
-    bub.onclick=function(){ if(!rvEditing) rvGo(it); };
-    row.appendChild(bub); row.appendChild(meta);
-    body.appendChild(row);
+    var grp=el('div','rv-group');
+    var parts=rvParts(it);
     var act=el('div','rv-act'); act.hidden=true;
+    var more=null;
+    parts.forEach(function(pt,idx){
+      var isLast=(idx===parts.length-1);
+      var row=el('div','rv-msg'+(isLast?' last':''));
+      var bub=el('div','rv-bub'+(isLast?' tail':''),pt);
+      bub.onclick=function(){ if(!rvEditing) rvGo(it); };
+      row.appendChild(bub);
+      if(isLast){
+        var meta=el('div','rv-meta');
+        meta.appendChild(el('span','rv-ref',it.ref||''));
+        if(rvEditing){
+          var db=el('button','rv-delpill','삭제');
+          db.setAttribute('aria-label','이 말씀 삭제');
+          db.onclick=function(){ rvDelete(it); };
+          meta.appendChild(db);
+        } else {
+          more=el('button','rv-more','⋯');
+          more.setAttribute('aria-label','말씀 관리');
+          meta.appendChild(more);
+        }
+        row.appendChild(meta);
+      }
+      grp.appendChild(row);
+    });
+    body.appendChild(grp);
     var go=el('button',null,'구절 열기'); go.onclick=function(){ rvGo(it); };
     var del=el('button','del','삭제'); del.onclick=function(){ rvDelete(it); };
     act.appendChild(go); act.appendChild(del);
@@ -2619,20 +2643,25 @@ function storyLayout(ctx,items,fs){
   var padX=Math.round(STORY_W*0.075);
   var refW=Math.round(fs*2.9);            // 오른쪽 아래 약어 자리
   var boxPadX=Math.round(fs*0.78), boxPadY=Math.round(fs*0.62);
-  var lh=Math.round(fs*1.56), gap=Math.round(fs*0.80), radius=Math.round(fs*0.86);
+  var lh=Math.round(fs*1.56), innerGap=Math.round(fs*0.28), gap=Math.round(fs*0.80), radius=Math.round(fs*0.86);
   var maxTextW=Math.round(STORY_W-padX*2-refW-boxPadX*2);
   ctx.font='500 '+fs+'px '+STORY_FONT;
-  var y=0, blocks=[];
+  var y=0, blocks=[], lastGap=0;
   for(var i=0;i<items.length;i++){
-    var lines=storyWrap(ctx,items[i].text,maxTextW);
-    var w=0;
-    for(var j=0;j<lines.length;j++){ var m=ctx.measureText(lines[j]).width; if(m>w) w=m; }
-    w=Math.min(Math.ceil(w)+boxPadX*2,maxTextW+boxPadX*2);
-    var h=lines.length*lh+boxPadY*2;
-    blocks.push({lines:lines,w:w,h:h,y:y,ref:items[i].ref||''});
-    y+=h+gap;
+    var parts=rvParts(items[i]);
+    for(var k=0;k<parts.length;k++){
+      var isLast=(k===parts.length-1);
+      var lines=storyWrap(ctx,parts[k],maxTextW);
+      var w=0;
+      for(var j=0;j<lines.length;j++){ var m=ctx.measureText(lines[j]).width; if(m>w) w=m; }
+      w=Math.min(Math.ceil(w)+boxPadX*2,maxTextW+boxPadX*2);
+      var h=lines.length*lh+boxPadY*2;
+      blocks.push({lines:lines,w:w,h:h,y:y,ref:isLast?(items[i].ref||''):'',tail:isLast});
+      lastGap=isLast?gap:innerGap;
+      y+=h+lastGap;
+    }
   }
-  return {blocks:blocks,height:(blocks.length?y-gap:0),padX:padX,refW:refW,boxPadX:boxPadX,boxPadY:boxPadY,
+  return {blocks:blocks,height:(blocks.length?y-lastGap:0),padX:padX,refW:refW,boxPadX:boxPadX,boxPadY:boxPadY,
           lh:lh,radius:radius,fs:fs};
 }
 function storyRoundRect(ctx,x,y,w,h,r){
@@ -2675,14 +2704,16 @@ function buildStoryCanvas(dayKey){
   for(var i=0;i<lay.blocks.length;i++){
     var b=lay.blocks[i], x=lay.padX, y=top+b.y, w=b.w, h=b.h;
     var tw=Math.round(lay.fs*0.46), tw2=Math.round(lay.fs*0.30), th=Math.round(lay.fs*1.0);
-    // 꼬리 (왼쪽 아래) — 화면의 말풍선 꼬리와 같은 결
-    ctx.fillStyle=rvBubble;
-    ctx.beginPath();
-    ctx.moveTo(x+tw2*1.5,y+h-th*0.92);
-    ctx.quadraticCurveTo(x-tw*0.55,y+h-th*0.55,x-tw,y+h-th*0.16);
-    ctx.quadraticCurveTo(x-tw*0.25,y+h+th*0.04,x+tw2*0.35,y+h+2);
-    ctx.closePath();
-    ctx.fill();
+    // 꼬리 (왼쪽 아래) — 마지막 말풍선에만 붙인다
+    if(b.tail){
+      ctx.fillStyle=rvBubble;
+      ctx.beginPath();
+      ctx.moveTo(x+tw2*1.5,y+h-th*0.92);
+      ctx.quadraticCurveTo(x-tw*0.55,y+h-th*0.55,x-tw,y+h-th*0.16);
+      ctx.quadraticCurveTo(x-tw*0.25,y+h+th*0.04,x+tw2*0.35,y+h+2);
+      ctx.closePath();
+      ctx.fill();
+    }
     storyRoundRect(ctx,x,y,w,h,lay.radius);
     ctx.fillStyle=rvBubble; ctx.fill();
     // 본문
@@ -2693,10 +2724,12 @@ function buildStoryCanvas(dayKey){
       ctx.fillText(b.lines[j],x+lay.boxPadX,y+lay.boxPadY+lay.fs*1.06+j*lay.lh);
     }
     // 오른쪽 아래 약어
-    ctx.fillStyle='#8E959E';
-    ctx.font='400 '+Math.round(lay.fs*0.66)+'px '+STORY_FONT;
-    ctx.textAlign='left';
-    ctx.fillText(b.ref,x+w+18,y+h-Math.round(lay.fs*0.18));
+    if(b.ref){
+      ctx.fillStyle='#8E959E';
+      ctx.font='400 '+Math.round(lay.fs*0.66)+'px '+STORY_FONT;
+      ctx.textAlign='left';
+      ctx.fillText(b.ref,x+w+18,y+h-Math.round(lay.fs*0.18));
+    }
   }
   return cv;
 }
