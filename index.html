@@ -267,10 +267,33 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   #picktool .pk-save{padding:9px 13px;}
 }
 
-/* ── 목차 창 안 카톡 방: 메모 · 기억 (전체 화면 덮개 없음) ── */
-#drawer{--rv-bg:#FFFFFF;--rv-bub:#274261;--rv-ink:#FFFFFF;--rv-me:#EEF0F3;--rv-meink:#22262B;--rv-maxw:78%;}
+/* ── 목차 창 / 가운데 모달 공용 카톡 방: 메모 · 기억 ── */
+#rvRoom{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;
+  --rv-bg:#FFFFFF;--rv-bub:#274261;--rv-ink:#FFFFFF;--rv-me:#EEF0F3;--rv-meink:#22262B;--rv-maxw:78%;}
 #dbody.in-rv{display:flex;flex-direction:column;overflow:hidden;padding:0;}
 #dbody.in-rv #dlist{display:none;}
+
+/* ── 화면 가운데 카톡방 모달 (형광펜 '메모 남기기' · 본문 ✎) ── */
+#rvScrim{position:fixed;inset:0;z-index:46;background:rgba(28,25,21,.38);
+  opacity:0;pointer-events:none;transition:opacity .22s ease;}
+#rvScrim.show{opacity:1;pointer-events:auto;}
+#rvModal{position:fixed;z-index:47;left:50%;top:50%;width:min(520px,92vw);height:min(680px,84vh);
+  display:flex;flex-direction:column;overflow:hidden;border-radius:20px;background:#FFFFFF;
+  box-shadow:0 26px 70px rgba(0,0,0,.30),0 2px 10px rgba(0,0,0,.10),0 0 0 1px rgba(0,0,0,.05);
+  transform:translate(-50%,-48%) scale(.975);opacity:0;pointer-events:none;
+  transition:opacity .20s ease,transform .26s cubic-bezier(.3,.85,.3,1);
+  --rv-cb:0px;}
+#rvModal.show{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto;}
+/* 가운데 방이 떠 있을 때 안내 토스트는 화면 위로 — 입력창을 가리지 않게 */
+.rv-center #toast{bottom:auto;top:calc(14px + var(--safe-t));transform:translate(-50%,-16px);}
+.rv-center #toast.show{transform:translate(-50%,0);}
+#rvModal .rv-close{display:inline-block;margin-left:2px;font-size:14px;line-height:1;color:#8E959E;}
+.rv-close{display:none;}
+@media (max-width:430px){
+  #rvModal{width:92vw;height:min(640px,86vh);border-radius:18px;}
+  #rvModal .rv-bar{padding:5px 3px 4px 5px;}
+  #rvModal .rv-title{font-size:12.5px;}
+}
 .rv-pane{display:none;flex:1 1 auto;min-height:0;flex-direction:column;position:relative;
   background:var(--rv-bg,#FFFFFF);transition:background .22s ease;}
 .rv-pane.on{display:flex;}
@@ -341,7 +364,7 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .rv-act.me{justify-content:flex-end;padding-left:0;padding-right:38px;}
 /* 하단 입력창 — 다다다다다닥 (메모 탭일 때만 목차 창 맨 아래에) */
 .rv-compose{flex:0 0 auto;display:none;align-items:flex-end;gap:7px;
-  padding:8px 10px calc(8px + var(--safe-b));
+  padding:8px 10px calc(10px + var(--rv-cb, var(--safe-b)));
   background:var(--rv-bg,#FFFFFF);border-top:1px solid rgba(0,0,0,.07);
   transition:background .22s ease;}
 .rv-input{flex:1 1 auto;min-width:0;height:40px;box-sizing:border-box;
@@ -698,6 +721,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <button class="tabbtn" data-tab="rv">기억</button>
     </div>
     <div id="dbody">
+      <div id="rvRoom">
       <section class="rv-pane" id="rvPane" aria-label="내 메모 · 기억하는 말씀 대화방">
         <header class="rv-bar">
           <span class="rv-title" id="rvTitle">기억하는 말씀 · 0</span>
@@ -705,6 +729,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
             <button class="rv-theme" id="rvThemeBtn" aria-label="색상 고르기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><circle cx="8.7" cy="10.2" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="8.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.4" cy="10.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="10.4" cy="15.2" r="1.15" fill="currentColor" stroke="none"/></svg></button>
             <button class="rv-sort" id="rvEdit">편집</button>
             <button class="rv-sort" id="rvSort">시간순 ▾</button>
+            <button class="rv-sort rv-close" id="rvClose" aria-label="닫기">✕</button>
           </div>
         </header>
         <div class="rv-palette" id="rvPalette">
@@ -713,14 +738,19 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         </div>
         <div class="rv-body" id="rvBody"></div>
       </section>
+      <div class="rv-compose" id="rvCompose">
+        <input class="rv-input" id="rvInput" type="text" autocomplete="off" enterkeyhint="send"
+               maxlength="500" placeholder="오늘의 생각을 보내 보세요" aria-label="내 메모 입력">
+        <button class="rv-send" id="rvSend" disabled>전송</button>
+      </div>
+      </div>
       <div id="dlist"></div>
     </div>
-    <div class="rv-compose" id="rvCompose">
-      <input class="rv-input" id="rvInput" type="text" autocomplete="off" enterkeyhint="send"
-             maxlength="500" placeholder="오늘의 생각을 보내 보세요" aria-label="내 메모 입력">
-      <button class="rv-send" id="rvSend" disabled>전송</button>
-    </div>
   </aside>
+
+  <!-- 형광펜 '메모 남기기' → 화면 가운데 카톡방 모달 (#rvRoom 이 이 안으로 옮겨 온다) -->
+  <div id="rvScrim"></div>
+  <div id="rvModal" role="dialog" aria-modal="true" aria-label="내 메모 대화방"></div>
 
   <div id="pentool" role="toolbar" aria-label="형광펜 도구">
     <button class="pt-sw y" data-pc="y" aria-label="버터"></button>
@@ -2297,15 +2327,46 @@ function addBookmark(b,c,v){
 }
 
 /* ── drawer ────────────────────────────────────────────── */
-var curTab='books', chapBook=null;
-function showRvPane(mode){
+var curTab='books', chapBook=null, rvHost='drawer';
+/* 방(#rvRoom)은 필요할 때 목차 창 안과 가운데 모달 사이를 옮겨 다닌다 (하나의 DOM · 하나의 입력창) */
+function rvMount(host){
+  host=(host==='modal')?'modal':'drawer';
+  var room=$('#rvRoom'), target=(host==='modal')?$('#rvModal'):$('#dbody');
+  if(room&&target&&room.parentNode!==target) target.appendChild(room);
+  rvHost=host;
+  var m=$('#rvModal'), s=$('#rvScrim');
+  if(host==='modal'){
+    if(m){ m.classList.add('show'); m.setAttribute('aria-hidden','false'); }
+    if(s) s.classList.add('show');
+    app.classList.add('rv-center');
+  } else {
+    if(m){ m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
+    if(s) s.classList.remove('show');
+    app.classList.remove('rv-center');
+  }
+}
+/* 아이폰 키보드가 올라오면 보이는 화면 높이에 맞춰 모달을 다시 앉힌다 */
+function rvFitViewport(){
+  var m=$('#rvModal'), vv=window.visualViewport;
+  if(!m||!m.classList.contains('show')) return;
+  if(!vv||vv.height>=window.innerHeight-80){ m.style.height=''; m.style.top=''; return; }
+  m.style.height=Math.max(300,Math.min(680,Math.round(vv.height-24)))+'px';
+  m.style.top=Math.round(vv.offsetTop+vv.height/2)+'px';
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',rvFitViewport);
+  window.visualViewport.addEventListener('scroll',rvFitViewport);
+}
+function showRvPane(mode,host){
   rvMode=(mode==='memo')?'memo':'rv';
   rvEditing=false;
   var pane=$('#rvPane'), body=$('#dbody');
+  rvMount(host==='modal'?'modal':'drawer');
   if(body) body.classList.add('in-rv');
   if(pane) pane.classList.add('on');
   renderRvWall();
   syncRvSend();
+  rvFitViewport();
 }
 function hideRvPane(){
   var pane=$('#rvPane'), body=$('#dbody');
@@ -2316,6 +2377,8 @@ function hideRvPane(){
   if(b) b.classList.remove('on');
   if(c) c.style.display='none';
   if(i) i.blur();
+  rvMount('drawer');            // 모달은 닫고, 방은 목차 창 자리로 돌려 둔다
+  var m=$('#rvModal'); if(m){ m.style.height=''; m.style.top=''; }
 }
 function openDrawer(tab){
   tab=tab||'books';
@@ -2524,13 +2587,14 @@ function rvMeFill(){
   return c;
 }
 function applyRvTheme(){
-  var w=$('#drawer'); if(!w) return;
+  var w=$('#rvRoom'); if(!w) return;
   var me=rvMeFill();
   w.style.setProperty('--rv-bg',rvBg);
   w.style.setProperty('--rv-bub',rvBubble);
   w.style.setProperty('--rv-ink',inkFor(rvBubble));
   w.style.setProperty('--rv-me',me);
   w.style.setProperty('--rv-meink',contrastColor(me));
+  var m=$('#rvModal'); if(m) m.style.background=rvBg;
   $$('#pvBg .pv-dot').forEach(function(d){ d.classList.toggle('on',d.dataset.v===rvBg); });
   $$('#pvBub .pv-dot').forEach(function(d){ d.classList.toggle('on',d.dataset.v===rvBubble); });
 }
@@ -2885,7 +2949,11 @@ function openMemoRoom(opts){
   opts=opts||{};
   rvEditing=false;
   if(rvSort!=='old') rvSort='old';        // 방금 남긴 구절이 늘 맨 아래에
-  openDrawer('note');                    // 동기: 누른 순간 방과 입력창이 바로 선다
+  // 목차 창이 열려 있으면 닫고, 방을 화면 가운데 모달로 옮긴다
+  drawerEl.classList.remove('show');
+  scrimEl.classList.remove('show'); scrimEl.classList.remove('soft');
+  setChrome(true);
+  showRvPane('memo','modal');            // 동기: 누른 순간 방과 입력창이 바로 선다
   function focusInput(){
     var i=$('#rvInput'); if(!i) return;
     try{ i.focus({preventScroll:true}); }catch(e){ try{ i.focus(); }catch(e2){} }
@@ -2900,6 +2968,11 @@ function openMemoRoom(opts){
   if(!opts.noteKey) setTimeout(scrollRvEnd,420);
 }
 $('#rvSend').onclick=function(){ sendChat(); };
+$('#rvClose').onclick=function(){ closeRvWall(); };
+$('#rvScrim').onclick=function(){
+  if(Date.now()-(window.__rvPalClosed||0)<400) return;   // 팔레트만 닫힌 탭이면 방은 그대로
+  closeRvWall();
+};
 $('#rvInput').addEventListener('input', syncRvSend);
 $('#rvInput').addEventListener('keydown', function(e){
   if(e.key!=='Enter') return;
@@ -2939,6 +3012,7 @@ document.addEventListener('pointerdown',function(e){
   if(p.contains(e.target)||e.target.closest('#rvThemeBtn')) return;
   p.classList.remove('show');
   var b=$('#rvThemeBtn'); if(b) b.classList.remove('on');
+  window.__rvPalClosed=Date.now();     // 이 탭은 팔레트만 닫는다 (바로 뒤따르는 backdrop 탭이 방을 닫지 않게)
 },true);
 $('#pkCancel').onclick=function(){ setPickMode(false); };
 $('#pkSave').onclick=savePick;
