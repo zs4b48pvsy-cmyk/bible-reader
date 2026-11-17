@@ -2906,14 +2906,7 @@ function renderResults(box,res,q){
   for(var i=0;i<res.list.length;i++) box.appendChild(resRow(res.list[i],q));
 }
 
-function focusVerse(c,v){
-  if(v==null) return;
-  var sel='.v[data-c="'+c+'"][data-v="'+v+'"]';
-  var nodes=(mode==='scroll')?$$('#scroll '+sel):$$('.spread '+sel);
-  if(!nodes.length) return;
-  nodes.forEach(function(n){ n.classList.add('focus'); });
-  setTimeout(function(){ nodes.forEach(function(n){ n.classList.remove('focus'); }); },2700);
-}
+function focusVerse(){ /* 검색·이동 시 노란 반짝임 없이 조용히 이동 */ }
 
 function closeCover(){ coverEl.classList.add('open'); reading=true; }
 function openResult(b,c,v){
