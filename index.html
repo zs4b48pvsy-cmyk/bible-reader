@@ -1260,17 +1260,20 @@ function buildFlip(dir){
 
 /* ── the three effects ─────────────────────────────────── */
 function slideTurn(dir){
-  var st=buildFlip(dir); if(!st) return false;
-  var tr=$('#track'); if(!tr){ fxClose(false); return false; }
-  st.el.style.display='none';                    // no sheet: slide the spread instead
+  var target=curSpread+dir;
+  if(target<0||target>=totalSpreads()) return false;
+  var tr=$('#track'); if(!tr) return false;
   flipping=true;
   var t0=performance.now(), ms=FLIP_SLIDE_MS;
   function frame(t){
     var p=Math.min(1,(t-t0)/ms), e=1-Math.pow(1-p,3);
     tr.style.transform='translate3d('+(-dir*100*e).toFixed(2)+'%,0,0)';
-    tr.style.transition='none';
     if(p<1) requestAnimationFrame(frame);
-    else { tr.style.transform=''; fxClose(true); }
+    else{
+      tr.style.transform='';
+      curSpread=target; S.forced=null; renderSlots(); updateChrome(); savePos();
+      flipping=false;
+    }
   }
   requestAnimationFrame(frame);
   return true;
@@ -1297,6 +1300,7 @@ window.__flipPreview=function(a,dir){
   fxApply(a); return 'angle '+a;
 };
 window.__flipClear=function(){ fxClose(false); return 'cleared'; };
+window.__turn=function(d){ turn(d||1); return 'turn'; };
 
 function goSpread(idx, animate){
   idx=clamp(idx,0,totalSpreads()-1);
