@@ -5518,7 +5518,7 @@ function boot(){
   mode=wantMode();
   app.classList.toggle('scroll-mode',mode==='scroll');
   setChrome(false);
-  var hideT=setTimeout(function(){ if(!drawerEl.classList.contains('show')) setChrome(true); },6000);
+  var hideT=setTimeout(function(){ if(!drawerEl.classList.contains('show')&&!selectMode) setChrome(true); },6000);
   app.addEventListener('pointerdown',function(){ clearTimeout(hideT); },{once:true});
   if(!usingDefault && st.v!==3) st={fs:st.fs};
   S.fs=st.fs||15;
