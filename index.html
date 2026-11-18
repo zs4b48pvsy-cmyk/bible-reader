@@ -19,7 +19,7 @@
   --paper:#FFFFFF; --ink:#191919; --ink2:#3F3F3F; --muted:#9C9C9C;
   --accent:#191919; --rule:rgba(0,0,0,.08); --ui:rgba(255,255,255,.90);
   --hl-y:rgba(255,212,128,.55); --hl-g:rgba(166,224,180,.50); --hl-p:rgba(255,167,159,.42); --hl-s:rgba(178,210,236,.48);
-  --fs:19px; --lh:1.9; --fw:400; --ls:0; --gap:28px; --pad-in:34px; --pad-out:46px; --colw:400px; --colh:600px;
+  --fs:15px; --lh:1.9; --fw:400; --ls:0; --gap:28px; --pad-in:34px; --pad-out:46px; --colw:400px; --colh:600px;
   --font-serif:"AppleMyungjo","Nanum Myeongjo","Noto Serif KR","Noto Serif CJK KR","Batang","바탕","Times New Roman",serif;
   --font-sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
   --font-body:var(--font-sans); --font-ui:var(--font-sans);
@@ -912,7 +912,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
   <div id="sheet">
     <div class="shbar"><span>설정</span><span class="sp"></span><button class="btn" id="resetSheet">기본값</button><button class="btn icon" id="closeSheet" aria-label="닫기">✕</button></div>
     <div class="row"><span class="lb">글자 크기</span>
-      <div class="stepper"><button id="fsMinus">A−</button><span class="val" id="fsVal">19</span><button id="fsPlus">A+</button></div>
+      <div class="stepper"><button id="fsMinus">A−</button><span class="val" id="fsVal">15</span><button id="fsPlus">A+</button></div>
     </div>
     <div class="row"><span class="lb">줄 간격</span>
       <div class="seg" id="segLh"><button data-v="1.65">좁게</button><button data-v="1.9">보통</button><button data-v="2.15">넓게</button></div>
@@ -1198,7 +1198,7 @@ function buildSourceIndex(){
 }
 
 /* ── state ─────────────────────────────────────────────── */
-var S={fs:19,cols:1,font:'gothic',theme:'white',lh:1.9,pad:'normal',book:1,chapter:1,curCols:1,flip:'curl'};
+var S={fs:15,cols:1,font:'gothic',theme:'white',lh:1.9,pad:'normal',book:1,chapter:1,curCols:1,flip:'curl'};
 var THEMES={
   white:{name:'화이트',paper:'#FFFFFF',ink:'#191919',ink2:'#3F3F3F',muted:'#9C9C9C',accent:'#191919',rule:'rgba(0,0,0,.08)',ui:'rgba(255,255,255,.90)',hly:'rgba(255,212,128,.55)',hlg:'rgba(166,224,180,.50)',hlp:'rgba(255,167,159,.42)',hls:'rgba(178,210,236,.48)'},
   ivory:{name:'아이보리',paper:'#FAF6EE',ink:'#2C2824',ink2:'#4A443B',muted:'#9B9182',accent:'#2C2824',rule:'rgba(70,58,40,.13)',ui:'rgba(250,246,238,.90)',hly:'rgba(246,200,110,.50)',hlg:'rgba(158,214,172,.45)',hlp:'rgba(250,160,150,.40)',hls:'rgba(170,202,228,.45)'},
@@ -4044,7 +4044,7 @@ function applySettings(){
 }
 
 /* ── 내 기본값 (Aa 설정 저장·복원) ─────────────────────── */
-var DEFAULT_SETTINGS={fs:19,lh:1.9,pad:'normal',cols:1,font:'gothic',theme:'white'};
+var DEFAULT_SETTINGS={fs:15,lh:1.9,pad:'normal',cols:1,font:'gothic',theme:'white'};
 function hasSettings(o){
   if(!o||typeof o!=='object') return false;
   return !!(o.fs||o.font||o.theme||o.cols||o.lh||o.pad);
@@ -4849,7 +4849,7 @@ function boot(){
   var hideT=setTimeout(function(){ if(!drawerEl.classList.contains('show')) setChrome(true); },6000);
   app.addEventListener('pointerdown',function(){ clearTimeout(hideT); },{once:true});
   if(!usingDefault && st.v!==3) st={fs:st.fs};
-  S.fs=st.fs||19;
+  S.fs=st.fs||15;
   S.cols=st.cols===2?2:1;
   S.font=FONTS[st.font]?st.font:'gothic';
   S.theme=THEMES[st.theme]?st.theme:'white';
