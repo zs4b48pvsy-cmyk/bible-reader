@@ -24,6 +24,7 @@
   --font-sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
   --font-body:var(--font-sans); --font-ui:var(--font-sans);
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --tool-pad:0px;   /* 형광펜·담기·복사 바가 떠 있을 때 본문 아래로 비워 두는 높이 (JS 가 잰다) */
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--paper);overscroll-behavior:none;}
@@ -43,7 +44,7 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .page .hd{position:absolute;top:calc(var(--safe-t) + 21px);left:0;right:0;height:14px;text-align:center;
   font-family:var(--font-ui);font-size:10px;letter-spacing:.10em;color:var(--muted);font-weight:500;}
 .page .hd i{font-style:normal;}
-.page .cols{position:absolute;top:calc(var(--safe-t) + 54px);bottom:calc(var(--safe-b) + 40px);
+.page .cols{position:absolute;top:calc(var(--safe-t) + 54px);bottom:calc(var(--safe-b) + 40px + var(--tool-pad));
   display:flex;gap:var(--gap);justify-content:center;}
 .page.left .cols{left:var(--pad-out);right:var(--pad-in);}
 .page.right .cols{left:var(--pad-in);right:var(--pad-out);}
@@ -86,7 +87,7 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .app.scroll-mode #zones{display:none;}
 .app.scroll-mode #fx{display:none;}
 .sc-inner{position:relative;max-width:min(660px,100%);margin:0 auto;
-  padding:calc(var(--safe-t) + 74px) var(--sc-pad,26px) calc(var(--safe-b) + 86px);}
+  padding:calc(var(--safe-t) + 74px) var(--sc-pad,26px) calc(var(--safe-b) + 86px + var(--tool-pad));}
 .sc-ch{position:static;}
 .sc-inner .ch{margin:36px 0 14px;}
 .sc-inner .sc-ch:first-child .ch{margin-top:0;}
@@ -1235,7 +1236,7 @@ function metrics(){
   var maxCol = W>=768 ? 620 : 100000;
   var colW = Math.min(Math.floor((innerW - (cols-1)*gap)/cols), maxCol);
   // content area: top = safeT+54, bottom = safeB+40 (see css .cols)
-  var colH = Math.floor(H - (safeTop()+54) - (safeBot()+40) - 2);
+  var colH = Math.floor(H - (safeTop()+54) - (safeBot()+40+toolPadPx) - 2);
 
   var st=document.documentElement.style;
   app.classList.toggle('single-page', pps===1);
@@ -1250,6 +1251,63 @@ function metrics(){
 }
 function safeTop(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-t'))||0; }
 function safeBot(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-b'))||0; }
+
+/* ── 하단 플로팅 바(형광펜·담기·복사)가 본문 마지막 줄을 가리지 않게 ──
+   바가 떠 있는 동안 그 높이만큼 본문 아래를 비워 두고(--tool-pad) 다시 쪽을 나눈다.
+   끄면 0 으로 돌아가 원래 여백·쪽나눔으로 돌아온다. */
+var toolPadPx=0, toolPadBusy=0, TOOL_CLEAR=12;
+function activeToolBar(){
+  if(penMode) return $('#pentool');
+  if(pickMode) return $('#picktool');
+  if(copyMode) return $('#copytool');
+  return null;
+}
+/* 바가 차지하는 만큼(본문 아래 기준선 ~ 바 위 끝 + 숨 쉬는 틈) — transform 에 흔들리지 않게 offsetHeight 로 잰다 */
+function toolPadNeed(){
+  var el=activeToolBar();
+  if(!el) return 0;
+  var h=el.offsetHeight||0;
+  if(!h) return 0;
+  var b=parseFloat(getComputedStyle(el).bottom);
+  if(isNaN(b)) b=0;
+  var top=window.innerHeight-b-h;              // 바의 위 끝 (화면 기준)
+  var contentBottom=window.innerHeight-safeBot()-40;   // 지금 본문이 쓸 수 있는 아래 끝
+  var need=Math.ceil(contentBottom-(top-TOOL_CLEAR));
+  return need>0?need:0;
+}
+/* 잰 값을 --tool-pad 에 반영. 값이 바뀌었으면 true */
+function syncToolPad(){
+  var need=toolPadNeed();
+  if(need===toolPadPx) return false;
+  toolPadPx=need;
+  document.documentElement.style.setProperty('--tool-pad',need+'px');
+  return true;
+}
+/* 모드가 바뀐 뒤: 여백을 다시 재고(필요하면) 보던 절을 그대로 두고 쪽을 다시 나눈다
+   바를 켠 순간의 자리(padEntryAnchor)를 기억해 두었다가, 그 사이 쪽을 넘기지 않았다면
+   끌 때 바로 그 자리로 되돌려 놓는다 (쪽나눔이 달라져도 자리가 튀지 않게) */
+var padEntryAnchor=null, padLiveAnchor=null;
+function sameAnchor(a,b){
+  if(!a||!b) return false;
+  return a.c===b.c && (a.v||null)===(b.v||null);
+}
+function refreshToolPad(anchor){
+  if(toolPadBusy) return;
+  var before=toolPadPx;
+  var changed=syncToolPad();
+  if(mode==='scroll') return;     // 스크롤 읽기는 아래 여백만 늘면 된다 (쪽나눔 없음)
+  if(toolPadPx>0 && before===0){          // 바가 막 떴다
+    padEntryAnchor=currentAnchor();
+    layout(padEntryAnchor);
+    padLiveAnchor=currentAnchor();
+  } else if(toolPadPx===0 && before>0){   // 바를 껐다
+    var cur=currentAnchor();
+    layout(sameAnchor(cur,padLiveAnchor)?padEntryAnchor:cur);
+    padEntryAnchor=padLiveAnchor=null;
+  } else if(changed){                     // 바 높이가 달라졌다 (좁은 화면에서 줄이 바뀔 때)
+    layout(anchor||null);
+  }
+}
 
 /* ── blocks ────────────────────────────────────────────── */
 function buildBlocks(bookIdx){
@@ -1572,6 +1630,7 @@ function checkMode(){
   app.classList.toggle('scroll-mode',mode==='scroll');
   closePop();
   var root=scRoot(); if(root&&mode!=='scroll') root.scrollTop=0;
+  syncToolPad();
   layout(a);
   return true;
 }
@@ -1649,6 +1708,7 @@ function renderSlots(){
     }
   }
   if(pickMode) applyPick();
+  if(copyMode) applyCopy();
 }
 
 /* ── page turn: a sheet of paper that bends, with a choice of effect ──
@@ -1991,12 +2051,12 @@ function updateChrome(){
   $('#btnNextCh').textContent=nc+' ›';
   $('#btnPrevCh').style.visibility=pc?'visible':'hidden';
   $('#btnNextCh').style.visibility=nc?'visible':'hidden';
-  if(penMode) $('#locbtn').innerHTML='형광펜 끄는 중<small>'+SRC.name+'</small>';
+  if(penMode) $('#locbtn').innerHTML='형광펜 긋는 중<small>'+SRC.name+'</small>';
   else if(copyMode) $('#locbtn').innerHTML='복사할 절을 고르는 중<small>'+SRC.name+'</small>';
   else if(pickMode) $('#locbtn').innerHTML='담을 절을 고르는 중<small>'+SRC.name+'</small>';
 }
 function applyLocMode(){
-  if(penMode) $('#locbtn').innerHTML='형광펜 끄는 중<small>'+SRC.name+'</small>';
+  if(penMode) $('#locbtn').innerHTML='형광펜 긋는 중<small>'+SRC.name+'</small>';
   else if(copyMode) $('#locbtn').innerHTML='복사할 절을 고르는 중<small>'+SRC.name+'</small>';
   else if(pickMode) $('#locbtn').innerHTML='담을 절을 고르는 중<small>'+SRC.name+'</small>';
 }
@@ -2156,6 +2216,7 @@ function updatePenUI(){
   $$('#pentool .pt-sw').forEach(function(x){ x.classList.toggle('on',!penEraseMode&&x.dataset.pc===penColor); });
   var er=$('#ptErase'); if(er) er.classList.toggle('on',penEraseMode);
   var un=$('#ptUndo'); if(un) un.disabled=!penUndoStack.length;
+  refreshToolPad();   // 안내 문구가 길어져 바 높이가 달라지면 본문 여백도 따라 늘린다
 }
 function pushPenUndo(keys){
   var items=[];
@@ -2181,6 +2242,8 @@ function undoPen(){
   toast('방금 작업을 되돌렸어요');
 }
 function setPenMode(on){
+  var anchor=currentAnchor();
+  toolPadBusy++;
   if(on&&pickMode) setPickMode(false);
   if(on&&copyMode) setCopyMode(false);
   penMode=!!on;
@@ -2198,6 +2261,8 @@ function setPenMode(on){
     penClear();
     Store.save(true);
   }
+  toolPadBusy--;
+  refreshToolPad(anchor);
 }
 function strokeNodes(c,v){
   var k=c+'|'+v;
@@ -2973,9 +3038,12 @@ function updatePickTool(){
             : '담을 절을 톡톡 눌러 주세요';
   var c=$('#pkCount'); if(c) c.textContent=txt;
   var sb=$('#pkSave'); if(sb) sb.disabled=!n;
+  refreshToolPad();
 }
 function setPickMode(on){
   on=!!on;
+  var anchor=currentAnchor();
+  toolPadBusy++;
   if(on&&penMode) setPenMode(false);
   if(on&&copyMode) setCopyMode(false);
   pickMode=on;
@@ -2984,6 +3052,8 @@ function setPickMode(on){
   pickSel={};
   pickChap=pickMode ? (currentChapter()||S.chapter||1) : 0;
   applyPick(); updatePickTool(); updateChrome();
+  toolPadBusy--;
+  refreshToolPad(anchor);
 }
 function togglePick(c,v){
   if(pickChap && c!==pickChap){
@@ -3028,9 +3098,12 @@ function updateCopyTool(){
             : '복사할 절을 톡톡 눌러 주세요';
   var c=$('#cpCount'); if(c) c.textContent=txt;
   var g=$('#cpGo'); if(g) g.disabled=!n;
+  refreshToolPad();
 }
 function setCopyMode(on){
   on=!!on;
+  var anchor=currentAnchor();
+  toolPadBusy++;
   if(on&&penMode) setPenMode(false);
   if(on&&pickMode) setPickMode(false);
   copyMode=on;
@@ -3039,6 +3112,8 @@ function setCopyMode(on){
   copySel={};
   copyChap=copyMode ? (currentChapter()||S.chapter||1) : 0;
   applyCopy(); updateCopyTool(); updateChrome();
+  toolPadBusy--;
+  refreshToolPad(anchor);
 }
 function toggleCopy(c,v){
   if(copyChap && c!==copyChap){
@@ -4386,11 +4461,11 @@ $('#lnkClearData').onclick=function(){
 var rzT=null;
 window.addEventListener('resize',function(){
   clearTimeout(rzT);
-  rzT=setTimeout(function(){ if(!checkMode()) layout(); },180);
+  rzT=setTimeout(function(){ if(!checkMode()){ syncToolPad(); layout(); } },180);
 });
 window.addEventListener('orientationchange',function(){
   clearTimeout(rzT);
-  rzT=setTimeout(function(){ if(!checkMode()) layout(); },320);
+  rzT=setTimeout(function(){ if(!checkMode()){ syncToolPad(); layout(); } },320);
 });
 
 /* ── cover / search / notes ────────────────────────────── */
