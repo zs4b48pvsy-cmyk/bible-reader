@@ -456,10 +456,6 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .rv-body::before{content:"";display:block;margin-top:auto;}
 .rv-day{display:flex;align-items:center;justify-content:center;gap:9px;margin:20px 0 16px;}
 .rv-day span{font-family:var(--font-ui);font-size:11.5px;color:#8E959E;letter-spacing:.03em;}
-.rv-story{border:1px solid rgba(0,0,0,.10);background:transparent;color:#8A9099;font-family:var(--font-ui);
-  font-size:10.5px;line-height:1;padding:5px 9px;border-radius:11px;cursor:pointer;white-space:nowrap;}
-.rv-story:active{background:rgba(0,0,0,.055);color:#555C64;}
-.rv-story.on{background:#2E2A24;border-color:#2E2A24;color:#F7F4EC;}
 .rv-group{margin:0 0 13px;}
 .rv-group.flash .rv-bub{animation:rvFlash 1.2s ease-out 2;}
 @keyframes rvFlash{0%{box-shadow:0 0 0 0 rgba(226,178,58,.50);}70%{box-shadow:0 0 0 8px rgba(226,178,58,0);}100%{box-shadow:0 0 0 0 rgba(226,178,58,0);}}
@@ -857,6 +853,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
           <div class="rv-tools">
             <button class="rv-theme" id="rvThemeBtn" aria-label="색상 고르기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><circle cx="8.7" cy="10.2" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="8.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.4" cy="10.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="10.4" cy="15.2" r="1.15" fill="currentColor" stroke="none"/></svg></button>
             <button class="rv-sort" id="rvEdit">편집</button>
+            <button class="rv-sort" id="rvCapture" aria-pressed="false">캡쳐</button>
             <button class="rv-sort" id="rvSort">시간순 ▾</button>
             <button class="rv-sort rv-close" id="rvClose" aria-label="닫기">✕</button>
           </div>
@@ -2702,7 +2699,8 @@ function hideRvPane(){
   if(pane){ pane.classList.remove('on'); pane.classList.remove('rv-capturing'); }
   var bar=$('#rvCapBar');
   if(bar) bar.classList.remove('show');
-  $$('#rvBody .rv-story').forEach(function(b){ b.classList.remove('on'); });
+  var capb=$('#rvCapture');
+  if(capb){ capb.classList.remove('on'); capb.setAttribute('aria-pressed','false'); }
   var p=$('#rvPalette'), b=$('#rvThemeBtn'), c=$('#rvCompose'), i=$('#rvInput');
   if(p) p.classList.remove('show');
   if(b) b.classList.remove('on');
@@ -3460,10 +3458,8 @@ function setRvCapturing(on){
   if(rvCapturing) rvEditing=false;          // 편집 모드와 상호 배타
   var pane=$('#rvPane');
   if(pane) pane.classList.toggle('rv-capturing',rvCapturing);
-  $$('#rvBody .rv-story').forEach(function(b){
-    b.classList.toggle('on',rvCapturing);
-    b.setAttribute('aria-pressed',rvCapturing?'true':'false');
-  });
+  var cb=$('#rvCapture');
+  if(cb){ cb.classList.toggle('on',rvCapturing); cb.setAttribute('aria-pressed',rvCapturing?'true':'false'); }
   var bar=$('#rvCapBar'), tip=$('#rvCapTip'), cmp=$('#rvCompose');
   if(bar) bar.classList.toggle('show',rvCapturing);
   if(tip) tip.textContent='캡쳐할 구절을 눌러 보세요';
@@ -3505,15 +3501,6 @@ function rvWriteClipboard(text,done){
 function rvDayHeader(dk,at){
   var dayRow=el('div','rv-day');
   dayRow.appendChild(el('span',null,rvDateLabel(at)));
-  var sb=el('button','rv-story','캡쳐');
-  sb.setAttribute('aria-label','캡쳐할 구절 고르기');
-  sb.setAttribute('aria-pressed',rvCapturing?'true':'false');
-  if(rvCapturing) sb.classList.add('on');
-  sb.onclick=function(){
-    setRvCapturing(!rvCapturing);
-    if(rvCapturing) toast('캡쳐할 구절을 눌러 보세요');
-  };
-  dayRow.appendChild(sb);
   return dayRow;
 }
 function openActRow(act){
@@ -3607,6 +3594,7 @@ function renderRvWall(){
   $('#rvTitle').textContent=(isMemo?'내 메모':'기억하는 말씀')+' · '+items.length;
   $('#rvSort').textContent=(rvSort==='recent'?'최신 위':'시간순')+' ▾';
   var eb=$('#rvEdit'); if(eb){ eb.textContent=rvEditing?'완료':'편집'; eb.classList.toggle('on',rvEditing); }
+  var cb=$('#rvCapture'); if(cb){ cb.classList.toggle('on',rvCapturing); cb.setAttribute('aria-pressed',rvCapturing?'true':'false'); }
   if(cmp) cmp.style.display=(isMemo&&!rvCapturing)?'flex':'none';
   applyRvTheme();
   var body=$('#rvBody'); body.innerHTML='';
@@ -3739,6 +3727,13 @@ $('#rvInput').addEventListener('keydown', function(e){
 $('#rvEdit').onclick=function(){
   if(rvCapturing) setRvCapturing(false);
   rvEditing=!rvEditing; renderRvWall();
+};
+$('#rvCapture').onclick=function(){
+  if(rvCapturing){ setRvCapturing(false); renderRvWall(); return; }
+  rvEditing=false;                       // 편집 모드와 상호 배타
+  setRvCapturing(true);
+  renderRvWall();
+  toast('캡쳐할 구절을 눌러 보세요');
 };
 $('#rvCapCancel').onclick=function(){ setRvCapturing(false); };
 $('#rvSort').onclick=function(){ rvSort=(rvSort==='recent')?'old':'recent'; renderRvWall(); };
