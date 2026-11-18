@@ -935,10 +935,12 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         <button data-v="dark" title="다크" aria-label="다크"></button>
       </div>
     </div>
+    <button class="link" id="saveDefaultSheet">현재 설정을 내 기본값으로 저장</button>
+    <div class="hint" id="defHint"></div>
     <div class="hr"></div>
     <button class="link" id="lnkImport">내 성경 파일 불러오기 (.txt / .json)</button>
-    <button class="link" id="lnkExport">내 기록 따로 저장하기 (형광펜·메모·기억 구절 백업)</button>
-    <button class="link" id="lnkImportData">저장한 기록 불러오기</button>
+    <button class="link" id="lnkExport">내 기록·설정 따로 저장하기 (형광펜·메모·기억 구절·폰트 설정)</button>
+    <button class="link" id="lnkImportData">저장한 기록·설정 불러오기</button>
     <button class="link" id="lnkClearData" style="color:#A63D33;">내 기록 모두 지우기</button>
     <button class="link" id="lnkHelp">사용 안내</button>
     <div class="srcbox">
@@ -4040,6 +4042,46 @@ function applySettings(){
   store.settings={cols:S.cols,font:S.font,theme:S.theme,fs:S.fs,lh:S.lh,pad:S.pad,flip:'curl',rvBg:rvBg,rvBubble:rvBubble,v:3};
   Store.save();
 }
+
+/* ── 내 기본값 (Aa 설정 저장·복원) ─────────────────────── */
+var DEFAULT_SETTINGS={fs:19,lh:1.9,pad:'normal',cols:1,font:'gothic',theme:'white'};
+function hasSettings(o){
+  if(!o||typeof o!=='object') return false;
+  return !!(o.fs||o.font||o.theme||o.cols||o.lh||o.pad);
+}
+/* 들어온 값 중 쓸 수 있는 것만 추려 6개 항목으로 만든다 */
+function normalizeSettings(src){
+  var o=(src&&typeof src==='object')?src:{};
+  var fs=+o.fs, lh=+o.lh;
+  return {
+    fs:(fs>=14&&fs<=34)?fs:DEFAULT_SETTINGS.fs,
+    lh:(lh===1.65||lh===1.9||lh===2.15)?lh:DEFAULT_SETTINGS.lh,
+    pad:(o.pad==='narrow'||o.pad==='wide')?o.pad:DEFAULT_SETTINGS.pad,
+    cols:o.cols===2?2:DEFAULT_SETTINGS.cols,
+    font:FONTS[o.font]?o.font:DEFAULT_SETTINGS.font,
+    theme:THEMES[o.theme]?o.theme:DEFAULT_SETTINGS.theme
+  };
+}
+function currentSettings(){ return {fs:S.fs,lh:S.lh,pad:S.pad,cols:S.cols,font:S.font,theme:S.theme}; }
+/* 설정 묶음을 S 에 반영하고 바로 그린다 */
+function useSettings(src){
+  var n=normalizeSettings(src);
+  S.fs=n.fs; S.lh=n.lh; S.pad=n.pad; S.cols=n.cols; S.font=n.font; S.theme=n.theme;
+  applySettings(); layout();
+}
+function settingsLabel(o){
+  var n=normalizeSettings(o);
+  var lhName=n.lh===2.15?'넓게':(n.lh===1.65?'좁게':'보통');
+  return FONTS[n.font].name+' '+n.fs+' · 줄 '+lhName+' · '+THEMES[n.theme].name;
+}
+function updateDefaultHint(){
+  var h=$('#defHint'); if(!h) return;
+  if(hasSettings(store.defaultSettings)){
+    h.textContent='저장된 내 기본값 · '+settingsLabel(store.defaultSettings)+' — 위 ‘기본값’을 누르면 이 설정으로 돌아와요';
+  }else{
+    h.textContent='아직 내 기본값을 저장하지 않았어요. 지금 설정을 저장해 두면 위 ‘기본값’으로 언제든 돌아올 수 있어요.';
+  }
+}
 function setChrome(hidden){
   app.classList.toggle('chrome-hidden',!!hidden);
 }
@@ -4349,6 +4391,7 @@ $$('.tabbtn').forEach(function(t){ t.onclick=function(){ switchTab(t.dataset.tab
 function openSheet(){
   sheetEl.classList.add('show');
   updateSourceSelect();
+  updateDefaultHint();
   setChrome(false);
 }
 $('#closeSheet').onclick=function(){ sheetEl.classList.remove('show'); };
@@ -4361,8 +4404,19 @@ $$('#segLh button').forEach(function(b){ b.onclick=function(){ S.lh=+b.dataset.v
 $$('#segPad button').forEach(function(b){ b.onclick=function(){ S.pad=b.dataset.v; applySettings(); layout(); }; });
 $('#scroll').addEventListener('scroll',onScrollReading,{passive:true});
 $('#resetSheet').onclick=function(){
-  S.fs=19; S.lh=1.9; S.pad='normal'; S.cols=1; S.font='gothic'; S.theme='white';
-  applySettings(); layout(); toast('기본 설정으로 되돌렸어요');
+  if(hasSettings(store.defaultSettings)){
+    useSettings(store.defaultSettings);
+    toast('저장해 둔 내 기본값으로 되돌렸어요');
+  }else{
+    useSettings(DEFAULT_SETTINGS);
+    toast('기본 설정으로 되돌렸어요');
+  }
+};
+$('#saveDefaultSheet').onclick=function(){
+  store.defaultSettings=currentSettings();
+  Store.save(true);
+  updateDefaultHint();
+  toast('현재 설정을 내 기본값으로 저장했어요');
 };
 
 $('#lnkImport').onclick=function(){ $('#fileSrc').click(); };
@@ -4400,11 +4454,13 @@ $('#srcSel').onchange=function(e){
 };
 $('#qjump').addEventListener('keydown',function(e){ if(e.key==='Enter') quickJump(this.value); });
 $('#lnkExport').onclick=function(){
-  var out={hl:store.hl,pi:store.pi,pic:store.pic,notes:store.notes,nat:store.nat,rv:store.rv,chat:store.chat,pos:store.pos,settings:store.settings,plan:store.plan||{},planCfg:store.planCfg||planCfg(),exported:new Date().toISOString()};
+  var out={hl:store.hl,pi:store.pi,pic:store.pic,notes:store.notes,nat:store.nat,rv:store.rv,chat:store.chat,pos:store.pos,
+    settings:store.settings||currentSettings(),defaultSettings:store.defaultSettings||null,
+    plan:store.plan||{},planCfg:store.planCfg||planCfg(),exported:new Date().toISOString()};
   var blob=new Blob([JSON.stringify(out,null,1)],{type:'application/json'});
   var a=el('a'); a.href=URL.createObjectURL(blob); a.download='bible-reader-기록.json';
   document.body.appendChild(a); a.click(); setTimeout(function(){document.body.removeChild(a);},400);
-  toast('기록 파일을 저장했어요');
+  toast('기록·설정 파일을 저장했어요');
 };
 $('#lnkImportData').onclick=function(){ $('#fileData').click(); };
 $('#fileData').onchange=function(e){
@@ -4443,19 +4499,34 @@ $('#fileData').onchange=function(e){
         });
       }
       if(o.planCfg&&typeof o.planCfg==='object') store.planCfg=o.planCfg;
+      // 설정도 백업 파일에서 같이 되살린다 (내 기본값 + 마지막으로 쓰던 설정)
+      var hadDefault=hasSettings(o.defaultSettings);
+      if(hadDefault) store.defaultSettings=normalizeSettings(o.defaultSettings);
+      var hadSettings=hasSettings(o.settings);
+      if(hadSettings){
+        store.settings=o.settings;
+        if(/^#[0-9a-fA-F]{6}$/.test(o.settings.rvBg||'')) rvBg=o.settings.rvBg;
+        if(/^#[0-9a-fA-F]{6}$/.test(o.settings.rvBubble||'')) rvBubble=o.settings.rvBubble;
+      }
       Store.save(true);
       if(mode==='scroll') renderScrollBook();
       renderSlots();
       renderRvWall();
-      toast('저장한 기록을 불러왔어요');
+      if(hadSettings||hadDefault){
+        useSettings(hadSettings?o.settings:o.defaultSettings);
+        if(hadSettings){ applyRvTheme(); }
+        updateDefaultHint();
+      }
+      toast('저장한 기록·설정을 불러왔어요');
     }catch(err){ toast('파일을 읽지 못했어요'); }
   };
   rd.readAsText(f,'utf-8'); e.target.value='';
 };
 $('#lnkClearData').onclick=function(){
-  if(!confirm('저장된 형광펜·메모·기억 구절·대화·읽기 기록을 모두 지울까요? 되돌릴 수 없어요.')) return;
+  if(!confirm('저장된 형광펜·메모·기억 구절·대화·읽기 기록을 모두 지울까요? 되돌릴 수 없어요.\n(글꼴·배경 같은 내 기본값 설정은 그대로 남아요.)')) return;
   store.hl={}; store.pi={}; store.pic={}; store.bm=[]; store.notes={}; store.rv=[]; store.chat=[]; store.nat={};
   store.plan={}; store.planCfg=null; planSel=null; planYM=null;   // 읽기 기록·기준도 기본값으로
+  // store.defaultSettings(내 기본값)는 일부러 지우지 않는다 — 기록을 지워도 글꼴·여백 설정은 남긴다
   penUndoStack=[]; lastStroke=null;
   Store.save(true);
   if(mode==='scroll') renderScrollBook();
@@ -4769,12 +4840,15 @@ $('#note').addEventListener('click',function(e){ if(e.target===this){ commitNote
 /* ── boot ──────────────────────────────────────────────── */
 function boot(){
   var st=store.settings||{};
+  var usingDefault=false;
+  // 저장된 설정이 비어 있으면(처음 설치·기기 초기화) 내 기본값으로 시작한다
+  if(!hasSettings(st) && hasSettings(store.defaultSettings)){ st=store.defaultSettings; usingDefault=true; }
   mode=wantMode();
   app.classList.toggle('scroll-mode',mode==='scroll');
   setChrome(false);
   var hideT=setTimeout(function(){ if(!drawerEl.classList.contains('show')) setChrome(true); },6000);
   app.addEventListener('pointerdown',function(){ clearTimeout(hideT); },{once:true});
-  if(st.v!==3) st={fs:st.fs};
+  if(!usingDefault && st.v!==3) st={fs:st.fs};
   S.fs=st.fs||19;
   S.cols=st.cols===2?2:1;
   S.font=FONTS[st.font]?st.font:'gothic';
