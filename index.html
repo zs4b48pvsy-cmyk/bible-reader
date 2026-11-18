@@ -3010,7 +3010,7 @@ function savePick(){
   toast('기억하는 말씀에 담았어요 · '+entry.ref);
 }
 
-/* 복사 모드: 본문 절을 톡톡 골라 클립보드로 ("본문 (롬 10:10)") */
+/* 복사 모드: 본문 절을 톡톡 골라 클립보드로 — 줄마다 줄바꿈, 출처는 마지막 줄 끝에 한 번 ("줄1\n줄2 (롬 10:9-10)") */
 var copyMode=false, copySel={}, copyChap=0;
 function applyCopy(){
   var nodes=$$('#track .v, #scroll .v');
@@ -3056,8 +3056,10 @@ function copyPickRun(){
   var b=curBook, c=copyChap||S.chapter||1, ref=abbr(b)+' '+c+':'+vsRuns(vs), out=[];
   for(var i=0;i<vs.length;i++){
     var t=verseText(b,c,vs[i]);
-    if(t) out.push(String(t).trim()+' ('+ref+')');
+    if(t) out.push(String(t).trim());
   }
+  if(!out.length) return '';
+  out[out.length-1]+=' ('+ref+')';   // 출처는 여러 절이어도 마지막 줄 끝에 한 번만
   return out.join('\n');
 }
 function copyPicked(){
