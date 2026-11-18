@@ -5452,6 +5452,8 @@ var Sync=(function(){
   }
   function linkFor(){
     var base=location.href.split('#')[0];
+    // 파일로 열어 둔 경우에는 다른 기기에서도 열 수 있는 라이브 주소로 안내한다
+    if(!/^https?:/i.test(base)) base='https://raw.githack.com/zs4b48pvsy-cmyk/bible-reader/main/index.html';
     return base+'#sync='+encodeURIComponent(S.token);
   }
   function copyLink(){
