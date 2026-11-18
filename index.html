@@ -763,9 +763,12 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 /* ── 앱 안 확인 창 ───────────────────────────────────────
    아이폰·아이패드를 홈 화면에 추가해 연 화면(standalone)에서는 window.confirm()
    이 창을 띄우지 않고 곧바로 false 를 돌려줘 삭제가 먹히지 않는다. 그래서 앱이 직접 그린다. */
-#cmodal{position:fixed;inset:0;z-index:88;display:none;align-items:center;justify-content:center;
+#cmodal{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;
   padding:24px;background:rgba(24,21,18,.34);}
 #cmodal.show{display:flex;}
+/* 아이패드 사파리에서 설정 시트(스크롤 층)가 확인 창 위에 겹쳐 비쳐 보이는 문제 —
+   확인 창이 떠 있는 동안에는 그 아래 패널을 잠시 감춰 늘 또렷하게 보이게 한다 */
+.app.cm-open #sheet,.app.cm-open #planSheet,.app.cm-open #selectbar{visibility:hidden;}
 .cm-card{width:min(340px,88vw);background:#FFFFFF;border-radius:16px;padding:20px 18px 14px;
   box-shadow:0 22px 60px rgba(0,0,0,.26),0 2px 8px rgba(0,0,0,.08);
   transform:scale(.96);opacity:0;animation:cmIn .18s ease forwards;}
@@ -1200,6 +1203,7 @@ function askConfirm(opts){
   if(ok){ ok.textContent=opts.okLabel||'지우기'; ok.className='cm-btn danger'; ok.disabled=false; }
   if(no) no.textContent=opts.cancelLabel||'취소';
   box.classList.add('show'); box.setAttribute('aria-hidden','false');
+  try{ app.classList.add('cm-open'); }catch(e){}
   return new Promise(function(res){
     cmResolve=res;
     setTimeout(function(){ try{ if(ok) ok.focus({preventScroll:true}); }catch(e){} },30);
@@ -1209,6 +1213,7 @@ function closeConfirm(yes){
   var box=$('#cmodal');
   if(!box||!box.classList.contains('show')) return false;
   box.classList.remove('show'); box.setAttribute('aria-hidden','true');
+  try{ app.classList.remove('cm-open'); }catch(e){}
   var r=cmResolve; cmResolve=null;
   if(r) r(!!yes);
   return true;
@@ -2995,6 +3000,7 @@ function planSet(key,b,c,on){
   if(!r){ r={ch:{},all:0}; }
   if(!r.ch||typeof r.ch!=='object') r.ch={};
   if(on) r.ch[b+':'+c]=1; else delete r.ch[b+':'+c];
+  if(on && typeof Sync!=='undefined' && Sync.planStamp){ try{ Sync.planStamp(key,b+':'+c); }catch(e){} }
   var list=planChapters(key), got=0;
   for(var i=0;i<list.length;i++) if(r.ch[list[i].b+':'+list[i].c]) got++;
   r.all=(list.length>0&&got>=list.length)?1:0;
@@ -4740,6 +4746,8 @@ $('#fileData').onchange=function(e){
         if(typeof o.settings.rvCapTrans==='boolean'){ rvCapTrans=o.settings.rvCapTrans; paintCapTrans(); }
       }
       Store.save(true);
+      // 불러온 기록은 사용자가 일부러 되살린 것이므로, 묻어 둔 것을 풀어 동기화에서도 살아남게 한다
+      if(typeof Sync!=='undefined' && Sync.reviveAll && Sync.active && Sync.active()){ try{ Sync.reviveAll(); }catch(e){} }
       if(mode==='scroll') renderScrollBook();
       renderSlots();
       renderRvWall();
@@ -4761,11 +4769,16 @@ $('#lnkClearData').onclick=function(){
   askConfirm({title:'저장된 기록을 모두 지울까요?', lines:lines, okLabel:'모두 지우기'})
   .then(function(ok){
     if(!ok) return;
-    store.hl={}; store.pi={}; store.pic={}; store.bm=[]; store.notes={}; store.rv=[]; store.chat=[]; store.nat={};
+    store.hl={}; store.pi={}; store.hlt={}; store.pic={}; store.bm=[]; store.notes={}; store.rv=[]; store.chat=[]; store.nat={};
     store.plan={}; store.planCfg=null; planSel=null; planYM=null;   // 읽기 기록·기준도 기본값으로
     // store.defaultSettings(내 기본값)는 일부러 지우지 않는다 — 기록을 지워도 글꼴·여백 설정은 남긴다
     penUndoStack=[]; lastStroke=null;
     Store.save(true);
+    // 기기 동기화가 켜져 있으면 Gist 쪽에도 지워진 상태를 바로 올리고,
+    // 그 전에 만든 기록이 다시 내려와 살아나지 않도록 이 시각을 함께 묻는다
+    if(typeof Sync!=='undefined' && Sync.clearAll && Sync.active && Sync.active()){
+      try{ Sync.clearAll(); }catch(e){}
+    }
     if(mode==='scroll') renderScrollBook();
     renderSlots();
     renderRvWall();
@@ -5095,7 +5108,8 @@ var Sync=(function(){
   var RETRY_WAIT=30000;
   var MAPS=['hl','pi','hlt','notes','nat','pic'];
   var SECS=['settings','defaultSettings','planCfg','pos'];
-  var S={token:'',gistId:'',login:'',deviceId:'',lastAt:0,lastErr:'',ts:{},del:{},mirror:null,fromLink:false};
+  var S={token:'',gistId:'',login:'',deviceId:'',lastAt:0,lastErr:'',ts:{},del:{},mirror:null,fromLink:false,
+         wipeAt:0,reviveAt:0,lastRemote:null,gen:0};
   var busy=false, applying=false, upT=0, retryT=0, started=false;
 
   function T(){ return Date.now(); }
@@ -5120,6 +5134,8 @@ var Sync=(function(){
         S.lastAt=+o.lastAt||0; S.ts=(o.ts&&typeof o.ts==='object')?o.ts:{};
         S.del=(o.del&&typeof o.del==='object')?o.del:{};
         S.mirror=o.mirror||null;
+        S.wipeAt=+o.wipeAt||0;
+        S.reviveAt=+o.reviveAt||0;
       }
     }catch(e){}
     if(!S.deviceId) S.deviceId='dev'+Math.random().toString(36).slice(2,10);
@@ -5129,7 +5145,7 @@ var Sync=(function(){
     try{
       localStorage.setItem(KEY,JSON.stringify({
         token:S.token,gistId:S.gistId,login:S.login,deviceId:S.deviceId,
-        lastAt:S.lastAt,ts:S.ts,del:S.del,mirror:S.mirror
+        lastAt:S.lastAt,ts:S.ts,del:S.del,mirror:S.mirror,wipeAt:S.wipeAt,reviveAt:S.reviveAt
       }));
     }catch(e){}
   }
@@ -5170,10 +5186,37 @@ var Sync=(function(){
   }
 
   /* ── 지운 항목 찾기: 지난번에 맞춰 둔 모습(mirror)과 지금을 견준다 ── */
+  /* 묻은 자리는 늘 '더 나중 시각'으로 갱신한다.
+     한 번 지운 항목을 다시 만들어 두었다가 또 지우면, 옛 묻은 자리 시각이
+     새로 만든 시각보다 앞서 그 항목이 되살아나던 문제가 있었다. */
   function markTomb(key,t){
     if(!S.del) S.del={};
-    if(!(+S.del[key]>0)) S.del[key]=t;
+    if(!(+t>0)) t=T();
+    if(+t>(+S.del[key]||0)) S.del[key]=t;
   }
+  /* 어떤 기록 묶음(이 기기·거울·Gist 문서)에 있는 모든 항목을 한꺼번에 묻는다 */
+  function markAllFrom(data,t){
+    if(!data||typeof data!=='object') return 0;
+    var n=0;
+    MAPS.forEach(function(kind){
+      var m=data[kind]; if(!m||typeof m!=='object') return;
+      Object.keys(m).forEach(function(k){ markTomb(kind+'|'+k,t); n++; });
+    });
+    var plan=data.plan;
+    if(plan&&typeof plan==='object'){
+      Object.keys(plan).forEach(function(dk){
+        var ch=(plan[dk]&&plan[dk].ch)||{};
+        Object.keys(ch).forEach(function(k){ markTomb('plan|'+dk+'|'+k,t); n++; });
+      });
+    }
+    ['rv','chat'].forEach(function(kind){
+      var arr=data[kind]; if(!Array.isArray(arr)) return;
+      arr.forEach(function(it){ if(it&&it.id){ markTomb(kind+'|'+it.id,t); n++; } });
+    });
+    return n;
+  }
+  /* '모두 지우기' 뒤로는 그 전에 만든 기록이 어느 기기에서도 되살아나지 않는다 */
+  function wipedFrom(){ return +S.wipeAt||0; }
   function detectDeletes(s,t){
     var mir=S.mirror;
     if(!mir) return 0;
@@ -5209,7 +5252,9 @@ var Sync=(function(){
       var ch=(s.plan[dk]&&s.plan[dk].ch)||{};
       Object.keys(ch).forEach(function(k){
         var key=dk+'|'+k;
-        ts.plan[key]=+(S.ts.plan&&S.ts.plan[key])||t;
+        // 계획 항목은 칠 때 찍어 둔 시각을 쓴다. 모르는 항목(예전 백업)은 0 으로 두어
+        // '모두 지우기' 뒤에 새 시각으로 둔갑해 되살아나지 않게 한다.
+        ts.plan[key]=+(S.ts.plan&&S.ts.plan[key])||0;
       });
     });
     var data={hl:s.hl,pi:s.pi,hlt:s.hlt,notes:s.notes,nat:s.nat,pic:s.pic,
@@ -5225,7 +5270,7 @@ var Sync=(function(){
       S.ts[nm]=old;
       data[nm]={v:cur,at:old};
     });
-    return {v:1,app:'bible-reader',updatedAt:t,writer:S.deviceId,data:data,ts:ts,del:cp(S.del)||{}};
+    return {v:1,app:'bible-reader',updatedAt:t,writer:S.deviceId,data:data,ts:ts,del:cp(S.del)||{},revive:+S.reviveAt||0};
   }
   function docKey(doc){
     if(!doc||typeof doc!=='object') return '';
@@ -5237,7 +5282,7 @@ var Sync=(function(){
       if(!s||typeof s!=='object'||!('v' in s)||s.v==null){ o[k]=null; return; }
       o[k]={v:s.v,at:+s.at||0};          // 값이 같아도 시각이 다르면 한 번 더 올려 시각을 맞춘다
     });
-    return stable(o)+' '+stable(doc.del||{});
+    return stable(o)+' '+stable(doc.del||{})+' '+(+doc.revive||0);
   }
 
   /* ── 두 기기 기록 합치기 ─────────────────────────────── */
@@ -5266,6 +5311,7 @@ var Sync=(function(){
   }
   function mergeMap(kind,L,R,LTS,RTS,del){
     var out={}, tsOut={}, keys={};
+    var W=wipedFrom();
     L=L||{}; R=R||{}; LTS=LTS||{}; RTS=RTS||{};
     Object.keys(L).forEach(function(k){ keys[k]=1; });
     Object.keys(R).forEach(function(k){ keys[k]=1; });
@@ -5276,10 +5322,12 @@ var Sync=(function(){
       if(kind==='hlt'||kind==='nat'){        // 값 자체가 시각인 표
         if(dt && dt>=(+lv||0) && dt>=(+rv||0)) return;
         var v=Math.max(+lv||0,+rv||0);
+        if(W && v<=W) return;                // '모두 지우기' 전 기록
         if(v) out[k]=v;
         return;
       }
       if(dt && dt>=lt && dt>=rt) return;     // 지운 것
+      if(W && lt<=W && rt<=W) return;        // '모두 지우기' 전 기록
       if(lv===undefined && rv===undefined) return;
       if(kind==='pi'){                       // 구간은 겹치지 않게 합친다
         var segs=unionSegs(lv,rv);
@@ -5294,6 +5342,7 @@ var Sync=(function(){
   }
   function mergePlan(L,R,LTS,RTS,del){
     var pages={}, out={}, tsOut={};
+    var W=wipedFrom();
     L=L||{}; R=R||{}; LTS=LTS||{}; RTS=RTS||{};
     Object.keys(L).forEach(function(dk){ pages[dk]=1; });
     Object.keys(R).forEach(function(dk){ pages[dk]=1; });
@@ -5306,6 +5355,7 @@ var Sync=(function(){
         var dt=+del['plan|'+dk+'|'+k]||0;
         var lt=+LTS[dk+'|'+k]||0, rt=+RTS[dk+'|'+k]||0;
         if(dt && dt>=lt && dt>=rt) return;
+        if(W && lt<=W && rt<=W) return;      // '모두 지우기' 전 기록
         if(lc[k]===undefined && rc[k]===undefined) return;
         ch[k]=1; tsOut[dk+'|'+k]=lt||rt||0;
       });
@@ -5318,10 +5368,12 @@ var Sync=(function(){
   }
   function mergeArr(kind,L,R,del){
     var out=[], seen={};
+    var W=wipedFrom();
     function add(it){
       if(!it||!it.id||seen[it.id]) return;
       seen[it.id]=1;
       if(del[kind+'|'+it.id]) return;      // 지운 것은 다시 살리지 않는다
+      if(W && (+it.at||0)<=W) return;      // '모두 지우기' 전 기록
       out.push(it);
     }
     (L||[]).forEach(add); (R||[]).forEach(add);
@@ -5343,7 +5395,10 @@ var Sync=(function(){
     var del={};
     mergeDel(del,S.del||{});
     mergeDel(del,(r&&r.del)||{});
-    var out={data:{},ts:{},sec:{},del:del};
+    // 저장한 기록을 불러온 뒤로는, 그 전에 묻어 둔 것은 '지운 것'이 아니다
+    var rv=Math.max(+S.reviveAt||0,+((r&&r.revive)||0));
+    Object.keys(del).forEach(function(k){ if((+del[k]||0)<rv) delete del[k]; });
+    var out={data:{},ts:{},sec:{},del:del,revive:rv};
     MAPS.forEach(function(kind){
       var m=mergeMap(kind,L[kind],rdata[kind],LT[kind],rts[kind],del);
       out.data[kind]=m.v; out.ts[kind]=m.ts;
@@ -5368,7 +5423,7 @@ var Sync=(function(){
     SECS.forEach(function(nm){
       data[nm]={v:(m.data[nm]==null?null:m.data[nm]),at:+(m.sec[nm]||0)};
     });
-    return {v:1,data:data,ts:m.ts||{},del:m.del||{}};
+    return {v:1,data:data,ts:m.ts||{},del:m.del||{},revive:+m.revive||0};
   }
   function applyMerged(m,t){
     // 내려받는 사이에 사용자가 남긴 기록이 있으면 그것도 함께 합친다 (덮어쓰지 않음)
@@ -5384,13 +5439,14 @@ var Sync=(function(){
       store.planCfg=again.data.planCfg||null;
       store.pos=again.data.pos||null;
       var ts={plan:{}};
-      Object.keys(again.ts.plan||{}).forEach(function(k){ ts.plan[k]=+again.ts.plan[k]||t; });
+      Object.keys(again.ts.plan||{}).forEach(function(k){ ts.plan[k]=+again.ts.plan[k]||0; });
       SECS.forEach(function(nm){
         var v=again.sec[nm]||0;
         ts[nm]=(again.data[nm]==null)?0:(v||t);   // 값은 있는데 시각이 없으면 지금으로
       });
       S.ts=ts;
       S.del=again.del||{};
+      S.reviveAt=+again.revive||0;
       Store.save(true);
     }finally{ applying=false; }
     return again;
@@ -5525,6 +5581,7 @@ var Sync=(function(){
   function runCycle(opts){
     if(!S.token) return Promise.resolve({ok:false,why:'no-token'});
     busy=true; setState();
+    var gen=S.gen;      // 이 차례가 시작될 때의 세대 — 도중에 '모두 지우기'가 있으면 옛 문서로 되돌리지 않는다
     return Promise.resolve().then(function(){
       if(typeof navigator!=='undefined' && navigator.onLine===false){
         var e=new Error('offline'); e.offline=true; throw e;
@@ -5533,7 +5590,10 @@ var Sync=(function(){
     }).then(function(){
       return readGist(S.gistId);
     }).then(function(remote){
+      if(gen!==S.gen) return {ok:true,skipped:'superseded'};
       var t=T();
+      S.lastRemote=remote||null;
+      if(opts.wipe) markAllFrom(remote&&remote.data,t);   // Gist 에 남아 있던 항목까지 묻는다
       var local=buildDoc();
       var beforeKey=docKey(local);
       var m=mergeDocs(local,remote);
@@ -5559,6 +5619,31 @@ var Sync=(function(){
   function dataField(doc,k){
     var s=doc&&doc.data&&doc.data[k];
     return (s&&typeof s==='object'&&'v' in s)?s.v:null;
+  }
+
+  /* ── 모두 지우기: 이 기기·다른 기기·Gist 의 기록을 한 번에 묻고 곥바로 올린다 ──
+     · 화면 기록은 부르는 쪽(설정 화면)에서 이미 비운 상태로 부른다.
+     · 지금 아는 모든 항목(이 기기 · 거울 · 마지막으로 받은 Gist)에 묻은 자리를 찍고,
+       '이 시각 이전 기록은 어느 기기에서도 돌아오지 않는다'는 경계(wipeAt)를 남긴다.
+     · 2초 뒤 자동 맞추기를 기다리지 않고 바로 한 차례 돌려 Gist 에도 지워진 상태를 올린다. */
+  function clearAll(){
+    var t=T();
+    S.gen++;
+    S.wipeAt=t;
+    markAllFrom(store,t);
+    markAllFrom(S.mirror,t);
+    if(S.lastRemote) markAllFrom(S.lastRemote.data,t);
+    persist();
+    clearTimeout(upT);
+    return cycle({wipe:true});
+  }
+  /* 저장한 기록을 불러오면, 방금 불러온 항목에 대해서만 묻어 둔 것을 풀어 다시 살린다
+     (다른 항목의 '지움' 기록은 그대로 둔다) */
+  function reviveAll(){
+    S.reviveAt=T();
+    S.wipeAt=0;          // '모두 지우기' 경계도 풀어 불러온 기록이 살아나게 한다
+    S.mirror=snap();
+    persist();
   }
 
   /* ── 안내 문구 ───────────────────────────────────────── */
@@ -5751,7 +5836,13 @@ var Sync=(function(){
   return {
     start:start, sync:function(){ return cycle({user:true}); }, link:linkFor,
     active:function(){ return !!S.token; },
-    state:function(){ return {token:S.token,gistId:S.gistId,lastAt:S.lastAt,busy:busy,err:S.lastErr,del:S.del}; }
+    clearAll:clearAll, reviveAll:reviveAll,
+    planStamp:function(dk,chKey){        // 읽기 기록을 칠 때 그 시각을 기억해 둔다
+      if(!S.ts.plan) S.ts.plan={};
+      S.ts.plan[dk+'|'+chKey]=T();
+      try{ persist(); }catch(e){}
+    },
+    state:function(){ return {token:S.token,gistId:S.gistId,lastAt:S.lastAt,busy:busy,err:S.lastErr,del:S.del,wipeAt:S.wipeAt}; }
   };
 })();
 
