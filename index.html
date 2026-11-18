@@ -291,6 +291,31 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #sheet .srcbox .scline{display:block;font-family:var(--font-ui);font-size:12px;color:var(--ink2);letter-spacing:.01em;line-height:1.55;}
 #sheet .srcbox .scsub{display:block;margin-top:3px;font-family:var(--font-ui);font-size:11px;color:var(--muted);line-height:1.55;}
 
+/* ── 기기 동기화 (Aa 설정 안) ────────────────────────────── */
+.syncbox{margin:2px 12px 4px;padding:11px 12px 10px;border-radius:10px;border:1px solid var(--rule);background:rgba(0,0,0,.022);}
+.app.night .syncbox{background:rgba(255,255,255,.035);}
+.sync-ttl{display:flex;align-items:baseline;gap:8px;margin-bottom:9px;}
+.sync-ttl b{font-family:var(--font-ui);font-size:12.5px;font-weight:600;color:var(--ink);letter-spacing:.01em;}
+.sync-ttl span{font-family:var(--font-ui);font-size:10.5px;letter-spacing:.04em;color:var(--muted);}
+.sync-row{display:flex;gap:6px;align-items:center;}
+.sync-in{flex:1 1 auto;min-width:0;height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--rule);
+  background:var(--paper);color:var(--ink);font-family:var(--font-ui);font-size:12.5px;-webkit-appearance:none;appearance:none;}
+.sync-in::placeholder{color:var(--muted);font-size:11.5px;}
+.sync-go{flex:0 0 auto;height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--rule);background:transparent;
+  color:var(--ink);font-family:var(--font-ui);font-size:12.5px;cursor:pointer;}
+.sync-go:active{background:rgba(0,0,0,.05);}
+.sync-go[disabled]{opacity:.45;}
+.sync-note{margin:7px 0 0;font-family:var(--font-ui);font-size:10.8px;line-height:1.6;color:var(--muted);word-break:keep-all;}
+.sync-note a{color:var(--ink2);text-decoration:underline;text-underline-offset:2px;}
+.sync-state{display:flex;align-items:center;gap:6px;font-family:var(--font-ui);font-size:12px;color:var(--ink2);margin-bottom:8px;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#5AA46A;flex:0 0 auto;}
+.sync-dot.err{background:#C08A3E;}
+.sync-btns{display:flex;flex-wrap:wrap;gap:6px;}
+.sync-btn{height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--rule);background:transparent;
+  color:var(--ink);font-family:var(--font-ui);font-size:12px;cursor:pointer;}
+.sync-btn:active{background:rgba(0,0,0,.05);}
+.sync-btn.ghost{color:var(--muted);}
+
 /* ── toast / help ────────────────────────────────────────── */
 /* ── 읽기 기준 시트 ─────────────────────────────────────── */
 #planSheet{position:fixed;z-index:60;left:50%;bottom:calc(12px + var(--safe-b));transform:translate(-50%,130%);
@@ -938,6 +963,26 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
     <button class="link" id="saveDefaultSheet">현재 설정을 내 기본값으로 저장</button>
     <div class="hint" id="defHint"></div>
     <div class="hr"></div>
+    <div class="syncbox" id="syncBox">
+      <div class="sync-ttl"><b>기기 동기화</b><span>아이패드 ↔ 아이폰</span></div>
+      <div id="syncOff">
+        <div class="sync-row">
+          <input class="sync-in" id="syncToken" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="GitHub 토큰 붙여넣기">
+          <button class="sync-go" id="syncConnect" type="button">연결하기</button>
+        </div>
+        <p class="sync-note" id="syncNote">GitHub에서 ‘gist’ 권한 토큰 1개만 만들면 두 기기가 자동으로 맞춰져요. 기록은 내 계정의 비공개 Gist에만 올라가요. <a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=bible-reader-sync" target="_blank" rel="noopener noreferrer">토큰 만들기 ↗</a></p>
+      </div>
+      <div id="syncOn" hidden>
+        <div class="sync-state"><i class="sync-dot" id="syncDot" aria-hidden="true"></i><span id="syncStateTxt">동기화 켜짐</span></div>
+        <div class="sync-btns">
+          <button class="sync-btn" id="syncNow" type="button">지금 동기화</button>
+          <button class="sync-btn" id="syncLinkBtn" type="button">다른 기기 연결 링크 복사</button>
+          <button class="sync-btn ghost" id="syncDisconnect" type="button">연결 해제</button>
+        </div>
+        <p class="sync-note" id="syncNote2">형광펜·메모·기억하는 말씀·읽기 기록·설정이 두 기기에 함께 맞춰져요.</p>
+      </div>
+    </div>
+    <div class="hr"></div>
     <button class="link" id="lnkImport">내 성경 파일 불러오기 (.txt / .json)</button>
     <button class="link" id="lnkExport">내 기록·설정 따로 저장하기 (형광펜·메모·기억 구절·폰트 설정)</button>
     <button class="link" id="lnkImportData">저장한 기록·설정 불러오기</button>
@@ -946,7 +991,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
     <div class="srcbox">
       <span class="sclb">본문 정보</span>
       <span class="scline">성경전서 개역한글판 © 대한성서공회 (1961)</span>
-      <span class="scsub">형광펜 · 메모 · 기억 구절은 이 기기에만 저장돼요</span>
+      <span class="scsub">형광펜 · 메모 · 기억 구절은 이 기기에 저장돼요. 위 ‘기기 동기화’를 켜면 내 비공개 Gist로 아이패드·아이폰이 함께 맞춰져요.</span>
     </div>
     <div class="hint" id="srcHint"></div>
     <input type="file" id="fileSrc" accept=".txt,.json,text/plain,application/json" style="display:none">
@@ -4523,7 +4568,9 @@ $('#fileData').onchange=function(e){
   rd.readAsText(f,'utf-8'); e.target.value='';
 };
 $('#lnkClearData').onclick=function(){
-  if(!confirm('저장된 형광펜·메모·기억 구절·대화·읽기 기록을 모두 지울까요? 되돌릴 수 없어요.\n(글꼴·배경 같은 내 기본값 설정은 그대로 남아요.)')) return;
+  var syncOn=(typeof Sync!=='undefined' && Sync.active && Sync.active())
+    ? '\n\n기기 동기화가 켜져 있어 다른 기기의 기록도 함께 지워져요.' : '';
+  if(!confirm('저장된 형광펜·메모·기억 구절·대화·읽기 기록을 모두 지울까요? 되돌릴 수 없어요.\n(글꼴·배경 같은 내 기본값 설정은 그대로 남아요.)'+syncOn)) return;
   store.hl={}; store.pi={}; store.pic={}; store.bm=[]; store.notes={}; store.rv=[]; store.chat=[]; store.nat={};
   store.plan={}; store.planCfg=null; planSel=null; planYM=null;   // 읽기 기록·기준도 기본값으로
   // store.defaultSettings(내 기본값)는 일부러 지우지 않는다 — 기록을 지워도 글꼴·여백 설정은 남긴다
@@ -4837,6 +4884,677 @@ $('#ntSave').onclick=function(){ commitNote(false); closeNote(); };
 $('#ntClose').onclick=function(){ closeNote(); };
 $('#note').addEventListener('click',function(e){ if(e.target===this){ commitNote(true); closeNote(); } });
 
+/* ── 기기 동기화 (비공개 GitHub Gist) ────────────────────────
+   'gist' 권한 토큰 하나만 넣으면 이 앱이 비공개 Gist 를 스스로 찾거나 만들어,
+   아이패드와 아이폰의 형광펜·메모·기억 구절·대화·읽기 기록·설정을 양방향으로 합친다.
+   · 항목은 합집합으로 모으고, 지운 항목은 30일 동안 '묻은 자리'(tombstone)로 기억해
+     두 기기에서 함께 지운다. 그 기간이 지나면 잊는다.
+   · 설정·읽던 자리처럼 값이 하나인 것은 더 최근에 바꾼 쪽을 쓴다.
+   · 네트워크가 없거나 실패하면 조용히 기다렸다가 다음 기회에 다시 맞춘다. */
+var Sync=(function(){
+  'use strict';
+  var KEY='bibleReader.sync.v1';
+  var API='https://api.github.com';
+  var DESC='pickle-bible-reader-sync';
+  var FILE='bible-reader-sync.json';
+  var KEEP=30*86400000;      // 묻은 자리 보관 기간
+  var MIN_GAP=10000;         // 화면으로 돌아왔을 때 다시 맞추는 최소 간격
+  var UPLOAD_WAIT=2000;      // 기록이 바뀐 뒤 올리기까지 기다리는 시간
+  var RETRY_WAIT=30000;
+  var MAPS=['hl','pi','hlt','notes','nat','pic'];
+  var SECS=['settings','defaultSettings','planCfg','pos'];
+  var S={token:'',gistId:'',login:'',deviceId:'',lastAt:0,lastErr:'',ts:{},del:{},mirror:null,fromLink:false};
+  var busy=false, applying=false, upT=0, retryT=0, started=false;
+
+  function T(){ return Date.now(); }
+  function cp(o){ return o==null?null:JSON.parse(JSON.stringify(o)); }
+  function stable(v){
+    if(v===null||typeof v!=='object') return JSON.stringify(v===undefined?null:v);
+    if(Object.prototype.toString.call(v)==='[object Array]')
+      return '['+v.map(stable).join(',')+']';
+    var ks=Object.keys(v).sort();
+    return '{'+ks.map(function(k){ return JSON.stringify(k)+':'+stable(v[k]); }).join(',')+'}';
+  }
+  function sameJson(a,b){ return stable(a||null)===stable(b||null); }
+
+  /* ── 토큰·설정 보관 (기록과 분리해 두어 '기록 모두 지우기'와 무관) ── */
+  function load(){
+    try{
+      var raw=localStorage.getItem(KEY);
+      if(raw){
+        var o=JSON.parse(raw)||{};
+        S.token=String(o.token||''); S.gistId=String(o.gistId||'');
+        S.login=String(o.login||''); S.deviceId=String(o.deviceId||'');
+        S.lastAt=+o.lastAt||0; S.ts=(o.ts&&typeof o.ts==='object')?o.ts:{};
+        S.del=(o.del&&typeof o.del==='object')?o.del:{};
+        S.mirror=o.mirror||null;
+      }
+    }catch(e){}
+    if(!S.deviceId) S.deviceId='dev'+Math.random().toString(36).slice(2,10);
+    prune();
+  }
+  function persist(){
+    try{
+      localStorage.setItem(KEY,JSON.stringify({
+        token:S.token,gistId:S.gistId,login:S.login,deviceId:S.deviceId,
+        lastAt:S.lastAt,ts:S.ts,del:S.del,mirror:S.mirror
+      }));
+    }catch(e){}
+  }
+  function prune(){
+    var cut=T()-KEEP, d=S.del||{}, n=0;
+    Object.keys(d).forEach(function(k){ if(!(+d[k]>cut)){ delete d[k]; n++; } });
+    return n;
+  }
+
+  /* ── 기기 안의 기록을 한 덩어리로 ─────────────────────── */
+  function snap(){
+    var s={};
+    MAPS.forEach(function(k){ s[k]=cp(store[k])||{}; });
+    s.rv=cp(store.rv)||[]; s.chat=cp(store.chat)||[]; s.plan=cp(store.plan)||{};
+    SECS.forEach(function(k){ s[k]=cp(store[k])||null; });
+    return s;
+  }
+  function piMax(segs){
+    var m=0;
+    (segs||[]).forEach(function(g){ if(g&&+g.at>m) m=+g.at; });
+    return m;
+  }
+  function tsOf(s,kind,key){
+    var hlt=(s.hlt||{})[key], nat=(s.nat||{})[key], pi=piMax((s.pi||{})[key]);
+    if(kind==='hlt') return +hlt||0;
+    if(kind==='nat') return +nat||0;
+    if(kind==='pi') return pi;
+    if(kind==='hl') return Math.max(+hlt||0,pi);
+    if(kind==='notes') return Math.max(+nat||0,+hlt||0,pi);
+    if(kind==='pic') return Math.max(+nat||0,+hlt||0);
+    return 0;
+  }
+  function normScalar(name,v){
+    if(name==='settings'||name==='defaultSettings') return hasSettings(v)?v:null;
+    if(name==='pos') return (v&&typeof v==='object'&&v.b&&v.c)?v:null;
+    if(name==='planCfg') return (v&&typeof v==='object')?v:null;
+    return (v===undefined)?null:v;
+  }
+
+  /* ── 지운 항목 찾기: 지난번에 맞춰 둔 모습(mirror)과 지금을 견준다 ── */
+  function markTomb(key,t){
+    if(!S.del) S.del={};
+    if(!(+S.del[key]>0)) S.del[key]=t;
+  }
+  function detectDeletes(s,t){
+    var mir=S.mirror;
+    if(!mir) return 0;
+    var n=0;
+    function gone(key){ markTomb(key,t); n++; }
+    MAPS.forEach(function(kind){
+      var m=mir[kind]||{}, c=s[kind]||{};
+      Object.keys(m).forEach(function(k){ if(!(k in c)) gone(kind+'|'+k); });
+    });
+    var mp=mir.plan||{}, cplan=s.plan||{};
+    Object.keys(mp).forEach(function(dk){
+      var a=(mp[dk]&&mp[dk].ch)||{}, b=(cplan[dk]&&cplan[dk].ch)||{};
+      Object.keys(a).forEach(function(k){ if(!(k in b)) gone('plan|'+dk+'|'+k); });
+    });
+    ['rv','chat'].forEach(function(kind){
+      var ids={};
+      (s[kind]||[]).forEach(function(it){ if(it&&it.id) ids[it.id]=1; });
+      (mir[kind]||[]).forEach(function(it){ if(it&&it.id&&!ids[it.id]) gone(kind+'|'+it.id); });
+    });
+    return n;
+  }
+
+  /* ── 올릴 문서 만들기 ─────────────────────────────────── */
+  function buildDoc(){
+    var t=T(), s=snap();
+    detectDeletes(s,t);
+    var ts={hl:{},pi:{},notes:{},pic:{},plan:{}};
+    ['hl','pi','notes','pic'].forEach(function(kind){
+      var m=s[kind]||{};
+      Object.keys(m).forEach(function(k){ ts[kind][k]=tsOf(s,kind,k); });
+    });
+    Object.keys(s.plan||{}).forEach(function(dk){
+      var ch=(s.plan[dk]&&s.plan[dk].ch)||{};
+      Object.keys(ch).forEach(function(k){
+        var key=dk+'|'+k;
+        ts.plan[key]=+(S.ts.plan&&S.ts.plan[key])||t;
+      });
+    });
+    var data={hl:s.hl,pi:s.pi,hlt:s.hlt,notes:s.notes,nat:s.nat,pic:s.pic,
+              rv:s.rv,chat:s.chat,plan:s.plan};
+    var firstSync=!S.mirror;      // 이 기기에서 처음 맞추는 중이면 설정에 시각을 새로 찍지 않는다
+    SECS.forEach(function(nm){
+      var cur=normScalar(nm,s[nm]);
+      var old=+S.ts[nm]||0;
+      if(!firstSync){
+        var prev=normScalar(nm,S.mirror[nm]);
+        if(prev===undefined || !sameJson(cur,prev)) old=old||t;
+      }
+      S.ts[nm]=old;
+      data[nm]={v:cur,at:old};
+    });
+    return {v:1,app:'bible-reader',updatedAt:t,writer:S.deviceId,data:data,ts:ts,del:cp(S.del)||{}};
+  }
+  function docKey(doc){
+    if(!doc||typeof doc!=='object') return '';
+    var d=doc.data||{}, o={};
+    MAPS.forEach(function(k){ o[k]=d[k]||null; });
+    o.rv=d.rv||null; o.chat=d.chat||null; o.plan=d.plan||null;
+    SECS.forEach(function(k){
+      var s=d[k];
+      if(!s||typeof s!=='object'||!('v' in s)||s.v==null){ o[k]=null; return; }
+      o[k]={v:s.v,at:+s.at||0};          // 값이 같아도 시각이 다르면 한 번 더 올려 시각을 맞춘다
+    });
+    return stable(o)+' '+stable(doc.del||{});
+  }
+
+  /* ── 두 기기 기록 합치기 ─────────────────────────────── */
+  function mergeDel(dst,src){
+    Object.keys(src||{}).forEach(function(k){
+      var v=+src[k]||0;
+      if(v>(+dst[k]||0)) dst[k]=v;
+    });
+  }
+  /* 부분 형광펜은 같은 절이라도 다른 자리를 칠했을 수 있으니 구간을 합친다 */
+  function unionSegs(a,b){
+    var out=[], by={};
+    function add(g){
+      if(!g) return;
+      var k=(+g.s)+':'+(+g.e);
+      var cur=by[k];
+      if(!cur){ by[k]=g; out.push(g); return; }
+      if((+g.at||0)>(+cur.at||0)){          // 같은 자리는 더 최근 색
+        for(var i=0;i<out.length;i++){ if(out[i]===cur){ out[i]=g; break; } }
+        by[k]=g;
+      }
+    }
+    (a||[]).forEach(add); (b||[]).forEach(add);
+    out.sort(function(x,y){ return (+x.s||0)-(+y.s||0); });
+    return out;
+  }
+  function mergeMap(kind,L,R,LTS,RTS,del){
+    var out={}, tsOut={}, keys={};
+    L=L||{}; R=R||{}; LTS=LTS||{}; RTS=RTS||{};
+    Object.keys(L).forEach(function(k){ keys[k]=1; });
+    Object.keys(R).forEach(function(k){ keys[k]=1; });
+    Object.keys(keys).forEach(function(k){
+      var dt=+del[kind+'|'+k]||0;
+      var lv=L[k], rv=R[k];
+      var lt=+LTS[k]||0, rt=+RTS[k]||0;
+      if(kind==='hlt'||kind==='nat'){        // 값 자체가 시각인 표
+        if(dt && dt>=(+lv||0) && dt>=(+rv||0)) return;
+        var v=Math.max(+lv||0,+rv||0);
+        if(v) out[k]=v;
+        return;
+      }
+      if(dt && dt>=lt && dt>=rt) return;     // 지운 것
+      if(lv===undefined && rv===undefined) return;
+      if(kind==='pi'){                       // 구간은 겹치지 않게 합친다
+        var segs=unionSegs(lv,rv);
+        if(segs.length){ out[k]=segs; tsOut[k]=Math.max(lt,rt); }
+        return;
+      }
+      if(rv===undefined){ out[k]=lv; tsOut[k]=lt; return; }
+      if(lv===undefined){ out[k]=rv; tsOut[k]=rt; return; }
+      if(rt>lt){ out[k]=rv; tsOut[k]=rt; } else { out[k]=lv; tsOut[k]=lt||rt; }
+    });
+    return {v:out,ts:tsOut};
+  }
+  function mergePlan(L,R,LTS,RTS,del){
+    var pages={}, out={}, tsOut={};
+    L=L||{}; R=R||{}; LTS=LTS||{}; RTS=RTS||{};
+    Object.keys(L).forEach(function(dk){ pages[dk]=1; });
+    Object.keys(R).forEach(function(dk){ pages[dk]=1; });
+    Object.keys(pages).forEach(function(dk){
+      var lc=((L[dk]||{}).ch)||{}, rc=((R[dk]||{}).ch)||{};
+      var ch={}, keys={};
+      Object.keys(lc).forEach(function(k){ keys[k]=1; });
+      Object.keys(rc).forEach(function(k){ keys[k]=1; });
+      Object.keys(keys).forEach(function(k){
+        var dt=+del['plan|'+dk+'|'+k]||0;
+        var lt=+LTS[dk+'|'+k]||0, rt=+RTS[dk+'|'+k]||0;
+        if(dt && dt>=lt && dt>=rt) return;
+        if(lc[k]===undefined && rc[k]===undefined) return;
+        ch[k]=1; tsOut[dk+'|'+k]=lt||rt||0;
+      });
+      if(!Object.keys(ch).length) return;
+      var need=0;
+      try{ need=planChapters(dk).length; }catch(e){ need=0; }
+      out[dk]={ch:ch,all:(need>0&&Object.keys(ch).length>=need)?1:0};
+    });
+    return {v:out,ts:tsOut};
+  }
+  function mergeArr(kind,L,R,del){
+    var out=[], seen={};
+    function add(it){
+      if(!it||!it.id||seen[it.id]) return;
+      seen[it.id]=1;
+      if(del[kind+'|'+it.id]) return;      // 지운 것은 다시 살리지 않는다
+      out.push(it);
+    }
+    (L||[]).forEach(add); (R||[]).forEach(add);
+    out.sort(function(a,b){ return (+a.at||0)-(+b.at||0); });
+    return out;
+  }
+  function mergeScalar(name,la,lat,ra,rat){
+    var lv=normScalar(name,la), rv=normScalar(name,ra);
+    lat=+lat||0; rat=+rat||0;
+    if(rv===null) return {v:lv,at:lv===null?0:lat};
+    if(lv===null) return {v:rv,at:rat};
+    if(rat>lat) return {v:rv,at:rat};
+    return {v:lv,at:lat||rat};
+  }
+  function mergeDocs(local,remote){
+    var r=(remote&&typeof remote==='object')?remote:null;
+    var rdata=(r&&r.data)||{}, rts=(r&&r.ts)||{};
+    var L=local.data, LT=local.ts;
+    var del={};
+    mergeDel(del,S.del||{});
+    mergeDel(del,(r&&r.del)||{});
+    var out={data:{},ts:{},sec:{},del:del};
+    MAPS.forEach(function(kind){
+      var m=mergeMap(kind,L[kind],rdata[kind],LT[kind],rts[kind],del);
+      out.data[kind]=m.v; out.ts[kind]=m.ts;
+    });
+    out.data.rv=mergeArr('rv',L.rv,rdata.rv,del);
+    out.data.chat=mergeArr('chat',L.chat,rdata.chat,del);
+    var mp=mergePlan(L.plan,rdata.plan,LT.plan,rts.plan,del);
+    out.data.plan=mp.v; out.ts.plan=mp.ts;
+    SECS.forEach(function(nm){
+      var a=L[nm]||{v:null,at:0}, b=rdata[nm]||{v:null,at:0};
+      var m=mergeScalar(nm,a.v,a.at,b.v,b.at);
+      out.data[nm]=m.v; out.sec[nm]=m.at;
+    });
+    return out;
+  }
+
+  /* ── 합친 결과를 이 기기에 앉히기 ─────────────────────── */
+  function docFromMerged(m){
+    var data={};
+    MAPS.forEach(function(k){ data[k]=m.data[k]||{}; });
+    data.rv=m.data.rv||[]; data.chat=m.data.chat||[]; data.plan=m.data.plan||{};
+    SECS.forEach(function(nm){
+      data[nm]={v:(m.data[nm]==null?null:m.data[nm]),at:+(m.sec[nm]||0)};
+    });
+    return {v:1,data:data,ts:m.ts||{},del:m.del||{}};
+  }
+  function applyMerged(m,t){
+    // 내려받는 사이에 사용자가 남긴 기록이 있으면 그것도 함께 합친다 (덮어쓰지 않음)
+    var again=mergeDocs(buildDoc(),docFromMerged(m));
+    applying=true;
+    try{
+      MAPS.forEach(function(k){ store[k]=again.data[k]||{}; });
+      store.rv=again.data.rv||[]; store.chat=again.data.chat||[];
+      store.plan=again.data.plan||{};
+      store.settings=again.data.settings||{};
+      store.defaultSettings=again.data.defaultSettings||null;
+      store.planCfg=again.data.planCfg||null;
+      store.pos=again.data.pos||null;
+      var ts={plan:{}};
+      Object.keys(again.ts.plan||{}).forEach(function(k){ ts.plan[k]=+again.ts.plan[k]||t; });
+      SECS.forEach(function(nm){
+        var v=again.sec[nm]||0;
+        ts[nm]=(again.data[nm]==null)?0:(v||t);   // 값은 있는데 시각이 없으면 지금으로
+      });
+      S.ts=ts;
+      S.del=again.del||{};
+      Store.save(true);
+    }finally{ applying=false; }
+    return again;
+  }
+  function refreshAfterSync(stChanged){
+    try{
+      if(stChanged && hasSettings(store.settings)) useSettings(store.settings);
+      else if(mode==='scroll') renderScrollBook();
+      else renderSlots();
+    }catch(e){}
+    try{ renderRvWall(); }catch(e){}
+    try{ renderCoverToday(); }catch(e){}
+    try{ updateDefaultHint(); }catch(e){}
+    try{ if(!reading) fillCover(); }catch(e){}
+    try{ if(drawerEl.classList.contains('show')) renderDrawer(curTab); }catch(e){}
+    try{ updateChrome(); }catch(e){}
+  }
+
+  /* ── GitHub ──────────────────────────────────────────── */
+  function api(path,opts){
+    opts=opts||{};
+    var h={'Accept':'application/vnd.github+json','Authorization':'Bearer '+S.token,
+           'X-GitHub-Api-Version':'2022-11-28'};
+    if(opts.body!=null) h['Content-Type']='application/json';
+    // 응답이 영영 오지 않아도 기다리지 않는다 (12초)
+    var ctl=null, wd=0;
+    try{
+      if(typeof AbortController!=='undefined'){
+        ctl=new AbortController();
+        wd=setTimeout(function(){ try{ ctl.abort(); }catch(e){} },12000);
+      }
+    }catch(e){ ctl=null; }
+    var done=function(){ if(wd) clearTimeout(wd); };
+    return fetch(API+path,{
+      method:opts.method||'GET',
+      headers:h,
+      body:(opts.body!=null)?JSON.stringify(opts.body):undefined,
+      cache:'no-store',credentials:'omit',
+      signal:ctl?ctl.signal:undefined
+    }).then(function(r){
+      done();
+      return r.text().then(function(txt){
+        var j=null;
+        try{ j=txt?JSON.parse(txt):null; }catch(e){ j=null; }
+        if(!r.ok){
+          var err=new Error((j&&j.message)||('HTTP '+r.status));
+          err.status=r.status; err.data=j;
+          throw err;
+        }
+        return j;
+      });
+    }).then(null,function(e){ done(); throw e; });
+  }
+  function parseDoc(txt){
+    try{ var o=JSON.parse(String(txt||'')); return (o&&typeof o==='object')?o:null; }catch(e){ return null; }
+  }
+  function filesOf(content){
+    var f={}; f[FILE]={content:content}; return f;
+  }
+  function findGist(page){
+    page=page||1;
+    return api('/gists?per_page=100&page='+page).then(function(list){
+      if(!Array.isArray(list)) return null;
+      for(var i=0;i<list.length;i++){
+        var g=list[i]; if(!g) continue;
+        if(g.description===DESC) return g;
+        if(g.files&&g.files[FILE]) return g;
+      }
+      if(list.length>=100 && page<5) return findGist(page+1);
+      return null;
+    });
+  }
+  function readGist(id){
+    return api('/gists/'+id).then(function(g){
+      var f=(g&&g.files&&g.files[FILE])||null;
+      if(!f) return null;
+      if(f.truncated&&f.raw_url){
+        return fetch(f.raw_url,{cache:'no-store'}).then(function(r){ return r.text(); }).then(parseDoc);
+      }
+      return parseDoc(f.content||'');
+    });
+  }
+  function writeGist(id,doc){
+    return api('/gists/'+id,{method:'PATCH',body:{description:DESC,files:filesOf(JSON.stringify(doc))}});
+  }
+  function createGist(doc){
+    return api('/gists',{method:'POST',body:{description:DESC,'public':false,files:filesOf(JSON.stringify(doc))}});
+  }
+  function ensureGist(){
+    if(S.gistId){
+      return api('/gists/'+S.gistId).then(function(g){
+        if(g&&g.id) return g;
+        S.gistId=''; persist();
+        return findOrCreate();
+      }).catch(function(e){
+        if(e&&e.status===404){ S.gistId=''; persist(); return findOrCreate(); }
+        throw e;
+      });
+    }
+    return findOrCreate();
+  }
+  function findOrCreate(){
+    return findGist().then(function(g){
+      if(g&&g.id){ S.gistId=g.id; persist(); return g; }
+      return createGist(buildDoc()).then(function(ng){
+        S.gistId=(ng&&ng.id)||''; persist(); return ng;
+      });
+    });
+  }
+
+  /* ── 한 번 맞추기: 내려받아 합치고, 바뀌었으면 올린다 ────── */
+  /* 맞추기는 한 번에 하나씩 차례로 — 겹쳐 돌면 서로의 결과를 덮어쓴다 */
+  var queue=Promise.resolve();
+  function cycle(opts){
+    opts=opts||{};
+    var run=queue.then(function(){ return runCycle(opts); });
+    queue=run.catch(function(){});
+    // 어떤 이유로든 응답이 끊기면 기다리지 않고 풀어 준다 (동기화가 영영 멈추지 않게)
+    var wd=setTimeout(function(){
+      if(!busy) return;
+      busy=false;
+      S.lastErr='응답이 없어 잠시 뒤 다시 시도할게요.';
+      try{ persist(); }catch(e){}
+      setState();
+      queue=Promise.resolve();
+      scheduleRetry({});
+    },15000);
+    var clear=function(){ clearTimeout(wd); };
+    run.then(clear,clear);
+    return run;
+  }
+  function runCycle(opts){
+    if(!S.token) return Promise.resolve({ok:false,why:'no-token'});
+    busy=true; setState();
+    return Promise.resolve().then(function(){
+      if(typeof navigator!=='undefined' && navigator.onLine===false){
+        var e=new Error('offline'); e.offline=true; throw e;
+      }
+      return ensureGist();
+    }).then(function(){
+      return readGist(S.gistId);
+    }).then(function(remote){
+      var t=T();
+      var local=buildDoc();
+      var beforeKey=docKey(local);
+      var m=mergeDocs(local,remote);
+      applyMerged(m,t);
+      S.mirror=snap();
+      var merged=buildDoc();
+      var afterKey=docKey(merged);
+      var stChanged=!sameJson(dataField(local,'settings'),dataField(merged,'settings'));
+      if(beforeKey!==afterKey || stChanged) refreshAfterSync(stChanged);
+      persist();
+      if(remote && docKey(remote)===afterKey) return {ok:true,wrote:false};
+      return writeGist(S.gistId,merged).then(function(){ return {ok:true,wrote:true}; });
+    }).then(function(r){
+      busy=false; S.lastAt=T(); S.lastErr=''; syncedSeq=changeSeq; persist(); setState();
+      return r||{ok:true};
+    }).catch(function(e){
+      busy=false; S.lastErr=errText(e); persist(); setState();
+      scheduleRetry(e);
+      if(opts.user) throw e;
+      return {ok:false,error:e,why:S.lastErr};
+    });
+  }
+  function dataField(doc,k){
+    var s=doc&&doc.data&&doc.data[k];
+    return (s&&typeof s==='object'&&'v' in s)?s.v:null;
+  }
+
+  /* ── 안내 문구 ───────────────────────────────────────── */
+  function errText(e){
+    if(!e) return '동기화하지 못했어요.';
+    if(e.status===401) return '토큰이 올바르지 않아요. GitHub 에서 만든 토큰을 다시 확인해 주세요.';
+    if(e.status===403) return '토큰에 ‘gist’ 권한이 없어요. gist 권한을 켜고 다시 만들어 주세요.';
+    if(e.status===404) return 'Gist 를 찾지 못했어요. 잠시 뒤 다시 시도할게요.';
+    if(e.status) return '동기화하지 못했어요 (GitHub '+e.status+'). 잠시 뒤 다시 시도할게요.';
+    if(e.offline || (typeof navigator!=='undefined'&&navigator.onLine===false))
+      return '인터넷이 연결되면 다시 맞출게요.';
+    return '인터넷 연결을 확인해 주세요. 연결되면 다시 맞출게요.';
+  }
+  function lastLabel(){
+    if(!S.lastAt) return '아직 맞추는 중';
+    var d=T()-S.lastAt;
+    if(d<60000) return '마지막 동기화 방금 전';
+    if(d<3600000) return '마지막 동기화 '+Math.floor(d/60000)+'분 전';
+    var dt=new Date(S.lastAt), h=dt.getHours(), m2=dt.getMinutes();
+    var ap=h<12?'오전':'오후', hh=h%12; if(hh===0) hh=12;
+    return '마지막 동기화 '+ap+' '+hh+':'+(m2<10?'0':'')+m2;
+  }
+  function setNote(t){
+    if(t==null) return;
+    ['#syncNote','#syncNote2'].forEach(function(sel){ var n=$(sel); if(n) n.textContent=t; });
+  }
+  function setState(){
+    var on=!!S.token;
+    var off=$('#syncOff'), onEl=$('#syncOn');
+    if(off) off.hidden=on;
+    if(onEl) onEl.hidden=!on;
+    var txt=$('#syncStateTxt');
+    if(txt){
+      if(!on) txt.textContent='아직 연결하지 않았어요';
+      else if(busy) txt.textContent='동기화 중…';
+      else if(S.lastErr) txt.textContent='동기화 켜짐 · 연결을 기다리는 중';
+      else txt.textContent='동기화 켜짐 · '+lastLabel();
+    }
+    var dot=$('#syncDot');
+    if(dot) dot.classList.toggle('err',!!(on&&S.lastErr&&!busy));
+  }
+  function cleanToken(t){
+    return String(t||'').replace(/[\s\u200b]+/g,'').replace(/^token[:=]?/i,'');
+  }
+
+  /* ── 연결 / 해제 / 링크 ──────────────────────────────── */
+  function connect(raw){
+    var tk=cleanToken(raw);
+    if(!tk){ setNote('토큰을 붙여넣어 주세요.'); toast('토큰을 붙여넣어 주세요'); return Promise.resolve(false); }
+    if(tk.length<20){
+      setNote('토큰이 짧아요. GitHub 에서 만든 토큰을 그대로 붙여넣어 주세요.');
+      toast('토큰을 다시 확인해 주세요'); return Promise.resolve(false);
+    }
+    var btn=$('#syncConnect');
+    if(btn){ btn.disabled=true; btn.textContent='연결 중…'; }
+    S.token=tk; S.lastErr=''; S.gistId='';
+    setState();
+    return api('/user').then(function(u){
+      S.login=(u&&u.login)||'';
+      persist();
+      return cycle({user:true,force:true});
+    }).then(function(){
+      setNote('연결됐어요. 이제 형광펜·메모·읽기 기록이 두 기기에 함께 맞춰져요.');
+      toast('두 기기 동기화를 켰어요');
+      return true;
+    }).catch(function(e){
+      var msg=errText(e);
+      if(e&&e.status===401){ S.token=''; S.gistId=''; persist(); }
+      S.lastErr=msg; persist(); setState(); setNote(msg);
+      toast(msg);
+      return false;
+    }).then(function(ok){
+      if(btn){ btn.disabled=false; btn.textContent='연결하기'; }
+      var inp=$('#syncToken'); if(inp&&ok) inp.value='';
+      return ok;
+    });
+  }
+  function disconnect(){
+    if(!confirm('이 기기의 동기화만 끊을까요?\nGist 에 올린 기록은 그대로 남고, 이 기기의 형광펜·메모도 지워지지 않아요.')) return;
+    S.token=''; S.gistId=''; S.login=''; S.lastAt=0; S.lastErr='';
+    persist(); clearTimeout(upT); clearTimeout(retryT);
+    setState(); setNote('연결을 끊었어요. 같은 토큰으로 다시 연결하면 이어서 맞춰져요.');
+    toast('동기화 연결을 끊었어요');
+  }
+  function linkFor(){
+    var base=location.href.split('#')[0];
+    return base+'#sync='+encodeURIComponent(S.token);
+  }
+  function copyLink(){
+    if(!S.token){ toast('먼저 토큰으로 연결해 주세요'); return; }
+    var url=linkFor();
+    rvWriteClipboard(url,function(ok){
+      if(ok){ toast('연결 링크를 복사했어요 · 다른 기기에서 열어 주세요'); setNote('복사한 링크를 다른 기기에서 열면 그 기기도 바로 연결돼요.'); }
+      else{
+        setNote('링크를 복사하지 못했어요. 아래 링크를 길게 눌러 복사해 주세요. '+url);
+        toast('링크를 복사하지 못했어요');
+      }
+    });
+  }
+
+  /* ── #sync=토큰 링크로 들어오면 자동 연결 ─────────────── */
+  function adoptLink(){
+    var h=String(location.hash||'');
+    if(!h || h.indexOf('sync=')<0) return false;
+    var m=h.match(/[#&]sync=([^&]+)/);
+    if(!m) return false;
+    var tk='';
+    try{ tk=decodeURIComponent(m[1]); }catch(e){ tk=m[1]; }
+    tk=cleanToken(tk);
+    try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){ location.hash=''; }
+    if(!tk||tk.length<20) return false;
+    S.token=tk; S.gistId=''; S.lastErr=''; S.fromLink=true;
+    persist();
+    return true;
+  }
+
+  /* ── 자동 맞추기 걸어 두기 ───────────────────────────── */
+  var changeSeq=0, syncedSeq=0;
+  function touch(){
+    changeSeq++;
+    if(!S.token||applying) return;
+    clearTimeout(upT);
+    upT=setTimeout(function(){ if(S.token) cycle(); },UPLOAD_WAIT);
+  }
+  /* 바뀐 기록이 남아 있는데 2초 타이머가 밀렸을 때를 위한 안전망 */
+  function guard(){
+    if(!S.token) return;
+    if(syncedSeq>=changeSeq) return;
+    cycle();
+  }
+  function wake(){
+    if(!S.token) return;
+    if(T()-S.lastAt<MIN_GAP) return;
+    cycle();
+  }
+  function scheduleRetry(e){
+    clearTimeout(retryT);
+    if(!S.token) return;
+    if(e&&(e.status===401||e.status===403)) return;
+    retryT=setTimeout(function(){ if(S.token) cycle(); },RETRY_WAIT);
+  }
+  function start(){
+    if(!started){ init(); started=true; }
+    setState();
+    if(!S.token) return;
+    if(S.fromLink) connect(S.token);
+    else cycle();
+  }
+
+  /* ── 화면 연결 ───────────────────────────────────────── */
+  function buildUI(){
+    var inp=$('#syncToken'), go=$('#syncConnect');
+    if(go) go.onclick=function(){ connect(inp?inp.value:''); };
+    if(inp) inp.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){ e.preventDefault(); connect(inp.value); }
+    });
+    var nw=$('#syncNow');
+    if(nw) nw.onclick=function(){
+      if(!S.token){ toast('먼저 토큰으로 연결해 주세요'); return; }
+      toast('맞추는 중…');
+      cycle({user:true}).then(function(r){
+        if(r&&r.ok){
+          toast(r.wrote?'올릴 기록이 있어 함께 올렸어요':'이미 두 기기가 같아요');
+          setNote('맞췄어요 · '+lastLabel());
+        }
+      }).catch(function(e){ toast(errText(e)); });
+    };
+    var lk=$('#syncLinkBtn'); if(lk) lk.onclick=copyLink;
+    var dc=$('#syncDisconnect'); if(dc) dc.onclick=disconnect;
+  }
+  function init(){
+    load();
+    adoptLink();
+    buildUI();
+    setState();
+    var _save=Store.save;
+    Store.save=function(immediate){ _save.call(Store,immediate); touch(); };
+    document.addEventListener('visibilitychange',function(){ if(!document.hidden) wake(); });
+    window.addEventListener('focus',function(){ wake(); });
+    window.addEventListener('online',function(){ if(S.token) cycle(); });
+    setInterval(guard,20000);
+  }
+  return {
+    start:start, sync:function(){ return cycle({user:true}); }, link:linkFor,
+    active:function(){ return !!S.token; },
+    state:function(){ return {token:S.token,gistId:S.gistId,lastAt:S.lastAt,busy:busy,err:S.lastErr,del:S.del}; }
+  };
+})();
+
 /* ── boot ──────────────────────────────────────────────── */
 function boot(){
   var st=store.settings||{};
@@ -4886,7 +5604,7 @@ layout=function(anchor){
   layoutBook=curBook;
 };
 
-Store.load().then(boot);
+Store.load().then(boot).then(function(){ try{ Sync.start(); }catch(e){} });
 })();
 </script>
 </body>
