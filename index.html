@@ -995,10 +995,10 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <h3>이렇게 읽어요</h3>
       <ul>
         <li><b>화면 가장자리</b>를 누르거나 <b>옆으로 밀면</b> 다음 쪽 / 이전 쪽</li>
-        <li><b>펜 아이콘</b>을 켜고 첫 글자부터 마지막 글자까지 손가락을 스으윽 훑으면 그대로 칠해져요. 칠한 곳을 톡 누르면 지워져요</li>
+        <li>상단 <b>선택</b>을 누르면 고르는 상태가 돼요. 본문 절을 톡톡 눌러 고르고(다시 누르면 풀려요), 아래 바의 <b>색 동그라미</b>로 칠하거나 <b>지우기·저장·복사·메모</b>를 한자리에서 해요. 고르는 동안 손가락이 조금 스쳐도 칠해지지 않아요</li>
         <li>칠한 뒤 <b>메모 남기기</b>를 누르면 왼쪽 목차 창의 <b>메모</b> 카톡방이 바로 열려요. 방금 칠한 구절이 왼쪽 말풍선으로 서고, 아래 입력창에 한 줄씩 보내면 오른쪽에 이어져요</li>
         <li><b>본문 절</b>을 톡 누르면 화면 맨 위·아래 도구 막대만 조용히 여닫혀요</li>
-        <li>상단의 <b>담기</b>를 누르면 절을 톡톡 골라 <b>기억하는 말씀</b>에 담을 수 있어요. 담은 말씀은 <b>☰ 목차 → 기억</b>을 누르면 목차 창 안에서 바로 열리는 대화방에서 봐요</li>
+        <li>상단 <b>선택</b>에서 절을 톡톡 고른 뒤 <b>저장</b>을 누르면 <b>기억하는 말씀</b>에 담겨요. 담은 말씀은 <b>☰ 목차 → 기억</b>을 누르면 목차 창 안에서 바로 열리는 대화방에서 봐요</li>
         <li><b>☰ 목차 → 메모</b>를 누르면 형광펜 칠한 구절(왼쪽)과 내 메모·단문(오른쪽)이 한 대화방에 모여요. 맨 아래 입력창에 한 줄씩 보내면 카톡처럼 쌓여요</li>
         <li>대화방 위 <b>복사</b>를 누르면 말풍선을 톡톡 골라 고른 것만 복사할 수 있어요. <b>전체 선택</b>·<b>취소</b>로 다루고 <b>복사하기</b>를 누르면 구절과 출처가 함께 복사돼요</li>
         <li><b>☰ 목차 → 오늘</b>에서 달력으로 날짜를 골라 그날 읽을 범위(매일 신약 3장 + 잠언 1장)를 보고, 읽은 장은 <b>✓</b>로 표시해 둘 수 있어요. 표지의 <b>오늘의 읽기</b>를 누르면 오늘 첫 장으로 바로 펼쳐져요</li>
@@ -1320,7 +1320,7 @@ function refreshToolPad(anchor){
   if(toolPadPx>0 && before===0){          // 바가 막 떴다
     padEntryAnchor=currentAnchor();
     padEntrySpread=curSpread; padEntryColH=colHv; padEntryPer=Math.max(1,S.curCols*pps);
-    layout(padEntryAnchor);
+    layout(padEntryAnchor, true);         // 보던 첫 구절을 왼쪽 페이지 맨 위에 그대로 둔다
     padLiveAnchor=currentAnchor();
   } else if(toolPadPx===0 && before>0){   // 바를 껐다
     var cur=currentAnchor();
@@ -1334,7 +1334,7 @@ function refreshToolPad(anchor){
     }
     padEntryAnchor=padLiveAnchor=null; padEntrySpread=null;
   } else if(changed){                     // 바 높이가 달라졌다 (좁은 화면에서 줄이 바뀔 때)
-    layout(anchor||null);
+    layout(anchor||currentAnchor()||null, toolPadPx>0);   // 바가 떠 있는 동안은 보던 첫 구절을 지킨다
   }
 }
 
@@ -1463,8 +1463,8 @@ function splitVerseBlock(bi, avail){
   return {head:text.slice(0,cut), tail:text.slice(cut), headH:nLines*lh+3, tailH:tailLines*lh+3};
 }
 
-function paginate(totalH){
-  colList=[]; colOfBlock=new Array(blockList.length); posIdx={}; chapCol={};
+function paginate(totalH, breakBi, per){
+  colList=[]; colOfBlock=[]; posIdx={}; chapCol={};
   var n=blockList.length, i=0, carry=null;
   if(!n) return;
   var guard=0;
@@ -1472,6 +1472,7 @@ function paginate(totalH){
     var items=[], used=0;
     if(carry){ items.push(carry.item); used+=carry.h; carry=null; }
     while(i<n){
+      if(breakBi!=null && i===breakBi && items.length) break;   // 보던 절이 이 열의 맨 위에서 시작하게
       var h=(i+1<n)?tops[i+1]-tops[i]:totalH-tops[i];
       if(used+h<=colHv+1){ items.push({bi:i}); used+=h; i++; continue; }
       // keep a chapter heading together with at least its first verse
@@ -1491,6 +1492,29 @@ function paginate(totalH){
     if(!items.length) break;
     colList.push({items:items});
   }
+  reindexCols();
+  /* 펼침면(두 쪽)에서 보던 절이 왼쪽 맨 위에 오도록: 그 절이 새 열의 첫 줄인데도
+     홀수 열이면 책 맨 앞쪽 열 하나를 둘로 나눠 한 열씩 민다 — 보던 자리 근처는
+     건드리지 않고, 본문 글자도 사라지지 않는다 (맨 앞 장이 조금 일찍 끝날 뿐) */
+  if(breakBi!=null && per>1){
+    var ak=colOfBlock[breakBi];
+    if(ak!=null){
+      var d=(per-(ak%per))%per;
+      var scan=0;
+      for(var s=0;s<d;s++){
+        var done=false;
+        for(var ci2=scan;ci2<colOfBlock[breakBi];ci2++){
+          if(splitColumn(ci2)){ scan=ci2+1; done=true; break; }
+        }
+        if(!done) break;
+        reindexCols();
+      }
+    }
+  }
+}
+/* 열 목록에서 파생되는 색인(장·절 → 열)을 다시 계산한다 */
+function reindexCols(){
+  colOfBlock=new Array(blockList.length); posIdx={}; chapCol={};
   for(var ci=0;ci<colList.length;ci++){
     var cc=colList[ci]; var fCh=null,lCh=null,fv=null;
     for(var q=0;q<cc.items.length;q++){
@@ -1507,6 +1531,48 @@ function paginate(totalH){
     }
     cc.firstCh=fCh; cc.lastCh=lCh; cc.firstVerse=fv;
   }
+}
+/* 한 열을 두 열로 나눈다 — 높이를 반으로 가르는 자리를 고르고,
+   앞 열이 제목만 남지 않게 경계를 살짝 옮긴다 */
+function splitColumn(ci){
+  var cc=colList[ci];
+  if(!cc||!cc.items||cc.items.length<2) return false;
+  var it=cc.items, hs=[], total=0, i;
+  for(i=0;i<it.length;i++){
+    var h;
+    if(it[i].text!=null) h=LH;                                  // 나뉜 조각은 줄 수를 알 수 없다
+    else h=(it[i].bi+1<blockList.length)?tops[it[i].bi+1]-tops[it[i].bi]:LH;
+    if(!(h>0)) h=LH;
+    hs.push(h); total+=h;
+  }
+  var half=1, bestd=1e9, acc=0;
+  for(i=1;i<it.length;i++){
+    acc+=hs[i-1];
+    var d=Math.abs(acc-total/2);
+    if(d<bestd){ bestd=d; half=i; }
+  }
+  while(half<it.length && (blockList[it[half-1].bi].k==='ch'||blockList[it[half-1].bi].k==='sh')) half++;
+  if(half>=it.length) return false;
+  colList.splice(ci,1,{items:it.slice(0,half)},{items:it.slice(half)});
+  return true;
+}
+/* 절(또는 장 시작)이 들어 있는 블록 번호 — 그 앞의 장 제목·소제목까지 함께 새 열로 넘긴다 */
+function anchorBlock(a){
+  if(!a) return null;
+  var bi=null;
+  for(var i=0;i<blockList.length;i++){
+    var b=blockList[i];
+    if(b.c!==a.c) continue;
+    if(a.v!=null){ if(b.k==='v'&&b.v===a.v){ bi=i; break; } }
+    else if(b.k==='ch'||b.k==='v'){ bi=i; break; }
+  }
+  if(bi==null) return null;
+  while(bi>0){
+    var pv=blockList[bi-1];
+    if((pv.k==='ch'||pv.k==='sh') && pv.c===blockList[bi].c){ bi--; continue; }
+    break;
+  }
+  return bi;
 }
 
 /* ── scroll reading: the whole book flows down one page ───────────── */
@@ -1618,7 +1684,9 @@ function onScrollReading(){
 }
 
 var pendingSpread=null;   // 바를 끌 때 '켤 때 보던 그 펼침면'으로 정확히 되돌리기 위한 지정값
-function layout(anchor){
+/* keep=true 면 anchor 가 들어 있는 열에서 쪽을 새로 시작해, 보던 첫 구절이
+   왼쪽 페이지 맨 위에 그대로 남는다 (하단 바가 떠서 쪽나눔이 달라질 때) */
+function layout(anchor, keep){
   if(!SRC) return;
   var pend=pendingSpread; pendingSpread=null;
   if(!anchor) anchor=currentAnchor();
@@ -1637,14 +1705,14 @@ function layout(anchor){
   var m=metrics();
   buildBlocks(curBook);
   var totalH=measureBlocks();
-  paginate(totalH);
+  var perSpread=Math.max(1,m.cols*pps);
+  paginate(totalH, keep?anchorBlock(anchor):null, perSpread);
   S.curCols=m.cols;
   var col=0;
   if(anchor){
     if(anchor.v!=null && posIdx[anchor.c+':'+anchor.v]!==undefined) col=posIdx[anchor.c+':'+anchor.v];
     else if(chapCol[anchor.c]!==undefined) col=chapCol[anchor.c];
   }
-  var perSpread=Math.max(1,m.cols*pps);
   curSpread=Math.floor(col/perSpread);
   if(pend!=null) curSpread=pend;
   curSpread=clamp(curSpread,0,totalSpreads()-1);
@@ -2266,7 +2334,7 @@ function setSelectMode(on){
   var anchor=currentAnchor();
   toolPadBusy++;
   selectMode=!!on;
-  penMode=selectMode;                     // 끌어서 칠하기(붓)도 같은 모드 안에서 동작한다
+  penMode=selectMode;                     // 선택 모드에선 쪽 넘김 끌기를 막는다 (칠하기는 하지 않는다)
   app.classList.toggle('sel-mode',selectMode);
   var b=$('#btnSelect'); if(b){ b.classList.toggle('on',selectMode); b.setAttribute('aria-pressed',selectMode?'true':'false'); }
   closePop();
@@ -2453,26 +2521,19 @@ function penMoveAt(x,y,ev){
   penDown.px=x; penDown.py=y;
   penMove(x,y);
 }
-/* 선택 모드: 톡 누르면 그 절을 고르고, 끌면 그 자리에 형광펜이 칠해진다 */
-var selPress=null, touchDown=false, selTapGuard=0;
-function selBegin(x,y){ selPress={x:x,y:y,drawing:false}; }
+/* 선택 모드: 톡 누르면 그 절을 고르고 푼다.
+   여기서는 끌어서 칠하기(형광펜)를 하지 않는다 — 선택하다 손가락이 조금 스쳐도
+   형광펜이 저절로 그려지면 안 되니까. 색은 아래 바의 색 동그라미로만 칠한다. */
+var selPress=null, touchDown=false, selTapGuard=0, SEL_TAP_SLOP=26;
+function selBegin(x,y){ selPress={x:x,y:y,far:false}; }
 function selMoveTo(x,y,ev){
   if(!selectMode||!selPress) return;
-  if(!selPress.drawing){
-    if(Math.abs(x-selPress.x)<5&&Math.abs(y-selPress.y)<5) return;
-    selPress.drawing=true;
-    penStartAt(selPress.x,selPress.y);
-  }
-  penMoveAt(x,y,ev);
+  if(Math.abs(x-selPress.x)>SEL_TAP_SLOP||Math.abs(y-selPress.y)>SEL_TAP_SLOP) selPress.far=true;
 }
 function selFinish(x,y){
   if(!selectMode||!selPress) return;
   var st=selPress; selPress=null;
-  if(st.drawing){
-    if(x!=null) penMove(x,y);
-    endStroke();
-    return;
-  }
+  if(st.far){ suppressClick=true; return; }   // 크게 끌었으면 아무 것도 하지 않는다 (칠하지도 고르지도 않는다)
   selTapAt(x==null?st.x:x, y==null?st.y:y);
 }
 function selTapAt(x,y){
@@ -2568,7 +2629,7 @@ $$('#selectbar .sb-sw').forEach(function(b){
     penColor=b.dataset.pc;
     updatePenUI();
     if(selCount()) selHighlight(penColor);      // 고른 절이 있으면 바로 그 색으로 칠한다
-    else toast('이 색으로 끌어서 그으면 칠해져요');
+    else toast('구절을 먼저 골라 주세요');       // 끌어서 긋는 대신, 고른 절에만 칠한다
   };
 });
 $('#sbErase').onclick=function(){ selHighlight('erase'); };
@@ -3083,8 +3144,10 @@ function updateSelUI(){
   refreshToolPad();       // 바 높이가 달라지면 본문 아래 여백도 따라 늘린다
 }
 function toggleSel(c,v){
-  if(selChap && c!==selChap){ selMap={}; selChap=c; toast('장이 달라 선택을 새로 시작했어요'); }
-  if(!selChap) selChap=c;
+  var n=selCount();
+  // 고른 절이 없으면 장이 달라도 '새로 시작' 이 아니다 — 조용히 그 장으로 시작한다
+  if(!n) selChap=c;
+  else if(selChap && c!==selChap){ selMap={}; selChap=c; toast('장이 달라 선택을 새로 시작했어요'); }
   var k=c+':'+v;
   if(selMap[k]) delete selMap[k]; else selMap[k]=1;
   applySel(); updateSelUI();
@@ -5553,8 +5616,8 @@ layoutBook=null;
 
 // keep curBook in sync with layout calls
 var _layout=layout;
-layout=function(anchor){
-  _layout(anchor);
+layout=function(anchor, keep){
+  _layout(anchor, keep);
   layoutBook=curBook;
 };
 
