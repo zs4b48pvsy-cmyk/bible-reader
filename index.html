@@ -536,6 +536,13 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   font-family:var(--font-ui);font-size:12px;padding:7px 12px;border-radius:15px;cursor:pointer;
   white-space:nowrap;line-height:1;}
 .rv-capbar .rv-capcancel:active{background:rgba(0,0,0,.06);}
+/* 캡쳐 배경 투명 — 켜면 먹색 알약 (편집·캡쳐 버튼의 .on 과 같은 톤) */
+.rv-capbar .rv-captrans{flex:0 0 auto;border:1px solid rgba(0,0,0,.12);background:transparent;color:#5E646B;
+  font-family:var(--font-ui);font-size:12px;padding:6px 10px;border-radius:15px;cursor:pointer;
+  white-space:nowrap;line-height:1;transition:background .16s ease,color .16s ease,border-color .16s ease;}
+.rv-capbar .rv-captrans:active{background:rgba(0,0,0,.06);}
+.rv-capbar .rv-captrans.on{background:#2E2A24;color:#F7F4EC;border-color:#2E2A24;}
+.rv-capbar .rv-captrans.on:active{background:#221F1A;}
 .rv-capturing #rvBody .rv-bub{cursor:pointer;}
 .rv-capturing #rvBody .rv-more,.rv-capturing #rvBody .rv-act{display:none;}
 .rv-capturing #rvBody .rv-group .rv-bub{box-shadow:0 0 0 1.5px var(--rv-bg,#FFFFFF),0 0 0 2.5px rgba(200,149,42,.55);}
@@ -544,6 +551,13 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   .rv-capbar{gap:6px;padding-left:9px;padding-right:9px;}
   .rv-captip{font-size:11.5px;}
   .rv-capbar .rv-capcancel{padding:7px 10px;font-size:11.5px;}
+  .rv-capbar .rv-captrans{padding:6px 8px;font-size:11.5px;}
+}
+@media (max-width:370px){
+  .rv-capbar{gap:5px;padding-left:8px;padding-right:8px;}
+  .rv-captip{font-size:11px;}
+  .rv-capbar .rv-capcancel{padding:6px 9px;font-size:11px;}
+  .rv-capbar .rv-captrans{padding:6px 7px;font-size:11px;}
 }
 
 /* 목차 드로어 — 기억 탭 */
@@ -899,6 +913,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         <div class="rv-body" id="rvBody"></div>
         <div class="rv-capbar" id="rvCapBar" role="group" aria-label="캡쳐할 구절 고르기">
           <span class="rv-captip" id="rvCapTip">캡쳐할 구절을 눌러 보세요</span>
+          <button type="button" class="rv-captrans" id="rvCapTrans" aria-pressed="false">배경 투명</button>
           <button type="button" class="rv-capcancel" id="rvCapCancel">취소</button>
         </div>
       </section>
@@ -3529,6 +3544,21 @@ function rvParts(it){
 var rvEditing=false;
 /* ── 캡쳐: 저장한 구절 하나를 눌러 그 구절만 9:16 이미지로 ──── */
 var rvCapturing=false;
+/* 캡쳐 배경을 채울지(먹색·내 배경색) 비울지(투명 PNG) — 캡쳐 바의 '배경 투명' 버튼 */
+var rvCapTrans=false;
+function paintCapTrans(){
+  var b=$('#rvCapTrans'); if(!b) return;
+  b.classList.toggle('on',rvCapTrans);
+  b.setAttribute('aria-pressed',rvCapTrans?'true':'false');
+}
+function setRvCapTrans(on,quiet){
+  rvCapTrans=!!on;
+  paintCapTrans();
+  store.settings=store.settings||{};
+  store.settings.rvCapTrans=rvCapTrans;      // 다음에 열어도 그대로 (기기 간 동기화에도 실린다)
+  try{ Store.save(true); }catch(e){}
+  if(!quiet) toast(rvCapTrans?'캡쳐 배경을 투명으로 저장해요':'캡쳐 배경을 채워서 저장해요');
+}
 function setRvCapturing(on){
   rvCapturing=!!on;
   if(rvCapturing) rvEditing=false;          // 편집 모드와 상호 배타
@@ -3539,6 +3569,7 @@ function setRvCapturing(on){
   var bar=$('#rvCapBar'), tip=$('#rvCapTip'), cmp=$('#rvCompose');
   if(bar) bar.classList.toggle('show',rvCapturing);
   if(tip) tip.textContent='캡쳐할 구절을 눌러 보세요';
+  paintCapTrans();
   if(cmp) cmp.style.display=(rvMode==='memo'&&!rvCapturing)?'flex':'none';
 }
 function rvLegacyCopy(text){
@@ -3857,6 +3888,7 @@ $('#rvCapture').onclick=function(){
   toast('캡쳐할 구절을 눌러 보세요');
 };
 $('#rvCapCancel').onclick=function(){ setRvCapturing(false); };
+$('#rvCapTrans').onclick=function(){ setRvCapTrans(!rvCapTrans); };
 $('#rvSort').onclick=function(){ rvSort=(rvSort==='recent')?'old':'recent'; renderRvWall(); };
 $('#rvThemeBtn').onclick=function(e){
   e.stopPropagation();
@@ -3978,8 +4010,9 @@ function drawStoryCanvas(items,opts){
     lay=storyLayout(ctx,items,sizes[s]);
     if(lay.height<=STORY_H-reserve) break;
   }
-  // 배경
-  ctx.fillStyle=rvBg; ctx.fillRect(0,0,STORY_W,STORY_H);
+  // 배경 — 투명으로 저장할 때는 아예 칠하지 않는다 (PNG 알파 0)
+  if(opts.transparent){ ctx.clearRect(0,0,STORY_W,STORY_H); }
+  else { ctx.fillStyle=rvBg; ctx.fillRect(0,0,STORY_W,STORY_H); }
   var top=0;
   if(opts.date){
     // 위쪽 날짜 + 말풍선 묶음을 한 덩어리로 세로 가운데에 둔다
@@ -4040,11 +4073,16 @@ function drawStoryCanvas(items,opts){
   }
   return cv;
 }
-function buildStoryCanvas(dayKey){
-  return drawStoryCanvas(storyTimelineOf(dayKey),{date:true});
+function capTransOpt(opts){
+  return (opts && opts.transparent != null) ? !!opts.transparent : rvCapTrans;
 }
-function buildCaptureCanvas(item){
-  return drawStoryCanvas(item?[item]:[],{date:true});
+function buildStoryCanvas(dayKey,opts){
+  return drawStoryCanvas(storyTimelineOf(dayKey),
+    {date:true, transparent:capTransOpt(opts)});
+}
+function buildCaptureCanvas(item,opts){
+  return drawStoryCanvas(item?[item]:[],
+    {date:true, transparent:capTransOpt(opts)});
 }
 function downloadBlob(blob,name){
   var url=URL.createObjectURL(blob);
@@ -4082,7 +4120,8 @@ function saveStory(dayKey){
   try{ cv=buildStoryCanvas(dayKey); }catch(err){ cv=null; }
   if(!cv){ toast('저장할 말씀이 없어요'); return; }
   shareCanvas(cv,'bible-story-'+dayKey+'.png','기억하는 말씀',
-              '스토리 이미지(1080×1920)를 저장했어요','공유 시트에서 《사진에 저장》을 골라 주세요');
+              rvCapTrans?'스토리 이미지(1080×1920)를 투명 배경으로 저장했어요':'스토리 이미지(1080×1920)를 저장했어요',
+              rvCapTrans?'공유 시트에서 《사진에 저장》이나 《파일에 저장》을 골라 주세요':'공유 시트에서 《사진에 저장》을 골라 주세요');
 }
 /* 캡쳐: 저장한 구절 중 누른 그 하나만 9:16 이미지로 */
 function captureVerse(it){
@@ -4094,22 +4133,30 @@ function captureVerse(it){
 function captureItem(it){
   var item=captureVerse(it);
   if(!item){ toast('캡쳐할 구절을 먼저 골라 주세요'); return; }
+  var trans=rvCapTrans;                  // 버튼에 지금 켜져 있는 그대로
   var cv=null;
-  try{ cv=buildCaptureCanvas(item); }catch(err){ cv=null; }
+  try{ cv=buildCaptureCanvas(item,{transparent:trans}); }catch(err){ cv=null; }
   if(!cv){ toast('이미지를 만들지 못했어요'); return; }
   var src=item.src||{}, ref=(item.kind==='rv')?(src.ref||item.ref||''):(item.ref||'');
   var slug=String(ref).replace(/[^0-9A-Za-z가-힣]+/g,'-').replace(/^-|-$/g,'')||'verse';
   setRvCapturing(false);                 // 누른 즉시 모드를 닫고 이미지로
   shareCanvas(cv,'bible-verse-'+slug+'.png',ref||'기억하는 말씀',
-              '구절 이미지(1080×1920)를 저장했어요','공유 시트에서 《사진에 저장》을 골라 주세요');
+              trans?'구절 이미지(1080×1920)를 투명 배경으로 저장했어요':'구절 이미지(1080×1920)를 저장했어요',
+              trans?'공유 시트에서 《사진에 저장》이나 《파일에 저장》을 골라 주세요':'공유 시트에서 《사진에 저장》을 골라 주세요');
 }
-window.__rvStory=function(dayKey){ var cv=buildStoryCanvas(dayKey||rvDayKey(Date.now())); return cv?cv.toDataURL('image/png'):''; };
-window.__rvCapture=function(id){
+window.__rvStory=function(dayKey,transparent){
+  var cv=buildStoryCanvas(dayKey||rvDayKey(Date.now()),
+           (transparent==null)?undefined:{transparent:!!transparent});
+  return cv?cv.toDataURL('image/png'):'';
+};
+window.__rvCapTrans=function(on){ if(on==null) return rvCapTrans; setRvCapTrans(on,true); return rvCapTrans; };
+window.__rvCapture=function(id,transparent){
   var hit=null;
   (store.rv||[]).forEach(function(it){ if(it && it.id===id) hit=it; });
   if(!hit) return '';
   var cv=null;
-  try{ cv=buildCaptureCanvas(captureVerse(hit)); }catch(e){ cv=null; }
+  try{ cv=buildCaptureCanvas(captureVerse(hit),
+           (transparent==null)?undefined:{transparent:!!transparent}); }catch(e){ cv=null; }
   return cv?cv.toDataURL('image/png'):'';
 };
 
@@ -4229,7 +4276,7 @@ function applySettings(){
   $$('#segPad button').forEach(function(b){ b.classList.toggle('on',b.dataset.v===S.pad); });
   var meta=document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute('content',T.paper);
-  store.settings={cols:S.cols,font:S.font,theme:S.theme,fs:S.fs,lh:S.lh,pad:S.pad,flip:'curl',rvBg:rvBg,rvBubble:rvBubble,v:3};
+  store.settings={cols:S.cols,font:S.font,theme:S.theme,fs:S.fs,lh:S.lh,pad:S.pad,flip:'curl',rvBg:rvBg,rvBubble:rvBubble,rvCapTrans:rvCapTrans,v:3};
   Store.save();
 }
 
@@ -4690,6 +4737,7 @@ $('#fileData').onchange=function(e){
         store.settings=o.settings;
         if(/^#[0-9a-fA-F]{6}$/.test(o.settings.rvBg||'')) rvBg=o.settings.rvBg;
         if(/^#[0-9a-fA-F]{6}$/.test(o.settings.rvBubble||'')) rvBubble=o.settings.rvBubble;
+        if(typeof o.settings.rvCapTrans==='boolean'){ rvCapTrans=o.settings.rvCapTrans; paintCapTrans(); }
       }
       Store.save(true);
       if(mode==='scroll') renderScrollBook();
@@ -5331,6 +5379,7 @@ var Sync=(function(){
       store.rv=again.data.rv||[]; store.chat=again.data.chat||[];
       store.plan=again.data.plan||{};
       store.settings=again.data.settings||{};
+      if(typeof store.settings.rvCapTrans==='boolean'){ rvCapTrans=store.settings.rvCapTrans; paintCapTrans(); }
       store.defaultSettings=again.data.defaultSettings||null;
       store.planCfg=again.data.planCfg||null;
       store.pos=again.data.pos||null;
@@ -5727,8 +5776,10 @@ function boot(){
   S.flip='curl';
   rvBg=/^#[0-9a-fA-F]{6}$/.test(st.rvBg||'')?st.rvBg:'#FFFFFF';
   rvBubble=/^#[0-9a-fA-F]{6}$/.test(st.rvBubble||'')?st.rvBubble:'#274261';
+  rvCapTrans=!!st.rvCapTrans;
   applySettings();
   applyRvTheme();
+  paintCapTrans();
 
   loadCustom().then(function(){
     useSource(store.src==='custom'&&customSrc?'custom':'builtin');
