@@ -1286,7 +1286,7 @@ function syncToolPad(){
 /* 모드가 바뀐 뒤: 여백을 다시 재고(필요하면) 보던 절을 그대로 두고 쪽을 다시 나눈다
    바를 켠 순간의 자리(padEntryAnchor)를 기억해 두었다가, 그 사이 쪽을 넘기지 않았다면
    끌 때 바로 그 자리로 되돌려 놓는다 (쪽나눔이 달라져도 자리가 튀지 않게) */
-var padEntryAnchor=null, padLiveAnchor=null;
+var padEntryAnchor=null, padLiveAnchor=null, padEntrySpread=null, padEntryColH=0, padEntryPer=1;
 function sameAnchor(a,b){
   if(!a||!b) return false;
   return a.c===b.c && (a.v||null)===(b.v||null);
@@ -1298,12 +1298,20 @@ function refreshToolPad(anchor){
   if(mode==='scroll') return;     // 스크롤 읽기는 아래 여백만 늘면 된다 (쪽나눔 없음)
   if(toolPadPx>0 && before===0){          // 바가 막 떴다
     padEntryAnchor=currentAnchor();
+    padEntrySpread=curSpread; padEntryColH=colHv; padEntryPer=Math.max(1,S.curCols*pps);
     layout(padEntryAnchor);
     padLiveAnchor=currentAnchor();
   } else if(toolPadPx===0 && before>0){   // 바를 껐다
     var cur=currentAnchor();
-    layout(sameAnchor(cur,padLiveAnchor)?padEntryAnchor:cur);
-    padEntryAnchor=padLiveAnchor=null;
+    var back=Math.floor(window.innerHeight-(safeTop()+54)-(safeBot()+40)-2);
+    if(sameAnchor(cur,padLiveAnchor) && padEntrySpread!=null && back===padEntryColH &&
+       Math.max(1,S.curCols*pps)===padEntryPer){
+      pendingSpread=padEntrySpread;      // 쪽나눔이 그대로니 보던 펼침면으로 그대로 되돌린다
+      layout(null);
+    } else {
+      layout(padEntryAnchor&&sameAnchor(cur,padLiveAnchor)?padEntryAnchor:cur);
+    }
+    padEntryAnchor=padLiveAnchor=null; padEntrySpread=null;
   } else if(changed){                     // 바 높이가 달라졌다 (좁은 화면에서 줄이 바뀔 때)
     layout(anchor||null);
   }
@@ -1588,8 +1596,10 @@ function onScrollReading(){
   });
 }
 
+var pendingSpread=null;   // 바를 끌 때 '켤 때 보던 그 펼침면'으로 정확히 되돌리기 위한 지정값
 function layout(anchor){
   if(!SRC) return;
+  var pend=pendingSpread; pendingSpread=null;
   if(!anchor) anchor=currentAnchor();
   if(mode==='scroll'){
     var W=window.innerWidth;
@@ -1615,6 +1625,7 @@ function layout(anchor){
   }
   var perSpread=Math.max(1,m.cols*pps);
   curSpread=Math.floor(col/perSpread);
+  if(pend!=null) curSpread=pend;
   curSpread=clamp(curSpread,0,totalSpreads()-1);
   renderSlots();
   updateChrome();
