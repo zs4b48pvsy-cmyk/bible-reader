@@ -1420,13 +1420,16 @@ function syncToolPad(){
 var padEntryAnchor=null, padLiveAnchor=null, padEntrySpread=null, padEntryColH=0, padEntryPer=1;
 function sameAnchor(a,b){
   if(!a||!b) return false;
-  return a.c===b.c && (a.v||null)===(b.v||null);
+  return a.c===b.c && (a.v||null)===(b.v||null) && (a.off||0)===(b.off||0);
 }
 function refreshToolPad(anchor){
   if(toolPadBusy) return;
   var before=toolPadPx;
   var changed=syncToolPad();
-  if(mode==='scroll') return;     // 스크롤 읽기는 아래 여백만 늘면 된다 (쪽나눔 없음)
+  if(mode==='scroll'){           // 스크롤 읽기는 아래 여백만 늘면 된다 (쪽나눔 없음)
+    if(changed) updateChrome();  // 바 높이가 달라진 만큼 진행률 표시도 다시 맞춘다
+    return;
+  }
   if(toolPadPx>0 && before===0){          // 바가 막 떴다
     padEntryAnchor=currentAnchor();
     padEntrySpread=curSpread; padEntryColH=colHv; padEntryPer=Math.max(1,S.curCols*pps);
@@ -1440,7 +1443,9 @@ function refreshToolPad(anchor){
       pendingSpread=padEntrySpread;      // 쪽나눔이 그대로니 보던 펼침면으로 그대로 되돌린다
       layout(null);
     } else {
-      layout(padEntryAnchor&&sameAnchor(cur,padLiveAnchor)?padEntryAnchor:cur);
+      /* 바를 꺼도 화면 맨 위에 보이던 글자 자리는 그대로 — 쪽나눔이 달라져도 그 글자에서 새 쪽을 시작한다 */
+      var back=padEntryAnchor&&sameAnchor(cur,padLiveAnchor)?padEntryAnchor:cur;
+      layout(back, true);
     }
     padEntryAnchor=padLiveAnchor=null; padEntrySpread=null;
   } else if(changed){                     // 바 높이가 달라졌다 (좁은 화면에서 줄이 바뀔 때)
@@ -1573,8 +1578,27 @@ function splitVerseBlock(bi, avail){
   return {head:text.slice(0,cut), tail:text.slice(cut), headH:nLines*lh+3, tailH:tailLines*lh+3};
 }
 
-function paginate(totalH, breakBi, per){
+/* 절의 off 글자부터 끝까지가 차지하는 높이 — 쪽을 다시 나눌 때 다음 열이 몇 줄을 더 담을지 계산한다 */
+function tailHeightAt(bi, off){
+  var elNode=blockEls[bi]; if(!elNode) return null;
+  var vt=elNode.querySelector('.vt'); if(!vt||!vt.firstChild) return null;
+  var tn=vt.firstChild;
+  if(off<=0 || off>=tn.length) return null;
+  var rects=rangeRects(tn); if(!rects||!rects.length) return null;
+  var rr=document.createRange(); rr.setStart(tn,off); rr.setEnd(tn,Math.min(tn.length,off+1));
+  var r0=rr.getClientRects()[0]; if(!r0) return null;
+  var lh=lineHeightPx(elNode), nL=0;
+  for(var i=0;i<rects.length;i++){ if(rects[i].top>=r0.top-2) nL++; }
+  return Math.max(lh, nL*lh+3);
+}
+/* breakAt = {bi, off} — off>0 이면 그 절의 off 글자에서 새 열을 시작한다
+   (보던 화면 맨 위가 절 중간에서 시작하던 자리까지 그대로 지키기 위해).
+   off===0 이면 그 절이 새 열의 맨 위에서 시작한다. */
+var anchorCol=null;      // 이번 쪽나눔에서 '보던 자리'가 놓인 열 번호
+function paginate(totalH, breakAt, per){
   colList=[]; colOfBlock=[]; posIdx={}; chapCol={};
+  anchorCol=null;
+  var anchorItem=null;
   var n=blockList.length, i=0, carry=null;
   if(!n) return;
   var guard=0;
@@ -1582,7 +1606,18 @@ function paginate(totalH, breakBi, per){
     var items=[], used=0;
     if(carry){ items.push(carry.item); used+=carry.h; carry=null; }
     while(i<n){
-      if(breakBi!=null && i===breakBi && items.length) break;   // 보던 절이 이 열의 맨 위에서 시작하게
+      if(breakAt!=null && i===breakAt.bi && items.length){
+        var bb=blockList[i], boff=breakAt.off||0;
+        if(boff>0 && bb.k==='v' && bb.text!=null && boff<bb.text.length){
+          /* 보던 자리가 절 중간 — 위쪽 글자는 이 열에 그대로 두고 아래만 새 열로 넘긴다 */
+          items.push({bi:i, text:bb.text.slice(0,boff)});
+          anchorItem={bi:i, text:bb.text.slice(boff), cont:true, anchor:true};
+          carry={item:anchorItem, h:(tailHeightAt(i,boff)||LH*2)};
+          anchorCol=colList.length+1;    // 곧 만들어질 새 열의 번호 (이 열이 먼저 놓인다)
+          i++; break;
+        }
+        break;                           // 보던 절이 이 열의 맨 위에서 시작하게
+      }
       var h=(i+1<n)?tops[i+1]-tops[i]:totalH-tops[i];
       if(used+h<=colHv+1){ items.push({bi:i}); used+=h; i++; continue; }
       // keep a chapter heading together with at least its first verse
@@ -1606,19 +1641,29 @@ function paginate(totalH, breakBi, per){
   /* 펼침면(두 쪽)에서 보던 절이 왼쪽 맨 위에 오도록: 그 절이 새 열의 첫 줄인데도
      홀수 열이면 책 맨 앞쪽 열 하나를 둘로 나눠 한 열씩 민다 — 보던 자리 근처는
      건드리지 않고, 본문 글자도 사라지지 않는다 (맨 앞 장이 조금 일찍 끝날 뿐) */
-  if(breakBi!=null && per>1){
-    var ak=colOfBlock[breakBi];
+  if(breakAt!=null && per>1){
+    var ak=anchorCol;
+    if(ak==null && !(breakAt.off>0)) ak=colOfBlock[breakAt.bi];
     if(ak!=null){
       var d=(per-(ak%per))%per;
       var scan=0;
       for(var s=0;s<d;s++){
         var done=false;
-        for(var ci2=scan;ci2<colOfBlock[breakBi];ci2++){
+        for(var ci2=scan;ci2<ak;ci2++){
           if(splitColumn(ci2)){ scan=ci2+1; done=true; break; }
         }
         if(!done) break;
-        reindexCols();
+        reindexCols(); ak++;
       }
+      anchorCol=ak;
+    }
+  }
+  /* 절 중간에서 시작한 조각이 실제로 놓인 열을 찾아 둔다 (앞을 나눴으면 번호가 밀린다) */
+  if(anchorItem){
+    anchorCol=null;
+    for(var ci3=0;ci3<colList.length && anchorCol==null;ci3++){
+      var its=colList[ci3].items;
+      for(var q3=0;q3<its.length;q3++){ if(its[q3]===anchorItem){ anchorCol=ci3; break; } }
     }
   }
 }
@@ -1666,9 +1711,12 @@ function splitColumn(ci){
   colList.splice(ci,1,{items:it.slice(0,half)},{items:it.slice(half)});
   return true;
 }
-/* 절(또는 장 시작)이 들어 있는 블록 번호 — 그 앞의 장 제목·소제목까지 함께 새 열로 넘긴다 */
-function anchorBlock(a){
+/* layout 의 breakAt — 앵커가 절 중간(off>0)이면 그 글자에서 새 열을 시작하고,
+   절 시작이면 그 절에서 그대로 새 열을 시작한다 (앞 장 제목을 끌어내리지 않아
+   보던 구절이 한 줄도 움직이지 않는다) */
+function anchorBreakFor(a){
   if(!a) return null;
+  if(!(a.off>0) && a.bi!=null && blockList[a.bi] && blockList[a.bi].c===a.c) return {bi:a.bi, off:0};
   var bi=null;
   for(var i=0;i<blockList.length;i++){
     var b=blockList[i];
@@ -1677,12 +1725,9 @@ function anchorBlock(a){
     else if(b.k==='ch'||b.k==='v'){ bi=i; break; }
   }
   if(bi==null) return null;
-  while(bi>0){
-    var pv=blockList[bi-1];
-    if((pv.k==='ch'||pv.k==='sh') && pv.c===blockList[bi].c){ bi--; continue; }
-    break;
-  }
-  return bi;
+  var b0=blockList[bi];
+  if(a.off>0 && b0.k==='v' && b0.text!=null && a.off<b0.text.length) return {bi:bi, off:a.off};
+  return {bi:bi, off:0};
 }
 
 /* ── scroll reading: the whole book flows down one page ───────────── */
@@ -1816,11 +1861,12 @@ function layout(anchor, keep){
   buildBlocks(curBook);
   var totalH=measureBlocks();
   var perSpread=Math.max(1,m.cols*pps);
-  paginate(totalH, keep?anchorBlock(anchor):null, perSpread);
+  paginate(totalH, keep?anchorBreakFor(anchor):null, perSpread);
   S.curCols=m.cols;
   var col=0;
   if(anchor){
-    if(anchor.v!=null && posIdx[anchor.c+':'+anchor.v]!==undefined) col=posIdx[anchor.c+':'+anchor.v];
+    if(keep && anchorCol!=null) col=anchorCol;                     // 보던 그 글자가 놓인 열
+    else if(anchor.v!=null && posIdx[anchor.c+':'+anchor.v]!==undefined) col=posIdx[anchor.c+':'+anchor.v];
     else if(chapCol[anchor.c]!==undefined) col=chapCol[anchor.c];
   }
   curSpread=Math.floor(col/perSpread);
@@ -2213,6 +2259,17 @@ function currentAnchor(){
   var ci=curTopCol();
   if(ci<colList.length){
     var cc=colList[ci];
+    /* 이 열이 어떤 절의 중간(이어지는 조각)에서 시작하면 그 글자 자리까지 함께 기억한다 —
+       '선택'을 켜고 꺼도 화면 맨 위 글자가 그대로 있어야 하기 때문 */
+    var it0=cc.items&&cc.items[0];
+    if(it0){
+      var b0=blockList[it0.bi];
+      if(b0 && (b0.k==='ch'||b0.k==='sh')) return {c:b0.c,v:(cc.firstVerse!=null?cc.firstVerse:null),bi:it0.bi};   // 이 열이 장·소제목에서 시작
+      if(b0 && it0.cont && it0.text!=null && b0.k==='v' && b0.text){
+        var off=b0.text.length-it0.text.length;
+        if(off>0 && off<b0.text.length) return {c:b0.c,v:b0.v,off:off};       // 이 열이 절 중간에서 시작
+      }
+    }
     if(cc.firstVerse!=null) return {c:cc.firstCh,v:cc.firstVerse};
     return {c:cc.firstCh,v:null};
   }
