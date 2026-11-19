@@ -2695,7 +2695,8 @@ function penMoveAt(x,y,ev){
    여기서는 끌어서 칠하기(형광펜)를 하지 않는다 — 선택하다 손가락이 조금 스쳐도
    형광펜이 저절로 그려지면 안 되니까. 색은 아래 바의 색 동그라미로만 칠한다. */
 var selPress=null, touchDown=false, selTapGuard=0, SEL_TAP_SLOP=26;
-function selBegin(x,y){ selPress={x:x,y:y,far:false}; }
+function selScrollTop(){ var el=$('#scroll'); return (el&&mode==='scroll')?el.scrollTop:null; }
+function selBegin(x,y){ selPress={x:x,y:y,far:false,top:selScrollTop()}; }
 function selMoveTo(x,y,ev){
   if(!selectMode||!selPress) return;
   if(Math.abs(x-selPress.x)>SEL_TAP_SLOP||Math.abs(y-selPress.y)>SEL_TAP_SLOP) selPress.far=true;
@@ -2704,6 +2705,10 @@ function selFinish(x,y){
   if(!selectMode||!selPress) return;
   var st=selPress; selPress=null;
   if(x!=null&&y!=null&&(Math.abs(x-st.x)>SEL_TAP_SLOP||Math.abs(y-st.y)>SEL_TAP_SLOP)) st.far=true;
+  if(st.top!=null){                     // 누르는 사이 지면이 움직였으면(굴러가는 중에 멈추려고 톡) 고르지 않는다
+    var nowTop=selScrollTop();
+    if(nowTop!=null&&Math.abs(nowTop-st.top)>2) st.far=true;
+  }
   // 끌었거나(쪽 넘김·스크롤) 쪽이 넘어가는 중이면 아무 것도 고르지 않는다
   if(st.far||dragMoved||(fxState&&fxState.drag)){
     suppressClick=true; dragMoved=false; return;
