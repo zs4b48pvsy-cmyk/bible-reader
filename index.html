@@ -86,7 +86,6 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .app.scroll-mode #scroll{display:block;}
 .app.scroll-mode #track{display:none;}
 .app.scroll-mode #zones{display:none;}
-.app.scroll-mode #fx{display:none;}
 .sc-inner{position:relative;max-width:min(660px,100%);margin:0 auto;
   padding:calc(var(--topbar-h) + 26px) var(--sc-pad,26px) calc(var(--safe-b) + 86px + var(--tool-pad));}
 .sc-ch{position:static;}
@@ -102,23 +101,6 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #zones{position:absolute;inset:0;z-index:6;pointer-events:none;}
 #zones .tz{position:absolute;top:0;bottom:0;width:var(--zonew);pointer-events:auto;}
 #zones .tz.l{left:0;} #zones .tz.r{right:0;}
-
-/* ── page turn: paper curl ───────────────────────────────── */
-#fx{position:fixed;inset:0;z-index:5;pointer-events:none;overflow:hidden;}
-#fx .u{position:absolute;top:0;height:100%;overflow:hidden;background:var(--paper);z-index:1;}
-#fx .u.sl{left:0;} #fx .u.sr{right:0;}
-#fx .cov{position:absolute;top:0;height:100%;overflow:hidden;background:var(--paper);z-index:2;}
-#fx .cast{position:absolute;top:0;height:100%;width:50%;z-index:3;opacity:0;pointer-events:none;will-change:opacity;}
-#fx .cast.cr{right:0;background:linear-gradient(to right,rgba(0,0,0,.22),rgba(0,0,0,.08) 22%,rgba(0,0,0,.02) 48%,rgba(0,0,0,0) 78%);}
-#fx .cast.cl{left:0;background:linear-gradient(to left,rgba(0,0,0,.22),rgba(0,0,0,.08) 22%,rgba(0,0,0,.02) 48%,rgba(0,0,0,0) 78%);}
-#fx .leaf{position:absolute;top:0;height:100%;z-index:4;transform-style:preserve-3d;will-change:transform;}
-#fx .card{position:absolute;top:0;height:100%;overflow:hidden;will-change:transform;}
-#fx .face{position:absolute;inset:0;overflow:hidden;background:var(--paper);}
-#fx .face.b{visibility:hidden;}
-#fx .bw{position:absolute;top:0;height:100%;transform-origin:50% 50%;transform:scaleX(-1);background:var(--paper);}
-#fx .sh{position:absolute;inset:0;pointer-events:none;background:rgba(0,0,0,0);}
-#fx .lift{position:absolute;top:0;height:100%;left:0;width:150px;margin-left:-75px;z-index:3;pointer-events:none;opacity:0;
-  background:radial-gradient(closest-side,rgba(24,18,10,.55),rgba(24,18,10,.16) 52%,rgba(24,18,10,0) 100%);filter:blur(7px);}
 
 /* ── bars ────────────────────────────────────────────────── */
 .bar{position:fixed;left:0;right:0;z-index:30;background:var(--ui);
@@ -1982,257 +1964,25 @@ function renderSlots(){
   if(selectMode) applySel();
 }
 
-/* ── page turn: a sheet of paper that bends, with a choice of effect ──
-   책넘김 (curl) · 슬라이드 (slide) · 없음 (none) */
-var flipping=false, fxState=null;
-var FLIP_MS=620;      // one soft page turn
-var CURL_SEGS=7, CURL_ZONE=0.52, CURL_BEND=30;
-/* a soft page-turn curve: gentle start, long settle
-   cubic-bezier(.33,.06,.16,1) approximates a hand turning a page */
-var flipEase=(function(){
-  var x1=.33,y1=.06,x2=.16,y2=1;
-  function A(a1,a2){return 1-3*a2+3*a1;}
-  function B(a1,a2){return 3*a2-6*a1;}
-  function C(a1){return 3*a1;}
-  function calc(t,a1,a2){return ((A(a1,a2)*t+B(a1,a2))*t+C(a1))*t;}
-  function slope(t,a1,a2){return 3*A(a1,a2)*t*t+2*B(a1,a2)*t+C(a1);}
-  return function(x){
-    if(x<=0) return 0; if(x>=1) return 1;
-    var t=x;
-    for(var i=0;i<6;i++){
-      var d=slope(t,x1,x2); if(Math.abs(d)<1e-6) break;
-      var err=calc(t,x1,x2)-x; if(Math.abs(err)<1e-6) break;
-      t-=err/d;
-    }
-    return calc(t,y1,y2);
-  };
-})();
-
-function fxPaper(node,W,H){
-  if(!node) return null;
-  var n=node.cloneNode(true);
-  n.style.position='absolute'; n.style.top='0'; n.style.left='0'; n.style.margin='0';
-  n.style.width=W+'px'; n.style.height=H+'px';
-  return n;
-}
-
-/* strip shading: darkness for a strip tilted t (degrees) while the sheet is at a */
-function curlAlpha(a,t,front){
-  var c=Math.cos((a+t)*Math.PI/180);
-  return front ? Math.min(.38,(1-Math.max(0,c))*0.30)
-               : Math.min(.34,(1-Math.max(0,-c))*0.20);
-}
-function shadeCss(a1,a2,warm){
-  var c=warm?'255,250,242':'0,0,0';
-  return 'linear-gradient(to right,rgba('+c+','+a1.toFixed(3)+'),rgba('+c+','+a2.toFixed(3)+'))';
-}
-
-/* the sheet bends: its outer part is a chain of strips, each turned a little more,
-   with the last one easing back so the free edge rolls over like real paper */
-function curlTilts(a){
-  var s=Math.min(1,Math.max(0,a/180));
-  var bend=CURL_BEND*Math.pow(Math.sin(Math.PI*s),0.55);
-  var out=[],i;
-  for(i=1;i<=CURL_SEGS;i++){
-    var u=i/CURL_SEGS;
-    var f=Math.sin(Math.PI/2*Math.pow(u,0.85));
-    if(u>0.78) f*=1-0.34*((u-0.78)/0.22);
-    out.push(bend*f);
-  }
-  return out;
-}
-
-function fxApply(a){
-  var st=fxState; if(!st) return;
-  st.angle=a;
-  var fwd=st.dir>0;
-  st.leaf.style.transform='rotateY('+(fwd?-a:a)+'deg)';
-  var tilts=curlTilts(a);
-  var X=0,Z=0,W=st.W,k;
-  for(k=0;k<st.cards.length;k++){
-    var c=st.cards[k];
-    var th=k===0?0:tilts[k-1];
-    var rad=th*Math.PI/180, w=c.w;
-    var x=fwd?X:(W-X-w);
-    c.el.style.transform='translate3d('+(fwd?X:-X)+'px,0,'+Z+'px) rotateY('+(fwd?-th:th)+'deg)';
-    c.f.firstChild.style.left=(-x)+'px';
-    c.bw.style.left=(-x)+'px';
-    var front=Math.cos((a+th)*Math.PI/180)>=0;
-    c.f.style.visibility=front?'visible':'hidden';
-    c.b.style.visibility=front?'hidden':'visible';
-    var bg=shadeCss(curlAlpha(a,k<=1?0:tilts[k-2],front),curlAlpha(a,th,front),!front);
-    if(k>=CURL_SEGS-1){
-      var hi=(0.44*Math.pow(Math.sin(Math.PI*Math.min(1,a/180)),0.8)).toFixed(3);
-      var dirn=(k===st.cards.length-1)?(fwd?'to left':'to right'):(fwd?'to left':'to right');
-      bg='linear-gradient('+dirn+',rgba(255,255,255,'+hi+'),rgba(255,255,255,0) 55%),'+bg;
-    }
-    c.sh.style.background=bg;
-    if(c.edge){
-      var s0=Math.sin(Math.PI*Math.min(1,a/180));
-      c.edge.style.opacity=(0.80*Math.pow(s0,.7)).toFixed(3);
-    }
-    X+=w*Math.cos(rad); Z+=w*Math.sin(rad);
-  }
-
-  // light landing on the half being uncovered + the shadow the lifted sheet throws
-  var sp=Math.sin(Math.min(1,Math.max(0,a/180))*Math.PI);
-  if(st.cast) st.cast.style.opacity=(Math.pow(sp,1.05)*0.95).toFixed(3);
-  if(st.lift){
-    var edge = st.spineX + (fwd?1:-1)*X;      // X ends at the sheet's free edge
-    st.lift.style.transform='translateX('+edge.toFixed(1)+'px)';
-    st.lift.style.opacity=(Math.pow(sp,0.55)*0.85).toFixed(3);
-  }
-}
-
-function fxAnimate(to,dur,done){
-  var st=fxState; if(!st){ if(done) done(false); return; }
-  var from=st.angle||0, span=to-from, t0=performance.now(), ms=Math.max(140,dur||FLIP_MS);
-  function frame(t){
-    if(!fxState||fxState!==st){ if(done) done(false); return; }
-    var p=Math.min(1,(t-t0)/ms);
-    fxApply(from+span*flipEase(p));
-    if(p<1) requestAnimationFrame(frame);
-    else if(done) done(true);
-  }
-  requestAnimationFrame(frame);
-}
-
-function fxClose(commit){
-  var st=fxState; if(!st) return;
-  fxState=null;
-  if(st.el&&st.el.parentNode) st.el.parentNode.removeChild(st.el);
-  flipping=false;
-  if(commit){
-    curSpread=st.target;
-    S.forced=null;
-    renderSlots(); updateChrome(); savePos();
-  }
-}
-
-/* build the turning sheet: one card per strip, front + back faces */
-function buildFlip(dir){
-  if(!SRC) return null;
-  var target=curSpread+dir;
-  if(target<0||target>=totalSpreads()) return null;
-  var single=(pps===1);
-  var curSp=$('.spread[data-slot="0"]');
-  var tgtSp=$('.spread[data-slot="'+dir+'"]');
-  if(!curSp||!tgtSp) return null;
-  var curPage=curSp.querySelector('.page');
-  var curL=single?null:curSp.querySelector('.page.left');
-  var curR=single?null:curSp.querySelector('.page.right');
-  var tgtPage=single?tgtSp.querySelector('.page'):null;
-  var tgtL=single?null:tgtSp.querySelector('.page.left');
-  var tgtR=single?null:tgtSp.querySelector('.page.right');
-  var leafSrc = single?curPage:(dir>0?curR:curL);
-  var leafBack= single?tgtPage:(dir>0?tgtL:tgtR);
-  var otherSrc= single?null:(dir>0?curL:curR);
-  if(!leafSrc||!leafBack) return null;
-
-  var pr=leafSrc.getBoundingClientRect();
-  var H=Math.round(pr.height)||window.innerHeight;
-  var W=Math.round(pr.width)||(single?window.innerWidth:window.innerWidth/2);
-  if(W<40||H<40) return null;
-
-  var fxEl=el('div'); fxEl.id='fx';
-  fxEl.style.perspective=Math.round(Math.max(4200,W*9))+'px';
-
-  // ── what lies underneath: the spread being turned to
-  if(single){
-    var u=el('div','u sl'); u.style.width='100%';
-    var up=fxPaper(leafBack,W,H); if(up) u.appendChild(up);
-    fxEl.appendChild(u);
-  }else{
-    var ul=el('div','u sl'); ul.style.width='50%';
-    var cl=fxPaper(tgtL,W,H); if(cl) ul.appendChild(cl);
-    fxEl.appendChild(ul);
-    var ur=el('div','u sr'); ur.style.width='50%';
-    var cr=fxPaper(tgtR,W,H); if(cr) ur.appendChild(cr);
-    fxEl.appendChild(ur);
-  }
-
-  // ── shadow cast on the half being uncovered
-  var cast=el('div','cast '+(dir>0?'cr':'cl'));
-  fxEl.appendChild(cast);
-
-  // ── the page that stays put
-  if(otherSrc){
-    var cov=el('div','cov');
-    cov.style.width='50%';
-    cov.style[dir>0?'left':'right']='0';
-    var cp=fxPaper(otherSrc,W,H); if(cp) cov.appendChild(cp);
-    fxEl.appendChild(cov);
-  }
-
-  // ── the turning sheet
-  var leaf=el('div','leaf');
-  leaf.style.width=(single?'100%':'50%');
-  leaf.style.left=((dir>0&&!single)?W:0)+'px';
-  leaf.style.transformOrigin = dir>0 ? '0 50%' : '100% 50%';
-  var flatW=W*CURL_ZONE, sw=(W-flatW)/CURL_SEGS;
-  var cards=[];
-  for(var i=0;i<=CURL_SEGS;i++){
-    var wig = i===0 ? flatW : sw;
-    var card=el('div','card');
-    card.style.width=(wig+1.6)+'px';
-    card.style.height=H+'px';
-    card.style.transformOrigin = dir>0 ? '0 50%' : '100% 50%';
-    var f=el('div','face f');
-    var fp=fxPaper(leafSrc,W,H); if(fp) f.appendChild(fp);
-    var b=el('div','face b');
-    var bw=el('div','bw'); bw.style.width=W+'px';
-    var bp=fxPaper(leafBack,W,H); if(bp) bw.appendChild(bp);
-    b.appendChild(bw);
-    var sh=el('div','sh');
-    card.appendChild(f); card.appendChild(b); card.appendChild(sh);
-    leaf.appendChild(card);
-    cards.push({el:card,f:f,b:b,bw:bw,sh:sh,w:wig});
-  }
-  // a whisper of light along the free edge (the paper's thickness)
-  var edgeEl=el('i','edge');
-  edgeEl.style.cssText='position:absolute;top:0;height:100%;width:2px;pointer-events:none;opacity:0;'+
-    (dir>0?'right:0;background:linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,.92));'
-          :'left:0;background:linear-gradient(to left,rgba(255,255,255,0),rgba(255,255,255,.92));');
-  cards[cards.length-1].el.appendChild(edgeEl);
-  cards[cards.length-1].edge=edgeEl;
-
-  fxEl.appendChild(leaf);
-  var lift=el('div','lift');
-  fxEl.appendChild(lift);
-
-  fxState={el:fxEl,leaf:leaf,dir:dir,target:target,single:single,W:W,H:H,
-           spineX:(single?0:(dir>0?W:0)), cards:cards, cast:cast, lift:lift, angle:0, drag:false};
-  fxApply(0);
-  app.appendChild(fxEl);
-  return fxState;
-}
-
-/* ── the page turn ────────────────────────────────────── */
+/* ── page turn: the same screen, the next words ──────────────
+   종이 말림도, 슬라이드도, 페이드도 없다. 보던 자리 그대로 화면을 두고
+   본문 글자만 다음(이전) 쪽 내용으로 곧바로 바뀐다. */
 function turn(dir){
   if(mode!=='curl') return;
-  if(flipping) return;
-  var st=buildFlip(dir);
-  if(!st) return;
-  flipping=true;
-  fxAnimate(180,FLIP_MS,function(ok){ fxClose(ok!==false); });
+  var target=curSpread+dir;
+  if(target<0||target>=totalSpreads()) return;
+  S.forced=null;
+  curSpread=target;
+  renderSlots(); updateChrome(); savePos();
 }
-
-/* test hook: hold the turning sheet at any angle (used for visual checks) */
-window.__flipPreview=function(a,dir){
-  if(!fxState){ var st=buildFlip(dir||1); if(!st) return 'no-target'; flipping=true; }
-  fxApply(a); return 'angle '+a;
-};
-window.__flipClear=function(){ fxClose(false); return 'cleared'; };
+/* test hook */
 window.__turn=function(d){ turn(d||1); return 'turn'; };
 
-function goSpread(idx, animate){
+function goSpread(idx){
   idx=clamp(idx,0,totalSpreads()-1);
   S.forced=null;
   if(idx===curSpread){ updateChrome(); return; }
-  var dir=idx>curSpread?1:-1;
-  if(!animate){ curSpread=idx; renderSlots(); updateChrome(); savePos(); return; }
-  if(Math.abs(idx-curSpread)>1){ curSpread=idx; renderSlots(); updateChrome(); savePos(); return; }
-  turn(dir);
+  curSpread=idx; renderSlots(); updateChrome(); savePos();
 }
 
 function jumpTo(b,c,v){
@@ -2708,7 +2458,7 @@ function selFinish(x,y){
     if(nowTop!=null&&Math.abs(nowTop-st.top)>2) st.far=true;
   }
   // 끌었거나(쪽 넘김·스크롤) 쪽이 넘어가는 중이면 아무 것도 고르지 않는다
-  if(st.far||dragMoved||(fxState&&fxState.drag)){
+  if(st.far||dragMoved){
     suppressClick=true; dragMoved=false; return;
   }
   selTapAt(x==null?st.x:x, y==null?st.y:y);
@@ -4631,47 +4381,35 @@ document.addEventListener('pointerdown',function(e){
 
 // drag / swipe (rotation follows the finger)
 var drag=null, dragMoved=false;
+/* 옆으로 끌어 넘기기 — 끄는 동안 화면은 그대로 있고, 기준(가로 폭의 10%, 최소 42px)을
+   넘는 순간 다음(이전) 쪽 글자로 한 번만 바뀐다. 손을 떼기 전에 이미 넘어가 있다. */
+var SWIPE_MIN=42, SWIPE_RATIO=0.10;
+function swipeNeed(){ return Math.max(SWIPE_MIN, window.innerWidth*SWIPE_RATIO); }
 bookEl.addEventListener('pointerdown',function(e){
   if(mode!=='curl') return;
   if(e.pointerType==='mouse'&&e.button!==0) return;
-  drag={x:e.clientX,y:e.clientY,active:true,moved:false};
+  drag={x:e.clientX,y:e.clientY,active:true,moved:false,done:false};
 });
 window.addEventListener('pointermove',function(e){
   if(mode!=='curl') return;
-  if(!drag||!drag.active) return;
+  if(!drag||!drag.active||drag.done) return;
   var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
   if(!drag.moved){
     if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.2){ drag.moved=true; }
     else if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){ drag.active=false; return; }
   }
   if(!drag.moved) return;
-  if(fxState){
-    if(!fxState.drag) return;
-  }else{
-    if(flipping) return;
-    var st0=buildFlip(dx<0?1:-1);
-    if(!st0){ drag.active=false; return; }
-    st0.drag=true; flipping=true;
-  }
-  var dir=dx<0?1:-1;
-  if(fxState.dir!==dir) return;
-  var span=window.innerWidth*(pps===1?0.85:0.5);
-  fxApply(Math.min(180,Math.abs(dx)/span*180));
+  if(Math.abs(dx)<swipeNeed()) return;
+  drag.done=true;
+  turn(dx<0?1:-1);
 },{passive:true});
 window.addEventListener('pointerup',function(){
   if(!drag) return;
-  var moved=drag.moved; drag=null;
-  if(!moved) return;
-  dragMoved=true; suppressClick=true;
-  if(!fxState||!fxState.drag) return;
-  var a0=fxState.angle||0;
-  if(a0>=70) fxAnimate(180,Math.max(260,FLIP_MS*(1-a0/180)+180),function(){ fxClose(true); });
-  else fxAnimate(0,Math.max(300,520*(a0/180)+200),function(){ fxClose(false); });
+  var d=drag; drag=null;
+  if(!d.moved) return;
+  dragMoved=true; suppressClick=true;      // 따라오는 click 이 쪽을 또 넘기지 않게
 });
-window.addEventListener('pointercancel',function(){
-  drag=null;
-  if(fxState&&fxState.drag) fxAnimate(0,160,function(){ fxClose(false); });
-});
+window.addEventListener('pointercancel',function(){ drag=null; });
 
 // keyboard
 document.addEventListener('keydown',function(e){
