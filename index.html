@@ -24,7 +24,8 @@
   --font-sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
   --font-body:var(--font-sans); --font-ui:var(--font-sans);
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
-  --tool-pad:0px;   /* 형광펜·담기·복사 바가 떠 있을 때 본문 아래로 비워 두는 높이 (JS 가 잰다) */
+  --tool-pad:0px;   /* (지금은 늘 0) 본문 아래로 비워 두는 높이 */
+  --topbar-h:calc(48px + var(--safe-t));   /* 상단 바 실제 높이 (JS 가 잰다 · 좁은 화면에선 구절 바가 한 줄 더 붙는다) */
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--paper);overscroll-behavior:none;}
@@ -41,10 +42,10 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 
 /* ── pages ───────────────────────────────────────────────── */
 .page{position:relative;flex:1 1 0;min-width:0;height:100%;}
-.page .hd{position:absolute;top:calc(var(--safe-t) + 21px);left:0;right:0;height:14px;text-align:center;
+.page .hd{position:absolute;top:calc(var(--topbar-h) - 27px);left:0;right:0;height:14px;text-align:center;
   font-family:var(--font-ui);font-size:10px;letter-spacing:.10em;color:var(--muted);font-weight:500;}
 .page .hd i{font-style:normal;}
-.page .cols{position:absolute;top:calc(var(--safe-t) + 54px);bottom:calc(var(--safe-b) + 40px + var(--tool-pad));
+.page .cols{position:absolute;top:calc(var(--topbar-h) + 6px);bottom:calc(var(--safe-b) + 40px + var(--tool-pad));
   display:flex;gap:var(--gap);justify-content:center;}
 .page.left .cols{left:var(--pad-out);right:var(--pad-in);}
 .page.right .cols{left:var(--pad-in);right:var(--pad-out);}
@@ -87,7 +88,7 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .app.scroll-mode #zones{display:none;}
 .app.scroll-mode #fx{display:none;}
 .sc-inner{position:relative;max-width:min(660px,100%);margin:0 auto;
-  padding:calc(var(--safe-t) + 74px) var(--sc-pad,26px) calc(var(--safe-b) + 86px + var(--tool-pad));}
+  padding:calc(var(--topbar-h) + 26px) var(--sc-pad,26px) calc(var(--safe-b) + 86px + var(--tool-pad));}
 .sc-ch{position:static;}
 .sc-inner .ch{margin:36px 0 14px;}
 .sc-inner .sc-ch:first-child .ch{margin-top:0;}
@@ -123,7 +124,8 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .bar{position:fixed;left:0;right:0;z-index:30;background:var(--ui);
   -webkit-backdrop-filter:blur(16px) saturate(1.15);backdrop-filter:blur(16px) saturate(1.15);
   transition:transform .26s cubic-bezier(.3,.8,.3,1),opacity .2s ease;}
-#topbar{top:0;height:calc(48px + var(--safe-t));padding:var(--safe-t) 8px 0;display:flex;align-items:center;gap:2px;}
+#topbar{top:0;height:auto;min-height:calc(48px + var(--safe-t));padding:var(--safe-t) 8px 0;
+  display:flex;flex-wrap:wrap;align-items:center;gap:2px;}
 #bottombar{bottom:0;height:calc(44px + var(--safe-b));padding:0 8px var(--safe-b);display:flex;align-items:center;gap:4px;}
 .chrome-hidden #topbar{transform:translateY(-102%);opacity:0;pointer-events:none;}
 .chrome-hidden #bottombar{transform:translateY(102%);opacity:0;pointer-events:none;}
@@ -352,49 +354,43 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #help .go{display:block;width:100%;margin-top:10px;padding:12px;border:0;border-radius:10px;background:var(--accent);color:var(--paper);
   font-family:var(--font-ui);font-size:14px;font-weight:600;cursor:pointer;}
 
-/* ── 선택: 상단 '선택' 버튼 + 하단 통합 바(형광펜 · 저장 · 복사 · 메모) ── */
+/* ── 구절 선택: 본문에서 톡톡 눌러 고르면 상단 바의 도구(형광펜 · 저장 · 복사 · 메모)가 바로 켜진다 ── */
 .sel-mode #book .v{cursor:pointer;}
 .v.sel .vt{background:rgba(236,222,190,.34);border-radius:4px;
   box-shadow:0 0 0 1.5px rgba(188,158,104,.34);}
-#btnSelect{padding:6px 12px;border-radius:15px;border:1px solid rgba(0,0,0,.14);
-  font-family:var(--font-ui);font-size:12.5px;font-weight:600;color:var(--ink2);letter-spacing:.02em;}
-#btnSelect.on{background:#2E2A24;color:#F7F4EC;border-color:#2E2A24;}
-#selectbar{position:fixed;z-index:48;left:50%;bottom:calc(56px + var(--safe-b));transform:translate(-50%,16px);
-  display:none;flex-wrap:wrap;justify-content:center;align-items:center;gap:9px;
-  width:max-content;
-  padding:8px 11px 8px 15px;border-radius:30px;
-  background:var(--ui);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
-  border:1px solid var(--rule);box-shadow:0 10px 30px rgba(0,0,0,.16);
-  transition:transform .24s cubic-bezier(.3,.85,.3,1),opacity .2s ease;opacity:0;max-width:94vw;}
-.sel-mode #selectbar{display:flex;transform:translate(-50%,0);opacity:1;}
-.sel-mode #toast{bottom:calc(122px + var(--safe-b));}
-#selectbar .sb-row{display:flex;align-items:center;gap:8px;}
-#selectbar .sb-count{font-family:var(--font-ui);font-size:12.5px;font-weight:600;color:var(--ink);
-  letter-spacing:.01em;white-space:nowrap;}
-#selectbar .sb-colors{display:flex;align-items:center;gap:6px;}
-#selectbar .sb-sw{width:23px;height:23px;border-radius:50%;border:1px solid rgba(0,0,0,.10);
+/* 늘 상단 바 안에 붙어 있는 구절 도구 바 — #locbtn(장 제목) 오른쪽, #btnSearch 바로 왼쪽 */
+#selectbar{display:flex;align-items:center;flex:0 1 auto;min-width:0;gap:7px;
+  margin:0 2px;padding:3px 7px;border-radius:16px;background:rgba(0,0,0,.030);}
+.app.night #selectbar{background:rgba(255,255,255,.07);}
+#selectbar .sb-row{display:flex;align-items:center;gap:6px;min-width:0;}
+#selectbar .sb-row.sb-acts{gap:5px;}
+#selectbar .sb-count{font-family:var(--font-ui);font-size:11.5px;font-weight:600;color:var(--ink);
+  letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#selectbar .sb-colors{display:flex;align-items:center;gap:5px;}
+#selectbar .sb-sw{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.10);
   cursor:pointer;padding:0;flex:0 0 auto;}
 #selectbar .sb-sw.y{background:#F2DA85;} #selectbar .sb-sw.p{background:#EFB6AB;}
 #selectbar .sb-sw.g{background:#B9D8BC;} #selectbar .sb-sw.s{background:#B4CFE7;}
-#selectbar .sb-sw.on{box-shadow:0 0 0 2.5px var(--ui),0 0 0 4px rgba(0,0,0,.45);border-color:transparent;}
+#selectbar .sb-sw.on{box-shadow:0 0 0 2px var(--ui),0 0 0 3.5px rgba(0,0,0,.45);border-color:transparent;}
 #selectbar .sb-tool{border:1px solid rgba(0,0,0,.14);background:transparent;color:var(--ink);
-  font-family:var(--font-ui);font-size:12.5px;padding:8px 12px;border-radius:18px;cursor:pointer;white-space:nowrap;}
+  font-family:var(--font-ui);font-size:11.5px;line-height:1;padding:6px 9px;border-radius:13px;
+  cursor:pointer;white-space:nowrap;}
 #selectbar .sb-tool:active{background:rgba(0,0,0,.06);}
 #selectbar .sb-tool:disabled{opacity:.32;cursor:default;}
-#selectbar .sb-done{border:0;background:#2E2A24;color:#F7F4EC;font-family:var(--font-ui);font-size:12.5px;font-weight:600;
-  padding:9px 15px;border-radius:18px;cursor:pointer;white-space:nowrap;}
-#selectbar .sb-done:active{opacity:.85;}
-#selectbar .sb-sep{width:1px;height:20px;background:var(--rule);flex:0 0 auto;}
-/* 좁은 화면(아이폰): 두 줄로 깔끔히 — 위줄 카운트·색·지우기 / 아랫줄 저장·복사·메모·완료 */
+#selectbar .sb-sep{width:1px;height:17px;background:var(--rule);flex:0 0 auto;margin:0 1px;}
+/* 좁은 화면(아이폰 세로): 상단 바 바로 아래 줄에 붙이고, 넘치면 저장·복사·메모가 한 줄 더 내려간다 */
 @media (max-width:600px){
-  #selectbar{gap:7px;padding:9px 10px;max-width:96vw;}
-  #selectbar .sb-row{flex:1 0 100%;justify-content:center;gap:7px;}
-  #selectbar .sb-count{font-size:12px;}
-  #selectbar .sb-sw{width:22px;height:22px;}
-  #selectbar .sb-tool{padding:8px 11px;}
+  /* 두 줄짜리 바는 본문이 비쳐 보이면 글자가 겹쳐 보인다 — 좁은 화면은 종이색으로 꽉 채운다 */
+  #topbar{padding:calc(var(--safe-t) + 7px) 6px 0;background:var(--paper);}
+  #selectbar{flex:1 0 100%;order:9;flex-wrap:wrap;justify-content:center;gap:5px;row-gap:4px;
+    margin:6px 0 0;padding:5px 2px 6px;border-radius:0;background:transparent;
+    border-top:1px solid var(--rule);}
+  #selectbar .sb-count{font-size:11px;}
+  #selectbar .sb-colors{gap:4px;}
+  #selectbar .sb-sw{width:19px;height:19px;}
+  #selectbar .sb-tool{font-size:10.5px;padding:5px 7px;}
   #selectbar .sb-sep{display:none;}
-  .sel-mode #toast{bottom:calc(168px + var(--safe-b));}
-  #btnSelect{padding:6px 10px;}
+  .page .hd{display:none;}   /* 좁은 화면은 상단 바가 두 줄이라 책이름 줄은 접는다 (장 제목은 바에 있다) */
 }
 
 /* ── 목차 창 / 가운데 모달 공용 카톡 방: 메모 · 기억 ── */
@@ -868,8 +864,28 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
   <header class="bar" id="topbar">
     <button class="btn icon" id="btnMenu" aria-label="목차">☰</button>
     <button class="btn" id="locbtn">창세기 1장<small>개역한글</small></button>
+
+    <!-- 구절 도구 바: 늘 상단에 고정 — 장 제목 오른쪽, 말씀 찾기 바로 왼쪽 -->
+    <div id="selectbar" role="toolbar" aria-label="구절 도구">
+      <div class="sb-row">
+        <span class="sb-count" id="sbCount">구절을 눌러 보세요</span>
+        <div class="sb-colors">
+          <button type="button" class="sb-sw y" data-pc="y" aria-label="버터"></button>
+          <button type="button" class="sb-sw p on" data-pc="p" aria-label="피치"></button>
+          <button type="button" class="sb-sw g" data-pc="g" aria-label="민트"></button>
+          <button type="button" class="sb-sw s" data-pc="s" aria-label="하늘"></button>
+        </div>
+        <button type="button" class="sb-tool" id="sbErase" disabled>지우기</button>
+        <span class="sb-sep"></span>
+      </div>
+      <div class="sb-row sb-acts">
+        <button type="button" class="sb-tool" id="sbSave" disabled>저장</button>
+        <button type="button" class="sb-tool" id="sbCopy" disabled>복사</button>
+        <button type="button" class="sb-tool" id="sbMemo" disabled>메모</button>
+      </div>
+    </div>
+
     <button class="btn icon" id="btnSearch" aria-label="말씀 찾기"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.6 15.6 4.2 4.2"/></svg></button>
-    <button class="btn" id="btnSelect" aria-pressed="false" aria-label="구절 선택">선택</button>
     <button class="btn icon" id="btnHome" aria-label="표지"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.2 12 4.4l8 6.8"/><path d="M6.4 9.6V20h11.2V9.6"/></svg></button>
     <button class="btn icon" id="btnFont" aria-label="글자 크기">Aa</button>
   </header>
@@ -945,27 +961,6 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
   <!-- 형광펜 '메모 남기기' → 화면 가운데 카톡방 모달 (#rvRoom 이 이 안으로 옮겨 온다) -->
   <div id="rvScrim"></div>
   <div id="rvModal" role="dialog" aria-modal="true" aria-label="내 메모 대화방"></div>
-
-  <!-- 선택 모드 하단 통합 바: 카운트 · 형광펜 4색 · 지우기 | 저장 · 복사 · 메모 · 완료 -->
-  <div id="selectbar" role="toolbar" aria-label="구절 선택">
-    <div class="sb-row">
-      <span class="sb-count" id="sbCount">구절을 눌러 보세요</span>
-      <div class="sb-colors">
-        <button type="button" class="sb-sw y" data-pc="y" aria-label="버터"></button>
-        <button type="button" class="sb-sw p on" data-pc="p" aria-label="피치"></button>
-        <button type="button" class="sb-sw g" data-pc="g" aria-label="민트"></button>
-        <button type="button" class="sb-sw s" data-pc="s" aria-label="하늘"></button>
-      </div>
-      <button type="button" class="sb-tool" id="sbErase" disabled>지우기</button>
-      <span class="sb-sep"></span>
-    </div>
-    <div class="sb-row sb-acts">
-      <button type="button" class="sb-tool" id="sbSave" disabled>저장</button>
-      <button type="button" class="sb-tool" id="sbCopy" disabled>복사</button>
-      <button type="button" class="sb-tool" id="sbMemo" disabled>메모</button>
-      <button type="button" class="sb-done" id="sbDone">완료</button>
-    </div>
-  </div>
 
   <div id="sheet">
     <div class="shbar"><span>설정</span><span class="sp"></span><button class="btn" id="resetSheet">기본값</button><button class="btn icon" id="closeSheet" aria-label="닫기">✕</button></div>
@@ -1357,8 +1352,22 @@ function wantMode(){
   var W=window.innerWidth, H=window.innerHeight;
   return (W<768 || W<H) ? 'scroll' : 'curl';
 }
+/* 상단 바 높이를 실제로 재서 --topbar-h 에 넣는다.
+   좁은 화면(아이폰)에서는 구절 바가 한 줄 더 붙어 본문이 그만큼 내려가야 한다. */
+var topbarHv=0;
+function topbarMeasure(){
+  var t=$('#topbar');
+  var h=t?Math.round(t.getBoundingClientRect().height):0;
+  if(h){
+    topbarHv=h;
+    document.documentElement.style.setProperty('--topbar-h',h+'px');
+  }
+  return topbarHv;
+}
+function topbarH(){ return topbarHv || Math.round(safeTop()+48); }
 function metrics(){
   var W=window.innerWidth, H=window.innerHeight;
+  topbarMeasure();
   pps = (mode!=='scroll' && W>=768) ? 2 : 1;
   var ps = S.pad==='narrow'?0.66:(S.pad==='wide'?1.5:1);
   var padOut = Math.round((W>=768 ? (W>=1000?46:38) : (W>=420?26:22))*ps);
@@ -1371,8 +1380,8 @@ function metrics(){
   /* (scroll mode uses the same padding and gets its own column width) */
   var maxCol = W>=768 ? 620 : 100000;
   var colW = Math.min(Math.floor((innerW - (cols-1)*gap)/cols), maxCol);
-  // content area: top = safeT+54, bottom = safeB+40 (see css .cols)
-  var colH = Math.floor(H - (safeTop()+54) - (safeBot()+40+toolPadPx) - 2);
+  // content area: top = 상단 바 아래 + 6, bottom = safeB+40 (see css .cols)
+  var colH = Math.floor(H - (topbarH()+6) - (safeBot()+40+toolPadPx) - 2);
 
   var st=document.documentElement.style;
   app.classList.toggle('single-page', pps===1);
@@ -1393,8 +1402,7 @@ function safeBot(){ return parseFloat(getComputedStyle(document.documentElement)
    끄면 0 으로 돌아가 원래 여백·쪽나눔으로 돌아온다. */
 var toolPadPx=0, toolPadBusy=0, TOOL_CLEAR=12;
 function activeToolBar(){
-  if(selectMode) return $('#selectbar');
-  return null;
+  return null;                 // 구절 도구 바는 상단 바 안에 있어 본문 아래를 가리지 않는다
 }
 /* 바가 차지하는 만큼(본문 아래 기준선 ~ 바 위 끝 + 숨 쉬는 틈) — transform 에 흔들리지 않게 offsetHeight 로 잰다 */
 function toolPadNeed(){
@@ -1440,7 +1448,7 @@ function refreshToolPad(anchor){
     padLiveAnchor=currentAnchor();
   } else if(toolPadPx===0 && before>0){   // 바를 껐다
     var cur=currentAnchor();
-    var back=Math.floor(window.innerHeight-(safeTop()+54)-(safeBot()+40)-2);
+    var back=Math.floor(window.innerHeight-(topbarH()+6)-(safeBot()+40)-2);
     if(sameAnchor(cur,padLiveAnchor) && padEntrySpread!=null && back===padEntryColH &&
        Math.max(1,S.curCols*pps)===padEntryPer){
       pendingSpread=padEntrySpread;      // 쪽나눔이 그대로니 보던 펼침면으로 그대로 되돌린다
@@ -1811,7 +1819,9 @@ function labelScroll(){ /* re-measure tops after a decor change */ buildScrollIn
 function scAnchor(){
   var root=scRoot();
   if(!root||!scVerses.length) return null;
-  var y=root.scrollTop + Math.max(30, Math.min(150, root.clientHeight*0.18)) - scPadTop();
+  /* 상단 바 바로 아래(가리지 않는 첫 줄)에 있는 절을 '지금 읽는 곳'으로 본다
+     — 바 높이가 달라져도(좁은 화면 두 줄) 같은 자리를 가리킨다 */
+  var y=root.scrollTop + topbarH() + 30;
   var it=scVerses[scIndexAt(y)];
   return it?{c:it.c,v:it.v}:null;
 }
@@ -1823,7 +1833,7 @@ function scGoTo(c,v){
   if(!target){ root.scrollTop=0; return; }
   root.scrollTop=Math.max(0, target.top - scPadTop());
   /* place it just under the top bar (measured, so fonts and bars do not matter) */
-  var want=safeTop()+62;
+  var want=topbarH()+14;
   var r=target.el.getBoundingClientRect();
   root.scrollTop=Math.max(0, root.scrollTop + (r.top - want));
 }
@@ -1846,6 +1856,7 @@ var pendingSpread=null;   // 바를 끌 때 '켤 때 보던 그 펼침면'으로
    왼쪽 페이지 맨 위에 그대로 남는다 (하단 바가 떠서 쪽나눔이 달라질 때) */
 function layout(anchor, keep){
   if(!SRC) return;
+  topbarMeasure();                 // 스크롤 읽기에서도 상단 바 높이(안전영역·줄바꿈)를 다시 잰다
   var pend=pendingSpread; pendingSpread=null;
   if(!anchor) anchor=currentAnchor();
   if(mode==='scroll'){
@@ -2500,30 +2511,15 @@ function undoPen(){
   updatePenUI();
   toast('방금 작업을 되돌렸어요');
 }
-function setSelectMode(on){
-  var anchor=currentAnchor();
-  toolPadBusy++;
-  selectMode=!!on;
-  penMode=false;                          // 선택 모드는 쪽 넘김 끌기를 막지 않는다 (끌기는 쪽 넘김에 쓴다)
-  app.classList.toggle('sel-mode',selectMode);
-  var b=$('#btnSelect'); if(b){ b.classList.toggle('on',selectMode); b.setAttribute('aria-pressed',selectMode?'true':'false'); }
-  closePop();
-  if(selectMode){
-    lastStroke=null; penDown=null; selPress=null; touchDown=false;
-    if(stroke){ stroke=null; }
-    selMap={}; selChap=0;                 // 첫 절을 누를 때 그 장으로 정한다
-    setChrome(false);                     // 상단 '선택'이 켜진 걸 보이게 (false = 보이기)
-    applySel(); updateSelUI(); updateChrome();
-  } else {
-    if(stroke) endStroke();
-    penClear();
-    selMap={}; selChap=0;
-    applySel();
-    Store.save(true);
-    updateSelUI(); updateChrome();
-  }
-  toolPadBusy--;
-  refreshToolPad(anchor);
+/* 선택은 늘 켜져 있다 (상단 바가 늘 붙어 있음) — 고른 절만 비우는 함수 */
+function clearSel(save){
+  if(stroke) endStroke();
+  penClear();
+  penDown=null; selPress=null; touchDown=false;
+  selMap={}; selChap=0;                 // 첫 절을 누를 때 그 장으로 정한다
+  applySel();
+  if(save!==false) Store.save(true);
+  updateSelUI(); updateChrome();
 }
 function strokeNodes(c,v){
   var k=c+'|'+v;
@@ -2716,11 +2712,17 @@ function selFinish(x,y){
   selTapAt(x==null?st.x:x, y==null?st.y:y);
 }
 function selTapAt(x,y){
+  if(app.classList.contains('chrome-hidden')){     // 바를 숨겨 읽던 중의 톡 = 바 다시 보이기
+    selTapGuard=Date.now()+400;
+    setChrome(false);
+    return;
+  }
   var t=null;
   try{ t=document.elementFromPoint(x,y); }catch(e){ t=null; }
+  if(t&&t.closest&&t.closest('.nmark')) return;   // ✎ 메모 표시는 click 핸들러가 그 메모 방으로 연다
   var p=t&&t.closest?t.closest('.v'):null;
+  if(!p) return;                       // 여백: 이어지는 click 이 상단 바를 여닫는다
   selTapGuard=Date.now()+400;          // 이 탭이 만든 click 이 한 번 더 고르지 않게
-  if(!p) return;                       // 여백을 누르면 아무 것도 하지 않는다
   toggleSel(+p.dataset.c,+p.dataset.v);
 }
 bookEl.addEventListener('pointerdown',function(e){
@@ -2817,7 +2819,6 @@ $('#sbErase').onclick=function(){ selHighlight('erase'); };
 $('#sbSave').onclick=function(){ selSave(); };
 $('#sbCopy').onclick=function(){ selCopy(); };
 $('#sbMemo').onclick=function(){ selMemo(); };
-$('#sbDone').onclick=function(){ setSelectMode(false); };
 
 /* ── bookmarks ─────────────────────────────────────────── */
 function isBookmarked(b,c,v){
@@ -2898,7 +2899,7 @@ function hideRvPane(){
 }
 function openDrawer(tab){
   tab=tab||'books';
-  if(selectMode) setSelectMode(false);        // 목차·기억 창을 열면 선택은 접는다
+  clearSel();                                 // 목차·기억 창을 열면 고른 절은 비운다
   curTab=tab;
   $$('.tabbtn').forEach(function(t){ t.classList.toggle('on',t.dataset.tab===curTab); });
   if(tab==='rv'||tab==='note'){
@@ -3306,7 +3307,8 @@ function vsRuns(vs){            // [1,2,4] → '1–2, 4'
 
 /* ── 선택 모드: 상단 '선택' · 하단 통합 바(형광펜 · 저장 · 복사 · 메모) ──
    절을 톡톡 눌러 여러 절을 고르고, 한 바에서 다 한다. */
-var selectMode=false, selMap={}, selChap=0;
+/* 상단 바의 구절 도구는 늘 켜져 있다 — 본문을 톡톡 누르면 바로 골라진다 */
+var selectMode=true, selMap={}, selChap=0;
 function applySel(){
   var nodes=$$('#track .v, #scroll .v');
   for(var i=0;i<nodes.length;i++){
@@ -3417,7 +3419,7 @@ function selMemo(){
   if(!vs.length){ toast('메모를 남길 구절을 먼저 골라 주세요'); return; }
   var c=selChap||S.chapter||1;
   var bind=verseBind(c,vs[0]);
-  setSelectMode(false);            // 바는 닫고 방을 화면 가운데에
+  clearSel();                      // 고른 표시는 비우고 방을 화면 가운데에
   openMemoRoom({noteKey:bind.key, focus:true, bind:bind});
 }
 
@@ -4578,10 +4580,20 @@ var suppressClick=false;
 bookEl.addEventListener('click',function(e){
   if(suppressClick){ suppressClick=false; dragMoved=false; return; }   // 끌어서 넘긴 뒤 따라오는 click 은 끌기 몫
   if(Date.now()<selTapGuard){ selTapGuard=0; return; }   // 방금 손가락으로 고른 절을 click 이 또 뒤집지 않게
-  if(selectMode){                // 선택 모드: 누른 절을 고르거나 푼다 (끌어서 넘길 땐 그대로)
+  if(selectMode){                // 누른 절을 고르거나 푼다 (끌어서 넘길 땐 그대로)
     if(dragMoved){ dragMoved=false; return; }
+    if(app.classList.contains('chrome-hidden')){ setChrome(false); return; }   // 숨겨 읽던 중의 톡 = 바 다시 보이기
+    var nmEl=e.target.closest('.nmark');
+    if(nmEl){                     // ✎ 메모 표시는 그 메모 방으로 (고르기 대신)
+      var npv=nmEl.closest('.v');
+      if(npv){ var nc2=+npv.dataset.c, nv2=+npv.dataset.v;
+        openMemoRoom({noteKey:memoVerseKey(nc2,nv2), focus:false, bind:verseBind(nc2,nv2)}); }
+      return;
+    }
     var svEl=e.target.closest('.v');
-    if(svEl) toggleSel(+svEl.dataset.c,+svEl.dataset.v);
+    if(svEl){ toggleSel(+svEl.dataset.c,+svEl.dataset.v); return; }
+    if(e.target.closest('.tz')) return;
+    setChrome(!app.classList.contains('chrome-hidden'));   // 여백을 톡 치면 상단 바를 여닫는다
     return;
   }
   if(e.target.closest('.tz')) return;
@@ -4664,19 +4676,18 @@ document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA') return;
   if(!reading) return;
   if(rvCapturing && e.key==='Escape'){ e.preventDefault(); setRvCapturing(false); return; }
-  if(mode!=='curl'){ if(e.key==='Escape'){ closeDrawer(); closePop(); sheetEl.classList.remove('show'); closePlanCfg(); $('#help').classList.remove('show'); closeRvWall(); setSelectMode(false); setChrome(false); } return; }
+  if(mode!=='curl'){ if(e.key==='Escape'){ closeDrawer(); closePop(); sheetEl.classList.remove('show'); closePlanCfg(); $('#help').classList.remove('show'); closeRvWall(); clearSel(); setChrome(false); } return; }
   if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){ e.preventDefault(); turn(1); }
   else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); turn(-1); }
   else if(e.key==='ArrowDown'){ e.preventDefault(); gotoChapter(1); }
   else if(e.key==='ArrowUp'){ e.preventDefault(); gotoChapter(-1); }
-  else if(e.key==='Escape'){ closeDrawer(); closePop(); sheetEl.classList.remove('show'); closePlanCfg(); $('#help').classList.remove('show'); closeRvWall(); setSelectMode(false); setChrome(false); }
+  else if(e.key==='Escape'){ closeDrawer(); closePop(); sheetEl.classList.remove('show'); closePlanCfg(); $('#help').classList.remove('show'); closeRvWall(); clearSel(); setChrome(false); }
 });
 
 // toolbar
 $('#btnMenu').onclick=function(){ openDrawer('books'); };
 $('#btnHome').onclick=function(){ showCover(); };
 $('#btnSearch').onclick=function(){ openSearch(''); };
-$('#btnSelect').onclick=function(){ setSelectMode(!selectMode); if(selectMode) toast('구절을 톡톡 눌러 고르세요'); };
 $('#btnCloseDrawer').onclick=closeDrawer;
 scrimEl.onclick=closeDrawer;
 $('#locbtn').onclick=function(){ chapBook=curBook; openDrawer('chap'); };
@@ -4970,7 +4981,7 @@ function closeCover(){ coverEl.classList.add('open'); reading=true; }function op
 
 /* search sheet */
 function openSearch(q){
-  if(selectMode) setSelectMode(false);        // 말씀 찾기를 열면 선택은 접는다
+  clearSel();                                 // 말씀 찾기를 열면 고른 절은 비운다
   $('#search').classList.add('show');
   $('#sBody').innerHTML='';
   if(q){ $('#sInput').value=q; runSearch(q); }
@@ -5053,7 +5064,7 @@ function coverFind(){
 }
 function openFromCover(b,c,v){
   if(!SRC||!SRC.books[b]) return;
-  closeSearch(); closeNote(); closePop(); closeDrawer(); sheetEl.classList.remove('show'); closeRvWall(); setSelectMode(false);
+  closeSearch(); closeNote(); closePop(); closeDrawer(); sheetEl.classList.remove('show'); closeRvWall(); clearSel();
   coverEl.classList.add('open');
   reading=true;
   jumpTo(b,c,v||null);
@@ -5062,7 +5073,7 @@ function openFromCover(b,c,v){
 }
 function showCover(){
   reading=false;
-  closeSearch(); closeNote(); closePop(); closeDrawer(); sheetEl.classList.remove('show'); closeRvWall(); setSelectMode(false);
+  closeSearch(); closeNote(); closePop(); closeDrawer(); sheetEl.classList.remove('show'); closeRvWall(); clearSel();
   coverEl.classList.remove('open');
   setChrome(true);
   fillCover();
@@ -5925,7 +5936,9 @@ function boot(){
   if(!hasSettings(st) && hasSettings(store.defaultSettings)){ st=store.defaultSettings; usingDefault=true; }
   mode=wantMode();
   app.classList.toggle('scroll-mode',mode==='scroll');
+  app.classList.add('sel-mode');          // 구절 도구 바는 늘 켜져 있다
   setChrome(false);
+  topbarMeasure();
   var hideT=setTimeout(function(){ if(!drawerEl.classList.contains('show')&&!selectMode) setChrome(true); },6000);
   app.addEventListener('pointerdown',function(){ clearTimeout(hideT); },{once:true});
   if(!usingDefault && st.v!==3) st={fs:st.fs};
@@ -5942,6 +5955,7 @@ function boot(){
   applySettings();
   applyRvTheme();
   paintCapTrans();
+  updateSelUI();                          // 구절 도구 바: 처음엔 0절 · 도구는 비활성
 
   loadCustom().then(function(){
     useSource(store.src==='custom'&&customSrc?'custom':'builtin');
