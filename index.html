@@ -366,6 +366,8 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #selectbar .sb-row.sb-acts{gap:5px;}
 #selectbar .sb-count{font-family:var(--font-ui);font-size:11.5px;font-weight:600;color:var(--ink);
   letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* 고른 절이 없을 때는 자리도 차지하지 않는다 — 색 동그라미와 도구만 남아 바가 좁아진다 */
+#selectbar .sb-count:empty{display:none;}
 #selectbar .sb-colors{display:flex;align-items:center;gap:5px;}
 #selectbar .sb-sw{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.10);
   cursor:pointer;padding:0;flex:0 0 auto;}
@@ -868,7 +870,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
     <!-- 구절 도구 바: 늘 상단에 고정 — 장 제목 오른쪽, 말씀 찾기 바로 왼쪽 -->
     <div id="selectbar" role="toolbar" aria-label="구절 도구">
       <div class="sb-row">
-        <span class="sb-count" id="sbCount">구절을 눌러 보세요</span>
+        <span class="sb-count" id="sbCount"></span>
         <div class="sb-colors">
           <button type="button" class="sb-sw y" data-pc="y" aria-label="버터"></button>
           <button type="button" class="sb-sw p on" data-pc="p" aria-label="피치"></button>
@@ -3325,7 +3327,7 @@ function selRef(){
 }
 function updateSelUI(){
   var n=selCount();
-  var c=$('#sbCount'); if(c) c.textContent = n ? (n+'절 선택') : '구절을 눌러 보세요';
+  var c=$('#sbCount'); if(c) c.textContent = n ? (n+'절 선택') : '';   // 0절이면 안내 글자 없이 비운다
   ['#sbSave','#sbCopy','#sbErase'].forEach(function(s){ var b=$(s); if(b) b.disabled=!n; });
   var memo=$('#sbMemo'); if(memo) memo.disabled=!n;   // 메모는 고른 구절에 붙는다 (형광펜과 따로)
   updatePenUI();          // 지금 고른 색 점 표시
