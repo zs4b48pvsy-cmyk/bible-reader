@@ -4380,7 +4380,7 @@ document.addEventListener('pointerdown',function(e){
 },true);
 
 // drag / swipe (rotation follows the finger)
-var drag=null, dragMoved=false;
+var drag=null, dragMoved=false, swipeUnlockT=0;
 /* 옆으로 끌어 넘기기 — 끄는 동안 화면은 그대로 있고, 기준(가로 폭의 10%, 최소 42px)을
    넘는 순간 다음(이전) 쪽 글자로 한 번만 바뀐다. 손을 떼기 전에 이미 넘어가 있다. */
 var SWIPE_MIN=42, SWIPE_RATIO=0.10;
@@ -4407,7 +4407,11 @@ window.addEventListener('pointerup',function(){
   if(!drag) return;
   var d=drag; drag=null;
   if(!d.moved) return;
-  dragMoved=true; suppressClick=true;      // 따라오는 click 이 쪽을 또 넘기지 않게
+  /* 끌기 직후 브라우저가 따라 보내는 click 은 쪽 넘기기·바 여닫기 몫이 아니다.
+     다만 그 click 은 곧바로 오므로, 잠금은 잠깐만 두고 풀어 다음 톡은 그대로 듣는다. */
+  dragMoved=true; suppressClick=true;
+  clearTimeout(swipeUnlockT);
+  swipeUnlockT=setTimeout(function(){ suppressClick=false; dragMoved=false; },350);
 });
 window.addEventListener('pointercancel',function(){ drag=null; });
 
