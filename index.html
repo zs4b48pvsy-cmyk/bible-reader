@@ -16,17 +16,13 @@
 <link rel="icon" type="image/png" sizes="64x64" href="https://raw.githubusercontent.com/zs4b48pvsy-cmyk/bible-reader/main/favicon.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <style>
-/* ── 에스코어드림 (S-Core Dream) — 눈누 CDN. 기본 본문은 3Light(300) ── */
-@font-face{font-family:'S-CoreDream';font-style:normal;font-weight:200;font-display:swap;
-  src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-2ExtraLight.woff") format("woff");}
+/* ── 에스코어드림 (S-Core Dream) — 눈누 CDN. 기억·메모 방 글꼴(3Light)로만 쓴다 ── */
 @font-face{font-family:'S-CoreDream';font-style:normal;font-weight:300;font-display:swap;
   src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff") format("woff");}
 /* ── 조선일보명조체 — 눈누 CDN (Aa 글꼴 두 번째) ── */
 @font-face{font-family:'Chosunilbo_myungjo';font-style:normal;font-weight:400;font-display:swap;
   src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Chosunilbo_myungjo.woff") format("woff");}
-/* ── 기억·메모 방 글꼴 — 온글잎 범준필기체 · 델타돋움체 ── */
-@font-face{font-family:'OwnglyphBeomjunHandwriting';font-style:normal;font-weight:400;font-display:swap;
-  src:url("https://cdn.jsdelivr.net/gh/fontbee/font@main/ownglyph/OwnglyphBeomjunHandwriting.woff2") format("woff2");}
+/* ── 기억·메모 방 글꼴 — 델타돋움체 (기본은 에스코어드림) ── */
 @font-face{font-family:'DeltaDotumKR';font-style:normal;font-weight:400;font-display:swap;
   src:url("https://cdn.jsdelivr.net/gh/Project-Noonnu/2611112258@deltadotumkr/deltadotumkr/DeltaDotumKR.woff2") format("woff2");}
 :root{
@@ -900,7 +896,6 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
           <div class="pv-row"><span class="pv-lb">말풍선</span><div class="pv-dots" id="pvBub"></div></div>
           <div class="pv-row"><span class="pv-lb">글꼴</span><div class="pv-fonts" id="pvFont">
             <button type="button" class="pv-fbtn" data-v="dream">에스코어드림</button>
-            <button type="button" class="pv-fbtn" data-v="ownglyph">범준필기</button>
             <button type="button" class="pv-fbtn" data-v="delta">델타돋움</button>
           </div></div>
         </div>
@@ -944,7 +939,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <div class="seg" id="segCols"><button data-v="1">1단</button><button data-v="2">2단</button></div>
     </div>
     <div class="row"><span class="lb">글꼴</span>
-      <div class="seg" id="segFont"><button data-v="dream">에스코어드림</button><button data-v="chosun">조선일보명조</button></div>
+      <div class="seg" id="segFont"><button data-v="sans">기본 고딕</button><button data-v="chosun">조선일보명조</button></div>
     </div>
     <div class="row"><span class="lb">배경</span>
       <div class="swatches" id="segTheme">
@@ -1294,7 +1289,7 @@ function buildSourceIndex(){
 }
 
 /* ── state ─────────────────────────────────────────────── */
-var S={fs:15,cols:1,font:'dream',theme:'white',lh:1.9,pad:'normal',book:1,chapter:1,curCols:1,flip:'curl'};
+var S={fs:15,cols:1,font:'sans',theme:'white',lh:1.9,pad:'normal',book:1,chapter:1,curCols:1,flip:'curl'};
 var THEMES={
   white:{name:'화이트',paper:'#FFFFFF',ink:'#191919',ink2:'#3F3F3F',muted:'#9C9C9C',accent:'#191919',rule:'rgba(0,0,0,.08)',ui:'rgba(255,255,255,.90)',hly:'rgba(255,212,128,.55)',hlg:'rgba(166,224,180,.50)',hlp:'rgba(255,167,159,.42)',hls:'rgba(178,210,236,.48)'},
   ivory:{name:'아이보리',paper:'#FAF6EE',ink:'#2C2824',ink2:'#4A443B',muted:'#9B9182',accent:'#2C2824',rule:'rgba(70,58,40,.13)',ui:'rgba(250,246,238,.90)',hly:'rgba(246,200,110,.50)',hlg:'rgba(158,214,172,.45)',hlp:'rgba(250,160,150,.40)',hls:'rgba(170,202,228,.45)'},
@@ -1303,11 +1298,11 @@ var THEMES={
   dark:{name:'다크',paper:'#18181B',ink:'#E4E4E7',ink2:'#C4C4C9',muted:'#86868C',accent:'#E4E4E7',rule:'rgba(255,255,255,.10)',ui:'rgba(24,24,27,.90)',hly:'rgba(224,188,96,.30)',hlg:'rgba(126,200,150,.28)',hlp:'rgba(232,150,144,.30)',hls:'rgba(140,180,216,.30)'}
 };
 var FONTS={
-  dream:{name:'에스코어드림 얇게',css:'"S-CoreDream","Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif',w:300,ls:'.01em'},
+  sans:{name:'기본 고딕',css:'-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif',w:400,ls:'0'},
   chosun:{name:'조선일보명조',css:'"Chosunilbo_myungjo","AppleMyungjo","Nanum Myeongjo","Noto Serif KR","Batang","바탕",serif',w:400,ls:'0'}
 };
-/* 예전 저장값(고딕·명조·굵게·둥근)은 새 두 글꼴로 옮겨 준다 */
-var FONT_LEGACY={gothic:'dream',bold:'dream',round:'dream',myeongjo:'chosun'};
+/* 예전 저장값(에스코어드림·고딕·굵게·둥근·명조)은 새 두 글꼴로 옮겨 준다 */
+var FONT_LEGACY={dream:'sans',gothic:'sans',bold:'sans',round:'sans',myeongjo:'chosun'};
 function normFont(k){ return FONTS[k]?k:(FONT_LEGACY[k]||DEFAULT_SETTINGS.font); }
 var curBook=1, curSpread=0;
 var blockList=[], blockEls=[], tops=[], colList=[], colOfBlock=[], posIdx={}, chapCol={};
@@ -3161,11 +3156,17 @@ var rvSort='old', rvBg='#FFFFFF', rvBubble='#274261', rvFont='dream';
 var RV_FONTS={
   dream:{name:'에스코어드림 얇게',
          css:'"S-CoreDream","Apple SD Gothic Neo","Pretendard","Noto Sans KR",system-ui,sans-serif',w:300},
-  ownglyph:{name:'온글잎 범준필기체',
-         css:'"OwnglyphBeomjunHandwriting","S-CoreDream","Apple SD Gothic Neo",system-ui,sans-serif',w:400},
   delta:{name:'델타돋움체',
          css:'"DeltaDotumKR","S-CoreDream","Apple SD Gothic Neo",system-ui,sans-serif',w:400}
 };
+/* 없는 글꼴 값(옛 필기체)은 기본값 에스코어드림으로 되돌린다 */
+function normRvFont(k){ return RV_FONTS[k]?k:'dream'; }
+function fixRvFontSettings(){
+  if(store.settings&&typeof store.settings==='object'&&store.settings.rvFont!==undefined
+     &&!RV_FONTS[store.settings.rvFont]) store.settings.rvFont='dream';
+  if(store.defaultSettings&&typeof store.defaultSettings==='object'&&store.defaultSettings.rvFont!==undefined
+     &&!RV_FONTS[store.defaultSettings.rvFont]) store.defaultSettings.rvFont='dream';
+}
 function inkFor(hex){
   var h=String(hex||'').replace('#','');
   if(h.length!==6) return '#FFFFFF';
@@ -3821,7 +3822,7 @@ function applySettings(){
 }
 
 /* ── 내 기본값 (Aa 설정 저장·복원) ─────────────────────── */
-var DEFAULT_SETTINGS={fs:15,lh:1.9,pad:'normal',cols:1,font:'dream',theme:'white'};
+var DEFAULT_SETTINGS={fs:15,lh:1.9,pad:'normal',cols:1,font:'sans',theme:'white'};
 function hasSettings(o){
   if(!o||typeof o!=='object') return false;
   return !!(o.fs||o.font||o.theme||o.cols||o.lh||o.pad);
@@ -4277,7 +4278,8 @@ $('#fileData').onchange=function(e){
         store.settings=o.settings;
         if(/^#[0-9a-fA-F]{6}$/.test(o.settings.rvBg||'')) rvBg=o.settings.rvBg;
         if(/^#[0-9a-fA-F]{6}$/.test(o.settings.rvBubble||'')) rvBubble=o.settings.rvBubble;
-        if(RV_FONTS[o.settings.rvFont]) rvFont=o.settings.rvFont;
+        rvFont=normRvFont(o.settings.rvFont);
+        fixRvFontSettings();
       }
       Store.save(true);
       // 불러온 기록은 사용자가 일부러 되살린 것이므로, 묻어 둔 것을 풀어 동기화에서도 살아남게 한다
@@ -4969,6 +4971,7 @@ var Sync=(function(){
       store.plan=again.data.plan||{};
       store.settings=again.data.settings||{};
       store.defaultSettings=again.data.defaultSettings||null;
+      fixRvFontSettings();                 // 다른 기기에서 올라온 옛 글꼴 값도 기본값으로
       store.planCfg=again.data.planCfg||null;
       store.pos=again.data.pos||null;
       var ts={plan:{}};
@@ -5402,7 +5405,8 @@ function boot(){
   S.flip='curl';
   rvBg=/^#[0-9a-fA-F]{6}$/.test(st.rvBg||'')?st.rvBg:'#FFFFFF';
   rvBubble=/^#[0-9a-fA-F]{6}$/.test(st.rvBubble||'')?st.rvBubble:'#274261';
-  rvFont=RV_FONTS[st.rvFont]?st.rvFont:'dream';
+  rvFont=normRvFont(st.rvFont);
+  fixRvFontSettings();                    // 예전 저장값(옛 필기체)이 남아 있으면 기본값으로 바꿔 둔다
   applySettings();
   applyRvTheme();
   updateSelUI();                          // 구절 도구 바: 처음엔 0절 · 도구는 비활성
