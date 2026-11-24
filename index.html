@@ -19,9 +19,6 @@
 /* ── 에스코어드림 (S-Core Dream) — 눈누 CDN. 기억·메모 방 글꼴(3Light)로만 쓴다 ── */
 @font-face{font-family:'S-CoreDream';font-style:normal;font-weight:300;font-display:swap;
   src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff") format("woff");}
-/* ── 조선일보명조체 — 눈누 CDN (Aa 글꼴 두 번째) ── */
-@font-face{font-family:'Chosunilbo_myungjo';font-style:normal;font-weight:400;font-display:swap;
-  src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Chosunilbo_myungjo.woff") format("woff");}
 /* ── 기억·메모 방 글꼴 — 델타돋움체 (기본은 에스코어드림) ── */
 @font-face{font-family:'DeltaDotumKR';font-style:normal;font-weight:400;font-display:swap;
   src:url("https://cdn.jsdelivr.net/gh/Project-Noonnu/2611112258@deltadotumkr/deltadotumkr/DeltaDotumKR.woff2") format("woff2");}
@@ -98,10 +95,12 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .sum .sum-lb{font-family:var(--font-ui);font-size:calc(var(--fs)*.66);font-weight:500;letter-spacing:.03em;
   color:var(--muted);margin-bottom:7px;line-height:1.4;}
 .sum .sum-tx{margin:0;font-size:calc(var(--fs)*.94);line-height:1.82;font-weight:var(--fw,400);letter-spacing:var(--ls,0);
-  color:var(--ink2);text-align:left;word-break:keep-all;overflow-wrap:break-word;}
+  color:var(--ink2);text-align:justify;text-justify:inter-word;word-break:normal;line-break:strict;overflow-wrap:break-word;}
 /* 장별 쉬운 요약 — 2~3문단 산문 (~해요체). 문단 사이만 자연스럽게 띄운다 */
 .sum .sum-tx{margin:0;font-size:calc(var(--fs)*.9);line-height:1.78;font-weight:var(--fw,400);letter-spacing:var(--ls,0);
-  color:var(--ink2);text-align:left;word-break:keep-all;overflow-wrap:break-word;}
+  color:var(--ink2);text-align:justify;text-justify:inter-word;word-break:normal;line-break:strict;overflow-wrap:break-word;}
+.sum .sum-tx p{margin:0;text-align:justify;text-justify:inter-word;word-break:normal;line-break:strict;}
+.sum .sum-tx p+p{margin-top:9px;}
 .sum .sum-tx+.sum-tx{margin-top:9px;}
 .sc-inner .sum{margin:20px 0 26px;}
 .col>.sum:last-child{margin-bottom:0;}
@@ -955,7 +954,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <div class="seg" id="segCols"><button data-v="1">1단</button><button data-v="2">2단</button></div>
     </div>
     <div class="row"><span class="lb">글꼴</span>
-      <div class="seg" id="segFont"><button data-v="sans">기본 고딕</button><button data-v="chosun">조선일보명조</button></div>
+      <div class="seg" id="segFont"><button data-v="sans">기본 고딕</button></div>
     </div>
     <div class="row"><span class="lb">배경</span>
       <div class="swatches" id="segTheme">
@@ -1340,11 +1339,10 @@ var THEMES={
   dark:{name:'다크',paper:'#18181B',ink:'#E4E4E7',ink2:'#C4C4C9',muted:'#86868C',accent:'#E4E4E7',rule:'rgba(255,255,255,.10)',ui:'rgba(24,24,27,.90)',hly:'rgba(224,188,96,.30)',hlg:'rgba(126,200,150,.28)',hlp:'rgba(232,150,144,.30)',hls:'rgba(140,180,216,.30)',sumbg:'rgba(255,255,255,.05)',sumline:'rgba(255,255,255,.09)'}
 };
 var FONTS={
-  sans:{name:'기본 고딕',css:'-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif',w:400,ls:'0'},
-  chosun:{name:'조선일보명조',css:'"Chosunilbo_myungjo","AppleMyungjo","Nanum Myeongjo","Noto Serif KR","Batang","바탕",serif',w:400,ls:'0'}
+  sans:{name:'기본 고딕',css:'-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif',w:400,ls:'0'}
 };
-/* 예전 저장값(에스코어드림·고딕·굵게·둥근·명조)은 새 두 글꼴로 옮겨 준다 */
-var FONT_LEGACY={dream:'sans',gothic:'sans',bold:'sans',round:'sans',myeongjo:'chosun'};
+/* 본문 글꼴은 기본 고딕 하나뿐 — 예전 저장값(에스코어드림·고딕·굵게·둥근·명조 등)은 모두 여기로 되돌린다 */
+var FONT_LEGACY={dream:'sans',gothic:'sans',bold:'sans',round:'sans',myeongjo:'sans',chosun:'sans'};
 function normFont(k){ return FONTS[k]?k:(FONT_LEGACY[k]||DEFAULT_SETTINGS.font); }
 var curBook=1, curSpread=0;
 var blockList=[], blockEls=[], tops=[], colList=[], colOfBlock=[], posIdx={}, chapCol={};
