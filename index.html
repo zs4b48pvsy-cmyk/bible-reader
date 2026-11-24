@@ -14,7 +14,21 @@
 <!-- iOS '홈 화면에 추가'는 data: URI 아이콘을 읽지 않고 기본 아이콘으로 떨어지므로 직접 https URL 로 둔다 -->
 <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/zs4b48pvsy-cmyk/bible-reader/main/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="64x64" href="https://raw.githubusercontent.com/zs4b48pvsy-cmyk/bible-reader/main/favicon.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <style>
+/* ── 에스코어드림 (S-Core Dream) — 눈누 CDN. 기본 본문은 3Light(300) ── */
+@font-face{font-family:'S-CoreDream';font-style:normal;font-weight:200;font-display:swap;
+  src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-2ExtraLight.woff") format("woff");}
+@font-face{font-family:'S-CoreDream';font-style:normal;font-weight:300;font-display:swap;
+  src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff") format("woff");}
+/* ── 조선일보명조체 — 눈누 CDN (Aa 글꼴 두 번째) ── */
+@font-face{font-family:'Chosunilbo_myungjo';font-style:normal;font-weight:400;font-display:swap;
+  src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Chosunilbo_myungjo.woff") format("woff");}
+/* ── 기억·메모 방 글꼴 — 온글잎 범준필기체 · 델타돋움체 ── */
+@font-face{font-family:'OwnglyphBeomjunHandwriting';font-style:normal;font-weight:400;font-display:swap;
+  src:url("https://cdn.jsdelivr.net/gh/fontbee/font@main/ownglyph/OwnglyphBeomjunHandwriting.woff2") format("woff2");}
+@font-face{font-family:'DeltaDotumKR';font-style:normal;font-weight:400;font-display:swap;
+  src:url("https://cdn.jsdelivr.net/gh/Project-Noonnu/2611112258@deltadotumkr/deltadotumkr/DeltaDotumKR.woff2") format("woff2");}
 :root{
   --paper:#FFFFFF; --ink:#191919; --ink2:#3F3F3F; --muted:#9C9C9C;
   --accent:#191919; --rule:rgba(0,0,0,.08); --ui:rgba(255,255,255,.90);
@@ -426,6 +440,12 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .pv-row+.pv-row{margin-top:10px;}
 .pv-lb{font-family:var(--font-ui);font-size:11px;color:#8E959E;letter-spacing:.05em;width:42px;flex:0 0 auto;}
 .pv-dots{display:flex;gap:10px;align-items:center;}
+.pv-fonts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.pv-fbtn{border:1px solid rgba(0,0,0,.13);background:transparent;color:#5E646B;
+  font-family:var(--font-ui);font-size:11px;line-height:1;padding:6px 9px;border-radius:99px;cursor:pointer;
+  white-space:nowrap;}
+.pv-fbtn:active{background:rgba(0,0,0,.06);}
+.pv-fbtn.on{background:#2E2A24;color:#F7F4EC;border-color:#2E2A24;}
 .pv-dot{width:24px;height:24px;border-radius:50%;border:1px solid rgba(0,0,0,.13);padding:0;cursor:pointer;
   transition:transform .14s ease;}
 .pv-dot:active{transform:scale(.93);}
@@ -452,7 +472,7 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .rv-delpill:active{background:rgba(166,61,51,.15);}
 .rv-sort.on{background:#2E2A24;color:#F7F4EC;border-color:#2E2A24;border-radius:99px;padding:3px 9px;}
 .rv-bub{position:relative;max-width:var(--rv-maxw);background:var(--rv-bub);color:var(--rv-ink);
-  font-family:var(--font-ui);font-size:14.5px;line-height:1.64;letter-spacing:-.005em;
+  font-family:var(--rv-font,var(--font-ui));font-weight:var(--rv-fw,400);font-size:14.5px;line-height:1.64;letter-spacing:-.005em;
   padding:11px 15px 12px;border-radius:16px;word-break:keep-all;overflow-wrap:break-word;
   cursor:pointer;text-align:left;transition:background .22s ease,color .22s ease;}
 .rv-bub::after{content:"";position:absolute;left:-7px;bottom:0;width:13px;height:15px;
@@ -477,6 +497,7 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .rv-bind.show{display:flex;}
 .rv-bind-ref{flex:0 0 auto;font-size:11px;font-weight:600;color:#B08A3A;letter-spacing:.02em;}
 .rv-bind-txt{flex:1 1 auto;min-width:0;font-size:11.5px;color:#7C828A;
+  font-family:var(--rv-font,var(--font-ui));
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .rv-bind-x{flex:0 0 auto;border:0;background:transparent;color:#9BA2AA;font-family:var(--font-ui);
   font-size:11px;line-height:1;padding:4px 7px;border-radius:7px;cursor:pointer;}
@@ -488,7 +509,7 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
   transition:background .22s ease;}
 .rv-input{flex:1 1 auto;min-width:0;height:40px;box-sizing:border-box;
   border:1px solid rgba(0,0,0,.11);border-radius:20px;background:rgba(255,255,255,.72);
-  padding:0 15px;color:#22262B;font-family:var(--font-ui);font-size:16px;line-height:1.4;
+  padding:0 15px;color:#22262B;font-family:var(--rv-font,var(--font-ui));font-weight:var(--rv-fw,400);font-size:16px;line-height:1.4;
   -webkit-appearance:none;appearance:none;outline:none;}
 .rv-input::placeholder{color:#A2A8B0;}
 .rv-input:focus{border-color:rgba(0,0,0,.22);background:#FFFFFF;}
@@ -859,15 +880,14 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <button class="tabbtn on" data-tab="books">책</button>
       <button class="tabbtn" data-tab="chap">장</button>
       <button class="tabbtn" data-tab="today">오늘</button>
-      <button class="tabbtn" data-tab="note">메모</button>
-      <button class="tabbtn" data-tab="rv">기억</button>
+      <button class="tabbtn" data-tab="mem">기억·메모</button>
       <button class="tabbtn" data-tab="hl">형광펜</button>
     </div>
     <div id="dbody">
       <div id="rvRoom">
-      <section class="rv-pane" id="rvPane" aria-label="내 메모 · 기억하는 말씀 대화방">
+      <section class="rv-pane" id="rvPane" aria-label="기억 · 메모 대화방">
         <header class="rv-bar">
-          <span class="rv-title" id="rvTitle">기억하는 말씀 · 0</span>
+          <span class="rv-title" id="rvTitle">기억 · 메모 · 0</span>
           <div class="rv-tools">
             <button class="rv-theme" id="rvThemeBtn" aria-label="색상 고르기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><circle cx="8.7" cy="10.2" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="8.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.4" cy="10.4" r="1.15" fill="currentColor" stroke="none"/><circle cx="10.4" cy="15.2" r="1.15" fill="currentColor" stroke="none"/></svg></button>
             <button class="rv-sort" id="rvEdit">편집</button>
@@ -878,6 +898,11 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         <div class="rv-palette" id="rvPalette">
           <div class="pv-row"><span class="pv-lb">배경</span><div class="pv-dots" id="pvBg"></div></div>
           <div class="pv-row"><span class="pv-lb">말풍선</span><div class="pv-dots" id="pvBub"></div></div>
+          <div class="pv-row"><span class="pv-lb">글꼴</span><div class="pv-fonts" id="pvFont">
+            <button type="button" class="pv-fbtn" data-v="dream">에스코어드림</button>
+            <button type="button" class="pv-fbtn" data-v="ownglyph">범준필기</button>
+            <button type="button" class="pv-fbtn" data-v="delta">델타돋움</button>
+          </div></div>
         </div>
         <div class="rv-body" id="rvBody"></div>
       </section>
@@ -902,7 +927,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 
   <!-- 형광펜 '메모 남기기' → 화면 가운데 카톡방 모달 (#rvRoom 이 이 안으로 옮겨 온다) -->
   <div id="rvScrim"></div>
-  <div id="rvModal" role="dialog" aria-modal="true" aria-label="내 메모 대화방"></div>
+  <div id="rvModal" role="dialog" aria-modal="true" aria-label="기억 · 메모 대화방"></div>
 
   <div id="sheet">
     <div class="shbar"><span>설정</span><span class="sp"></span><button class="btn" id="resetSheet">기본값</button><button class="btn icon" id="closeSheet" aria-label="닫기">✕</button></div>
@@ -919,7 +944,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <div class="seg" id="segCols"><button data-v="1">1단</button><button data-v="2">2단</button></div>
     </div>
     <div class="row"><span class="lb">글꼴</span>
-      <div class="seg" id="segFont"><button data-v="gothic">고딕</button><button data-v="myeongjo">명조</button><button data-v="bold">굵게</button><button data-v="round">둥근</button></div>
+      <div class="seg" id="segFont"><button data-v="dream">에스코어드림</button><button data-v="chosun">조선일보명조</button></div>
     </div>
     <div class="row"><span class="lb">배경</span>
       <div class="swatches" id="segTheme">
@@ -949,7 +974,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
           <button class="sync-btn" id="syncLinkBtn" type="button">다른 기기 연결 링크 복사</button>
           <button class="sync-btn ghost" id="syncDisconnect" type="button">연결 해제</button>
         </div>
-        <p class="sync-note" id="syncNote2">형광펜·메모·기억하는 말씀·읽기 기록·설정이 두 기기에 함께 맞춰져요.</p>
+        <p class="sync-note" id="syncNote2">형광펜·기억·메모·읽기 기록·설정이 두 기기에 함께 맞춰져요.</p>
       </div>
     </div>
     <div class="hr"></div>
@@ -1004,14 +1029,14 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         <li>상단 <b>선택</b>을 누르면 고르는 상태가 돼요. 본문 절을 톡톡 눌러 고르고(다시 누르면 풀려요), 아래 바의 <b>색 동그라미</b>로 칠하거나 <b>지우기·저장·복사·메모</b>를 한자리에서 해요. 고르는 동안 손가락이 조금 스쳐도 칠해지지 않아요</li>
         <li><b>형광펜과 메모는 따로</b>예요. 절을 골라 <b>메모</b>를 누르면 그 구절에 메모를 남기는 방이 화면 가운데 열리고, 입력창에 적어 보내면 고른 구절(왼쪽)과 내 메모(오른쪽)로 남아요. 메모를 남길 때 형광펜은 칠해지지 않아요</li>
         <li><b>본문 절</b>을 톡 누르면 화면 맨 위·아래 도구 막대만 조용히 여닫혀요</li>
-        <li>상단 <b>선택</b>에서 절을 톡톡 고른 뒤 <b>저장</b>을 누르면 <b>기억하는 말씀</b>에 담겨요. 담은 말씀은 <b>☰ 목차 → 기억</b>을 누르면 목차 창 안에서 바로 열리는 대화방에서 봐요</li>
-        <li><b>☰ 목차 → 메모</b>를 누르면 내가 남긴 구절 메모와 단문이 한 대화방에 모여요. 맨 아래 입력창에 한 줄씩 보내면 카톡처럼 쌓여요. 형광펜은 <b>☰ 목차 → 형광펜</b>에서 따로 모아 봐요</li>
+        <li>상단 바에서 절을 톡톡 고른 뒤 <b>저장</b>을 누르면 <b>기억·메모</b>에 담기고, <b>☰ 목차 → 기억·메모</b>를 누르면 목차 창 안에서 바로 열리는 대화방에서 봐요</li>
+        <li><b>☰ 목차 → 기억·메모</b>에는 담은 말씀·구절 메모·단문이 날짜 구분선 아래 시간순으로 함께 쌓여요. 맨 아래 입력창에 한 줄씩 보내면 카톡처럼 붙고, 형광펜은 <b>☰ 목차 → 형광펜</b>에서 따로 모아 봐요</li>
         <li>대화방 위 <b>복사</b>를 누르면 말풍선을 톡톡 골라 고른 것만 복사할 수 있어요. <b>전체 선택</b>·<b>취소</b>로 다루고 <b>복사하기</b>를 누르면 구절과 출처가 함께 복사돼요</li>
         <li><b>☰ 목차 → 오늘</b>에서 달력으로 날짜를 골라 그날 읽을 범위(매일 신약 3장 + 잠언 1장)를 보고, 읽은 장은 <b>✓</b>로 표시해 둘 수 있어요. 표지의 <b>오늘의 읽기</b>를 누르면 오늘 첫 장으로 바로 펼쳐져요</li>
         <li><b>가운데 여백</b>을 누르면 위·아래 도구 막대가 나타나요</li>
         <li>가로로 들면 <b>두 쪽 펼침</b>으로 책장이 넘어가고, 세로로 세우면 <b>한 쪽</b>으로 위아래 스크롤하며 읽어요</li>
         <li><b>⌕ 찾기</b>에서 구절(요3:16)이나 단어(사랑)로 찾고, <b>⌂</b>를 누르면 표지로 돌아와요</li>
-        <li><b>☰ 목차</b>에서 책·장 이동, 형광펜·메모·기억하는 말씀을 모아 보기, <b>Aa</b>에서 배경색·글꼴·크기·줄 간격·여백</li>
+        <li><b>☰ 목차</b>에서 책·장 이동, 형광펜·기억·메모를 모아 보기, <b>Aa</b>에서 배경색·글꼴·크기·줄 간격·여백</li>
       </ul>
       <p class="src">본문 · 성경전서 개역한글판 © 대한성서공회 (1961)</p>
       <button class="go" id="helpGo">읽으러 가기</button>
@@ -1269,7 +1294,7 @@ function buildSourceIndex(){
 }
 
 /* ── state ─────────────────────────────────────────────── */
-var S={fs:15,cols:1,font:'gothic',theme:'white',lh:1.9,pad:'normal',book:1,chapter:1,curCols:1,flip:'curl'};
+var S={fs:15,cols:1,font:'dream',theme:'white',lh:1.9,pad:'normal',book:1,chapter:1,curCols:1,flip:'curl'};
 var THEMES={
   white:{name:'화이트',paper:'#FFFFFF',ink:'#191919',ink2:'#3F3F3F',muted:'#9C9C9C',accent:'#191919',rule:'rgba(0,0,0,.08)',ui:'rgba(255,255,255,.90)',hly:'rgba(255,212,128,.55)',hlg:'rgba(166,224,180,.50)',hlp:'rgba(255,167,159,.42)',hls:'rgba(178,210,236,.48)'},
   ivory:{name:'아이보리',paper:'#FAF6EE',ink:'#2C2824',ink2:'#4A443B',muted:'#9B9182',accent:'#2C2824',rule:'rgba(70,58,40,.13)',ui:'rgba(250,246,238,.90)',hly:'rgba(246,200,110,.50)',hlg:'rgba(158,214,172,.45)',hlp:'rgba(250,160,150,.40)',hls:'rgba(170,202,228,.45)'},
@@ -1278,11 +1303,12 @@ var THEMES={
   dark:{name:'다크',paper:'#18181B',ink:'#E4E4E7',ink2:'#C4C4C9',muted:'#86868C',accent:'#E4E4E7',rule:'rgba(255,255,255,.10)',ui:'rgba(24,24,27,.90)',hly:'rgba(224,188,96,.30)',hlg:'rgba(126,200,150,.28)',hlp:'rgba(232,150,144,.30)',hls:'rgba(140,180,216,.30)'}
 };
 var FONTS={
-  gothic:{name:'고딕',css:'-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif',w:400,ls:'0'},
-  myeongjo:{name:'명조',css:'"AppleMyungjo","Nanum Myeongjo","Noto Serif KR","Batang","바탕",serif',w:400,ls:'0'},
-  bold:{name:'굵은 고딕',css:'-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif',w:600,ls:'0'},
-  round:{name:'둥근 고딕',css:'"SF Pro Rounded","Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif',w:500,ls:'.01em'}
+  dream:{name:'에스코어드림 얇게',css:'"S-CoreDream","Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif',w:300,ls:'.01em'},
+  chosun:{name:'조선일보명조',css:'"Chosunilbo_myungjo","AppleMyungjo","Nanum Myeongjo","Noto Serif KR","Batang","바탕",serif',w:400,ls:'0'}
 };
+/* 예전 저장값(고딕·명조·굵게·둥근)은 새 두 글꼴로 옮겨 준다 */
+var FONT_LEGACY={gothic:'dream',bold:'dream',round:'dream',myeongjo:'chosun'};
+function normFont(k){ return FONTS[k]?k:(FONT_LEGACY[k]||DEFAULT_SETTINGS.font); }
 var curBook=1, curSpread=0;
 var blockList=[], blockEls=[], tops=[], colList=[], colOfBlock=[], posIdx={}, chapCol={};
 var colWv=0, colHv=0, LH=34;
@@ -2575,8 +2601,8 @@ if(window.visualViewport){
   window.visualViewport.addEventListener('resize',rvFitViewport);
   window.visualViewport.addEventListener('scroll',rvFitViewport);
 }
-function showRvPane(mode,host,bind){
-  rvMode=(mode==='memo')?'memo':'rv';
+function showRvPane(host,bind){
+  rvMode='mem';
   rvEditing=false;
   memoBind=bind||null;              // 구절에 메모를 남기는 중이면 그 구절
   var pane=$('#rvPane'), body=$('#dbody');
@@ -2606,23 +2632,23 @@ function openDrawer(tab){
   clearSel();                                 // 목차·기억 창을 열면 고른 절은 비운다
   curTab=tab;
   $$('.tabbtn').forEach(function(t){ t.classList.toggle('on',t.dataset.tab===curTab); });
-  if(tab==='rv'||tab==='note'){
-    showRvPane(tab==='note'?'memo':'rv');       // 목차 창 안에서 바로 대화방
+  if(tab==='mem'){
+    showRvPane('drawer');                       // 목차 창 안에서 바로 기억·메모 방
   } else {
     hideRvPane();
     renderDrawer(tab);
   }
   drawerEl.classList.add('show'); scrimEl.classList.add('show');
-  scrimEl.classList.toggle('soft', tab==='rv'||tab==='note');
+  scrimEl.classList.toggle('soft', tab==='mem');
   planFootShow(tab==='today');
   setChrome(true);
-  if(tab==='rv'||tab==='note'){ scrollRvEnd(); setTimeout(scrollRvEnd,40); }
+  if(tab==='mem'){ scrollRvEnd(); setTimeout(scrollRvEnd,40); }
 }
 function closeDrawer(){ hideRvPane(); closePlanCfg(); drawerEl.classList.remove('show'); scrimEl.classList.remove('show'); scrimEl.classList.remove('soft'); planFootShow(false); setChrome(false); }
 function renderDrawer(tab){
   var body=$('#dlist'); body.innerHTML='';
   planFootShow(tab==='today');
-  if(tab==='rv'||tab==='note'){ showRvPane(tab==='note'?'memo':'rv'); return; }
+  if(tab==='mem'){ showRvPane('drawer'); return; }
   hideRvPane();
   if(tab==='books'){
     var cur=curBook;
@@ -2676,7 +2702,7 @@ function renderDrawer(tab){
   }
   else if(tab==='hl'){ renderAnnoList(tab); }
   else if(tab==='today'){ renderToday(); }
-  // '기억'·'메모' 탭은 목차 목록 대신 목차 창 안 대화방(#rvPane)을 바로 보여준다
+  // '기억·메모' 탭은 목차 목록 대신 목차 창 안 대화방(#rvPane)을 바로 보여준다
 }
 /* ── 오늘의 읽기 (매일 신약 N장 + 잠언 1장) ─────────────────
    기준: 2026-11-17 = 로마서 7~9장. 신약 순서로 하루 N장씩 이어 읽고
@@ -3130,7 +3156,16 @@ function selMemo(){
 /* 색: 배경 5색 × 말풍선 5색 (말풍선은 글자색을 알아서 고른다) */
 var RV_BG=[['#FFFFFF','순백'],['#F7F3EA','웜아이보리'],['#D9E5F0','카톡스카이'],['#E5ECE6','세이지미스트'],['#F2E8E8','더스티로즈']];
 var RV_BUB=[['#274261','딥네이비'],['#FEE500','카톡엘로우'],['#3F5E4D','올리브그린'],['#353330','차콜먹색'],['#8B5A5A','로즈우드']];
-var rvSort='old', rvBg='#FFFFFF', rvBubble='#274261';
+var rvSort='old', rvBg='#FFFFFF', rvBubble='#274261', rvFont='dream';
+/* 기억·메모 방 글꼴 — 말풍선·입력창에 바로 적용된다 */
+var RV_FONTS={
+  dream:{name:'에스코어드림 얇게',
+         css:'"S-CoreDream","Apple SD Gothic Neo","Pretendard","Noto Sans KR",system-ui,sans-serif',w:300},
+  ownglyph:{name:'온글잎 범준필기체',
+         css:'"OwnglyphBeomjunHandwriting","S-CoreDream","Apple SD Gothic Neo",system-ui,sans-serif',w:400},
+  delta:{name:'델타돋움체',
+         css:'"DeltaDotumKR","S-CoreDream","Apple SD Gothic Neo",system-ui,sans-serif',w:400}
+};
 function inkFor(hex){
   var h=String(hex||'').replace('#','');
   if(h.length!==6) return '#FFFFFF';
@@ -3173,9 +3208,21 @@ function applyRvTheme(){
   w.style.setProperty('--rv-ink',inkFor(rvBubble));
   w.style.setProperty('--rv-me',me);
   w.style.setProperty('--rv-meink',contrastColor(me));
+  var rf=RV_FONTS[rvFont]||RV_FONTS.dream;
+  w.style.setProperty('--rv-font',rf.css);
+  w.style.setProperty('--rv-fw',String(rf.w));
   var m=$('#rvModal'); if(m) m.style.background=rvBg;
   $$('#pvBg .pv-dot').forEach(function(d){ d.classList.toggle('on',d.dataset.v===rvBg); });
   $$('#pvBub .pv-dot').forEach(function(d){ d.classList.toggle('on',d.dataset.v===rvBubble); });
+  $$('#pvFont .pv-fbtn').forEach(function(d){ d.classList.toggle('on',d.dataset.v===rvFont); });
+}
+function setRvFont(k){
+  if(!RV_FONTS[k]) return;
+  rvFont=k;
+  store.settings=store.settings||{};
+  store.settings.rvFont=rvFont;
+  Store.save(true);
+  applyRvTheme();
 }
 function setRvTheme(kind,hex){
   if(kind==='bg') rvBg=hex; else rvBubble=hex;
@@ -3224,23 +3271,21 @@ function noteTimelineItems(){
   });
   return out;
 }
-var rvMode='rv';
+var rvMode='mem';
 var memoBind=null;      // {key,b,c,v,ref,text} — 지금 이 구절에 메모를 남기는 중
+/* 기억·메모 통합 방의 타임라인 — 저장한 말씀(rv) · 구절 메모(note) · 단문(chat)이
+   한 줄기로 쌓인다. 형광펜(hl·pi)만 칠한 구절은 '형광펜' 탭 전용이라 여기 섮지 않는다. */
 function timelineAll(mode){
-  var m=mode||rvMode, arr=[], seq=0, first=null;
-  if(m==='rv'){
-    (store.rv||[]).forEach(function(it){
-      arr.push({kind:'rv', id:it.id||('rv'+(seq+1)), at:+it.at||0, src:it, seq:seq++});
-    });
-  } else {
-    /* 형광펜은 '형광펜' 탭에서만 — 메모 방에는 내가 남긴 구절 메모(note)와 단문(chat)만 모은다 */
-    noteTimelineItems().forEach(function(it){ it.seq=seq++; arr.push(it); });
-    (store.chat||[]).forEach(function(it){
-      if(!it||!String(it.text||'').trim()) return;
-      arr.push({kind:'chat', id:it.id||('c'+(seq+1)), at:+it.at||0, text:String(it.text),
-                src:it, seq:seq++});
-    });
-  }
+  var arr=[], seq=0, first=null;
+  (store.rv||[]).forEach(function(it){
+    arr.push({kind:'rv', id:it.id||('rv'+(seq+1)), at:+it.at||0, src:it, seq:seq++});
+  });
+  noteTimelineItems().forEach(function(it){ it.seq=seq++; arr.push(it); });
+  (store.chat||[]).forEach(function(it){
+    if(!it||!String(it.text||'').trim()) return;
+    arr.push({kind:'chat', id:it.id||('c'+(seq+1)), at:+it.at||0, text:String(it.text),
+              src:it, seq:seq++});
+  });
   arr.forEach(function(x){ if(x.at && (first===null||x.at<first)) first=x.at; });
   if(first===null) first=Date.now();
   arr.forEach(function(x){ if(!x.at) x.at=first; });   // 시각을 모르는 예전 메모는 맨 앞에
@@ -3490,22 +3535,21 @@ function renderBindBar(isMemo){
 }
 function renderRvWall(){
   var items=rvTimeline();
-  var isMemo=(rvMode==='memo');
+  var isMemo=true;                       // 통합 방은 늘 입력창·구절 바인딩을 메모로 쓴다
   var cmp=$('#rvCompose');
   renderBindBar(isMemo);
-  $('#rvTitle').textContent=(isMemo?'내 메모':'기억하는 말씀')+' · '+items.length;
+  $('#rvTitle').textContent='기억 · 메모 · '+items.length;
   $('#rvSort').textContent=(rvSort==='recent'?'최신 위':'시간순')+' ▾';
   var eb=$('#rvEdit'); if(eb){ eb.textContent=rvEditing?'완료':'편집'; eb.classList.toggle('on',rvEditing); }
-  if(cmp) cmp.style.display=isMemo?'flex':'none';
+  if(cmp) cmp.style.display='flex';
   applyRvTheme();
   var body=$('#rvBody'); body.innerHTML='';
   if(!items.length){
     rvEditing=false;
     if(eb){ eb.textContent='편집'; eb.classList.remove('on'); }
-    body.appendChild(el('div','rv-empty',isMemo
-      ?((memoBind&&isMemo)?'이 구절에 남길 메모를\n아래 입력창에 적어 보내 주세요.'
-        :'아직 남긴 메모가 없어요.\n본문에서 절을 골라 메모를 누르거나\n아래 입력창에 한 줄씩 적어 보세요.')
-      :'아직 담은 말씀이 없어요.\n본문 위의 담기 버튼을 누르고\n절을 톡톡 골라 보세요.'));
+    body.appendChild(el('div','rv-empty',(memoBind&&isMemo)
+      ?'이 구절에 남길 메모를\n아래 입력창에 적어 보내 주세요.'
+      :'아직 남긴 기억·메모가 없어요.\n본문에서 절을 골라 저장하거나 메모를 누르고,\n아래 입력창에 한 줄씩 적어 보세요.'));
     syncRvSend();
     return;
   }
@@ -3555,7 +3599,7 @@ function sendChat(){
   try{ inp.focus({preventScroll:true}); }catch(e){ inp.focus(); }
 }
 function openRvWall(mode){
-  openDrawer(mode==='memo'?'note':'rv');
+  openDrawer('mem');
 }
 function closeRvWall(){
   hideRvPane();
@@ -3581,7 +3625,7 @@ function openMemoRoom(opts){
   drawerEl.classList.remove('show');
   scrimEl.classList.remove('show'); scrimEl.classList.remove('soft');
   setChrome(true);
-  showRvPane('memo','modal',opts.bind||null);   // 동기: 누른 순간 방과 입력창이 바로 선다
+  showRvPane('modal',opts.bind||null);   // 동기: 누른 순간 방과 입력창이 바로 선다
   function focusInput(){
     var i=$('#rvInput'); if(!i) return;
     try{ i.focus({preventScroll:true}); }catch(e){ try{ i.focus(); }catch(e2){} }
@@ -3644,6 +3688,9 @@ $('#rvThemeBtn').onclick=function(e){
   });
   applyRvTheme();
 })();
+$$('#pvFont .pv-fbtn').forEach(function(b){
+  b.onclick=function(e){ e.stopPropagation(); setRvFont(b.dataset.v); };
+});
 document.addEventListener('pointerdown',function(e){
   var p=$('#rvPalette');
   if(!p||!p.classList.contains('show')) return;
@@ -3743,7 +3790,7 @@ function applySettings(){
   var st=document.documentElement.style;
   st.setProperty('--fs',S.fs+'px');
   st.setProperty('--lh',String(S.lh));
-  var f=FONTS[S.font]||FONTS.gothic;
+  var f=FONTS[S.font]||FONTS[DEFAULT_SETTINGS.font];
   st.setProperty('--font-body',f.css);
   st.setProperty('--fw',String(f.w));
   st.setProperty('--ls',f.ls);
@@ -3769,12 +3816,12 @@ function applySettings(){
   $$('#segPad button').forEach(function(b){ b.classList.toggle('on',b.dataset.v===S.pad); });
   var meta=document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute('content',T.paper);
-  store.settings={cols:S.cols,font:S.font,theme:S.theme,fs:S.fs,lh:S.lh,pad:S.pad,flip:'curl',rvBg:rvBg,rvBubble:rvBubble,v:3};
+  store.settings={cols:S.cols,font:S.font,theme:S.theme,fs:S.fs,lh:S.lh,pad:S.pad,flip:'curl',rvBg:rvBg,rvBubble:rvBubble,rvFont:rvFont,v:3};
   Store.save();
 }
 
 /* ── 내 기본값 (Aa 설정 저장·복원) ─────────────────────── */
-var DEFAULT_SETTINGS={fs:15,lh:1.9,pad:'normal',cols:1,font:'gothic',theme:'white'};
+var DEFAULT_SETTINGS={fs:15,lh:1.9,pad:'normal',cols:1,font:'dream',theme:'white'};
 function hasSettings(o){
   if(!o||typeof o!=='object') return false;
   return !!(o.fs||o.font||o.theme||o.cols||o.lh||o.pad);
@@ -3788,7 +3835,7 @@ function normalizeSettings(src){
     lh:(lh===1.65||lh===1.9||lh===2.15)?lh:DEFAULT_SETTINGS.lh,
     pad:(o.pad==='narrow'||o.pad==='wide')?o.pad:DEFAULT_SETTINGS.pad,
     cols:o.cols===2?2:DEFAULT_SETTINGS.cols,
-    font:FONTS[o.font]?o.font:DEFAULT_SETTINGS.font,
+    font:normFont(o.font),
     theme:THEMES[o.theme]?o.theme:DEFAULT_SETTINGS.theme
   };
 }
@@ -4230,6 +4277,7 @@ $('#fileData').onchange=function(e){
         store.settings=o.settings;
         if(/^#[0-9a-fA-F]{6}$/.test(o.settings.rvBg||'')) rvBg=o.settings.rvBg;
         if(/^#[0-9a-fA-F]{6}$/.test(o.settings.rvBubble||'')) rvBubble=o.settings.rvBubble;
+        if(RV_FONTS[o.settings.rvFont]) rvFont=o.settings.rvFont;
       }
       Store.save(true);
       // 불러온 기록은 사용자가 일부러 되살린 것이므로, 묻어 둔 것을 풀어 동기화에서도 살아남게 한다
@@ -5347,13 +5395,14 @@ function boot(){
   if(!usingDefault && st.v!==3) st={fs:st.fs};
   S.fs=st.fs||15;
   S.cols=st.cols===2?2:1;
-  S.font=FONTS[st.font]?st.font:'gothic';
+  S.font=normFont(st.font);
   S.theme=THEMES[st.theme]?st.theme:'white';
   S.lh=st.lh||1.9;
   S.pad=(st.pad==='narrow'||st.pad==='wide')?st.pad:'normal';
   S.flip='curl';
   rvBg=/^#[0-9a-fA-F]{6}$/.test(st.rvBg||'')?st.rvBg:'#FFFFFF';
   rvBubble=/^#[0-9a-fA-F]{6}$/.test(st.rvBubble||'')?st.rvBubble:'#274261';
+  rvFont=RV_FONTS[st.rvFont]?st.rvFont:'dream';
   applySettings();
   applyRvTheme();
   updateSelUI();                          // 구절 도구 바: 처음엔 0절 · 도구는 비활성
