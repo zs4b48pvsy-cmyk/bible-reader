@@ -1981,14 +1981,6 @@ function turn(dir){
 }
 /* test hook */
 window.__turn=function(d){ turn(d||1); return 'turn'; };
-window.__pt=function(x,y){
-  var r=caretRangeAt(x,y), n=r&&r.startContainer;
-  var p=n?verseOfNode(n):null, vt=p?p.querySelector('.vt'):null;
-  return {node:n?(n.nodeName+'|'+(n.nodeValue||'').slice(0,10)):null, off:r?r.startOffset:null,
-          v:p?(p.dataset.c+':'+p.dataset.v):null, vt:(vt?vt.textContent.slice(0,14):null),
-          base:vt?vtBase(vt):null, pt:pointAt(x,y),
-          el:(function(){var e=document.elementFromPoint(x,y); return e?(e.tagName+'#'+e.id):null;})()};
-};
 /* test hook: 지금 고른 글자 범위와 그 사각형 */
 window.__sel=function(){
   return {a:selA, b:selB,
