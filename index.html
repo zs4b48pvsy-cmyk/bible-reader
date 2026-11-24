@@ -346,45 +346,63 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #help .go{display:block;width:100%;margin-top:10px;padding:12px;border:0;border-radius:10px;background:var(--accent);color:var(--paper);
   font-family:var(--font-ui);font-size:14px;font-weight:600;cursor:pointer;}
 
-/* ── 구절 선택: 본문에서 톡톡 눌러 고르면 상단 바의 도구(형광펜 · 저장 · 복사 · 메모)가 바로 켜진다 ── */
-.sel-mode #book .v{cursor:pointer;}
-.v.sel .vt{background:rgba(236,222,190,.34);border-radius:4px;
-  box-shadow:0 0 0 1.5px rgba(188,158,104,.34);}
-/* 늘 상단 바 안에 붙어 있는 구절 도구 바 — #locbtn(장 제목) 오른쪽, #btnSearch 바로 왼쪽 */
-#selectbar{display:flex;align-items:center;flex:0 1 auto;min-width:0;gap:7px;
-  margin:0 2px;padding:3px 7px;border-radius:16px;background:rgba(0,0,0,.030);}
-.app.night #selectbar{background:rgba(255,255,255,.07);}
-#selectbar .sb-row{display:flex;align-items:center;gap:6px;min-width:0;}
-#selectbar .sb-row.sb-acts{gap:5px;}
-#selectbar .sb-count{font-family:var(--font-ui);font-size:11.5px;font-weight:600;color:var(--ink);
-  letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* 고른 절이 없을 때는 자리도 차지하지 않는다 — 색 동그라미와 도구만 남아 바가 좁아진다 */
-#selectbar .sb-count:empty{display:none;}
-#selectbar .sb-colors{display:flex;align-items:center;gap:5px;}
-#selectbar .sb-sw{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.10);
-  cursor:pointer;padding:0;flex:0 0 auto;}
-#selectbar .sb-sw.y{background:#F2DA85;} #selectbar .sb-sw.p{background:#EFB6AB;}
-#selectbar .sb-sw.g{background:#B9D8BC;} #selectbar .sb-sw.s{background:#B4CFE7;}
-#selectbar .sb-sw.on{box-shadow:0 0 0 2px var(--ui),0 0 0 3.5px rgba(0,0,0,.45);border-color:transparent;}
-#selectbar .sb-tool{border:1px solid rgba(0,0,0,.14);background:transparent;color:var(--ink);
-  font-family:var(--font-ui);font-size:11.5px;line-height:1;padding:6px 9px;border-radius:13px;
-  cursor:pointer;white-space:nowrap;}
-#selectbar .sb-tool:active{background:rgba(0,0,0,.06);}
-#selectbar .sb-tool:disabled{opacity:.32;cursor:default;}
-#selectbar .sb-sep{width:1px;height:17px;background:var(--rule);flex:0 0 auto;margin:0 1px;}
-/* 좁은 화면(아이폰 세로): 상단 바 바로 아래 줄에 붙이고, 넘치면 저장·복사·메모가 한 줄 더 내려간다 */
+/* ── 글자 드래그 선택 · 플로팅 팝오버 (리디북스식) ───────────
+   본문 글자를 길게 누르면(long-press) 그 낱말이 골라지고, 손을 떼지 않고 끌면
+   범위가 늘어난다. 마우스·트랙패드는 그냥 끌면 된다. 고른 글자 바로 위에 둥근
+   흰 팝오버(저장 · 복사 · 메모 · 지우기 · 컬러)가 뜨고, 양끝 물방울 핸들로
+   범위를 다듬는다. iOS Safari 의 검은 선택 메뉴(복사 | 찾아보기)는 기본 선택을
+   꺼서 아예 뜨지 않게 한다 — 우리가 그린 선택만 쓴다. */
+#book,#scroll{-webkit-touch-callout:none;}
+.v,.v .vn,.v .vt{-webkit-user-select:none;-webkit-touch-callout:none;user-select:none;}
+.sel-mode #book .v{cursor:default;}
+.v .vt{cursor:text;}
+/* 고른 글자를 덮는 반투명 사각형 — #selLayer 가 그린다 (.v.sel 은 '이 절 전체가 골라졌다' 표시) */
+#selLayer{position:fixed;inset:0;z-index:27;pointer-events:none;display:none;}
+#selLayer.on{display:block;}
+#selLayer .selrx{position:absolute;background:rgba(92,138,214,.26);border-radius:3px;}
+.app.night #selLayer .selrx{background:rgba(126,166,238,.30);}
+/* 양끝 물방울 핸들 — 끌어서 범위를 다듬는다 */
+.selhd{position:fixed;z-index:29;display:none;width:20px;height:20px;padding:0;border:0;
+  border-radius:50% 50% 50% 2px;background:var(--paper);
+  box-shadow:0 1px 4px rgba(0,0,0,.26),0 0 0 1px rgba(0,0,0,.10);
+  transform:translate(-50%,-50%) rotate(-45deg);touch-action:none;cursor:grab;}
+.selhd.on{display:block;}
+.selhd.drag{pointer-events:none;}   /* 끌리는 동안은 손가락 아래 글자를 그대로 짚게 */
+.selhd::after{content:"";position:absolute;inset:5px;border-radius:50%;background:rgba(92,138,214,.62);}
+.selhd:active{cursor:grabbing;}
+#selHdA{border-radius:50% 50% 2px 50%;}
+/* 고른 글자 위(자리가 없으면 아래)에 뜨는 둥근 흰 팝오버 */
+#selPop{position:fixed;z-index:31;display:none;flex-direction:column;padding:5px 6px;
+  border-radius:15px;background:var(--paper);
+  box-shadow:0 8px 26px rgba(0,0,0,.18),0 1px 3px rgba(0,0,0,.10),0 0 0 1px var(--rule);
+  transform:translate(-50%,0);opacity:0;transition:opacity .13s ease;}
+#selPop.on{display:flex;opacity:1;}
+#selPop .sp-row{display:flex;align-items:center;gap:1px;}
+#selPop .sp-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-width:47px;padding:5px 6px 4px;border:0;border-radius:11px;background:transparent;
+  font-family:var(--font-ui);font-size:10.5px;font-weight:500;color:var(--ink2);letter-spacing:-.01em;
+  cursor:pointer;line-height:1;white-space:nowrap;}
+#selPop .sp-btn svg{display:block;width:17px;height:17px;stroke:currentColor;fill:none;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+#selPop .sp-btn:active{background:rgba(0,0,0,.07);}
+#selPop .sp-sep{width:1px;height:26px;background:var(--rule);margin:0 3px;flex:0 0 auto;}
+#selPop .sp-dot{display:block;width:16px;height:16px;border-radius:50%;background:#EFB6AB;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.13);}
+/* 컬러를 누르면 같은 팝오버 안쪽(위)에 4색 동그라미가 열린다 */
+#selPop .sp-colors{display:none;align-items:center;justify-content:center;gap:13px;padding:8px 8px 9px;}
+#selPop.colors-open .sp-colors{display:flex;}
+#selPop.colors-open .sp-row{border-top:1px solid var(--rule);padding-top:4px;}
+#selPop .sp-sw{width:26px;height:26px;border-radius:50%;border:1px solid rgba(0,0,0,.10);
+  padding:0;cursor:pointer;flex:0 0 auto;transition:transform .12s ease;}
+#selPop .sp-sw.y{background:#F2DA85;} #selPop .sp-sw.p{background:#EFB6AB;}
+#selPop .sp-sw.g{background:#B9D8BC;} #selPop .sp-sw.s{background:#B4CFE7;}
+#selPop .sp-sw:active{transform:scale(.92);}
+#selPop .sp-sw.on{box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px rgba(0,0,0,.45);border-color:transparent;}
 @media (max-width:600px){
-  /* 두 줄짜리 바는 본문이 비쳐 보이면 글자가 겹쳐 보인다 — 좁은 화면은 종이색으로 꽉 채운다 */
-  #topbar{padding:calc(var(--safe-t) + 7px) 6px 0;background:var(--paper);}
-  #selectbar{flex:1 0 100%;order:9;flex-wrap:wrap;justify-content:center;gap:5px;row-gap:4px;
-    margin:6px 0 0;padding:5px 2px 6px;border-radius:0;background:transparent;
-    border-top:1px solid var(--rule);}
-  #selectbar .sb-count{font-size:11px;}
-  #selectbar .sb-colors{gap:4px;}
-  #selectbar .sb-sw{width:19px;height:19px;}
-  #selectbar .sb-tool{font-size:10.5px;padding:5px 7px;}
-  #selectbar .sb-sep{display:none;}
-  .page .hd{display:none;}   /* 좁은 화면은 상단 바가 두 줄이라 책이름 줄은 접는다 (장 제목은 바에 있다) */
+  #topbar{padding:calc(var(--safe-t) + 7px) 6px 0;background:var(--paper);}   /* 좁은 화면도 종이색 한 줄 */
+  #selPop .sp-btn{min-width:44px;padding:5px 5px 4px;font-size:10px;}
+  #selPop .sp-sw{width:25px;height:25px;}
+  .page .hd{display:none;}   /* 좁은 화면은 책이름 줄을 접는다 (장 제목은 상단 바에 있다) */
 }
 
 /* ── 목차 창 / 가운데 모달 공용 카톡 방: 메모 · 기억 ── */
@@ -729,7 +747,7 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 #cmodal.show{display:flex;}
 /* 아이패드 사파리에서 설정 시트(스크롤 층)가 확인 창 위에 겹쳐 비쳐 보이는 문제 —
    확인 창이 떠 있는 동안에는 그 아래 패널을 잠시 감춰 늘 또렷하게 보이게 한다 */
-.app.cm-open #sheet,.app.cm-open #planSheet,.app.cm-open #selectbar{visibility:hidden;}
+.app.cm-open #sheet,.app.cm-open #planSheet{visibility:hidden;}
 .cm-card{width:min(340px,88vw);background:#FFFFFF;border-radius:16px;padding:20px 18px 14px;
   box-shadow:0 22px 60px rgba(0,0,0,.26),0 2px 8px rgba(0,0,0,.08);
   transform:scale(.96);opacity:0;animation:cmIn .18s ease forwards;}
@@ -829,26 +847,6 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
   <header class="bar" id="topbar">
     <button class="btn icon" id="btnMenu" aria-label="목차">☰</button>
     <button class="btn" id="locbtn">창세기 1장<small>개역한글</small></button>
-
-    <!-- 구절 도구 바: 늘 상단에 고정 — 장 제목 오른쪽, 말씀 찾기 바로 왼쪽 -->
-    <div id="selectbar" role="toolbar" aria-label="구절 도구">
-      <div class="sb-row">
-        <span class="sb-count" id="sbCount"></span>
-        <div class="sb-colors">
-          <button type="button" class="sb-sw y" data-pc="y" aria-label="버터"></button>
-          <button type="button" class="sb-sw p on" data-pc="p" aria-label="피치"></button>
-          <button type="button" class="sb-sw g" data-pc="g" aria-label="민트"></button>
-          <button type="button" class="sb-sw s" data-pc="s" aria-label="하늘"></button>
-        </div>
-        <button type="button" class="sb-tool" id="sbErase" disabled>지우기</button>
-        <span class="sb-sep"></span>
-      </div>
-      <div class="sb-row sb-acts">
-        <button type="button" class="sb-tool" id="sbSave" disabled>저장</button>
-        <button type="button" class="sb-tool" id="sbCopy" disabled>복사</button>
-        <button type="button" class="sb-tool" id="sbMemo" disabled>메모</button>
-      </div>
-    </div>
 
     <button class="btn icon" id="btnSearch" aria-label="말씀 찾기"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.6 15.6 4.2 4.2"/></svg></button>
     <button class="btn icon" id="btnHome" aria-label="표지"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.2 12 4.4l8 6.8"/><path d="M6.4 9.6V20h11.2V9.6"/></svg></button>
@@ -1016,19 +1014,44 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
     <div class="row pc-act"><button type="button" class="pc-btn" id="pcCancel">취소</button><button type="button" class="pc-btn primary" id="pcSave">저장</button></div>
   </div>
 
+  <!-- 드래그 선택: 고른 글자를 덮는 사각형 · 양끝 핸들 · 플로팅 팝오버 -->
+  <div id="selLayer" aria-hidden="true"></div>
+  <button type="button" class="selhd" id="selHdA" aria-label="선택 시작 조절"></button>
+  <button type="button" class="selhd" id="selHdB" aria-label="선택 끝 조절"></button>
+  <div id="selPop" role="toolbar" aria-label="고른 글자 도구">
+    <div class="sp-colors" id="spColors">
+      <button type="button" class="sp-sw y" data-pc="y" aria-label="버터"></button>
+      <button type="button" class="sp-sw p on" data-pc="p" aria-label="피치"></button>
+      <button type="button" class="sp-sw g" data-pc="g" aria-label="민트"></button>
+      <button type="button" class="sp-sw s" data-pc="s" aria-label="하늘"></button>
+    </div>
+    <div class="sp-row">
+      <button type="button" class="sp-btn" id="sbSave" aria-label="저장">
+        <svg viewBox="0 0 24 24"><path d="M6.5 4.6h11v14.8l-5.5-3.6-5.5 3.6z"/></svg><span>저장</span></button>
+      <button type="button" class="sp-btn" id="sbCopy" aria-label="복사">
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M6.6 15H5.3A1.8 1.8 0 0 1 3.5 13.2V5.3A1.8 1.8 0 0 1 5.3 3.5h7.9A1.8 1.8 0 0 1 15 5.3v1.3"/></svg><span>복사</span></button>
+      <button type="button" class="sp-btn" id="sbMemo" aria-label="메모">
+        <svg viewBox="0 0 24 24"><path d="M4.4 5.4h15.2v9.9H10.4L6.1 18.6v-3.3H4.4z"/></svg><span>메모</span></button>
+      <button type="button" class="sp-btn" id="sbErase" aria-label="지우기">
+        <svg viewBox="0 0 24 24"><path d="M4.3 14.4 12.8 5.9a1.9 1.9 0 0 1 2.7 0l2.6 2.6a1.9 1.9 0 0 1 0 2.7l-6.4 6.4H8.7z"/><path d="M10.6 19.7h9"/></svg><span>지우기</span></button>
+      <span class="sp-sep"></span>
+      <button type="button" class="sp-btn" id="sbColor" aria-label="형광펜 색">
+        <i class="sp-dot" id="sbColorDot"></i><span>컬러</span></button>
+    </div>
+  </div>
+
   <div id="help">
     <div class="card">
       <h3>이렇게 읽어요</h3>
       <ul>
         <li><b>화면 가장자리</b>를 누르거나 <b>옆으로 밀면</b> 다음 쪽 / 이전 쪽</li>
-        <li>상단 <b>선택</b>을 누르면 고르는 상태가 돼요. 본문 절을 톡톡 눌러 고르고(다시 누르면 풀려요), 아래 바의 <b>색 동그라미</b>로 칠하거나 <b>지우기·저장·복사·메모</b>를 한자리에서 해요. 고르는 동안 손가락이 조금 스쳐도 칠해지지 않아요</li>
-        <li><b>형광펜과 메모는 따로</b>예요. 절을 골라 <b>메모</b>를 누르면 그 구절에 메모를 남기는 방이 화면 가운데 열리고, 입력창에 적어 보내면 고른 구절(왼쪽)과 내 메모(오른쪽)로 남아요. 메모를 남길 때 형광펜은 칠해지지 않아요</li>
-        <li><b>본문 절</b>을 톡 누르면 화면 맨 위·아래 도구 막대만 조용히 여닫혀요</li>
-        <li>상단 바에서 절을 톡톡 고른 뒤 <b>저장</b>을 누르면 <b>기억·메모</b>에 담기고, <b>☰ 목차 → 기억·메모</b>를 누르면 목차 창 안에서 바로 열리는 대화방에서 봐요</li>
+        <li>본문 글자를 <b>길게 눌러</b>(마우스·트랙패드는 끌어서) 원하는 만큼 고르면, 그 글자 위에 둥근 팝오버가 떠요. <b>저장 · 복사 · 메모 · 지우기 · 컬러</b>를 한자리에서 하고, 양끝 <b>물방울 핸들</b>로 범위를 다듬어요</li>
+        <li><b>컬러</b>를 누르면 노랑·분홍·초록·파랑 4색이 열리고, 고르면 <b>고른 글자에만</b> 형광펜이 칠해져요</li>
+        <li><b>형광펜과 메모는 따로</b>예요. 글자를 골라 <b>메모</b>를 누르면 그 구절에 메모를 남기는 방이 화면 가운데 열리고, 입력창에 적어 보내면 고른 구절(왼쪽)과 내 메모(오른쪽)로 남아요. 메모를 남길 때 형광펜은 칠해지지 않아요</li>
+        <li>본문을 짧게 <b>톡</b> 치면 위·아래 도구 막대만 조용히 여닫혀요. <b>칠해 둔 형광펜 글자</b>를 톡 치면 그 부분이 골라져 지우기·색 바꾸기 팝오버가 떠요</li>
+        <li>고른 글자에서 <b>저장</b>을 누르면 <b>기억·메모</b>에 담기고, <b>☰ 목차 → 기억·메모</b>를 누르면 목차 창 안에서 바로 열리는 대화방에서 봐요</li>
         <li><b>☰ 목차 → 기억·메모</b>에는 담은 말씀·구절 메모·단문이 날짜 구분선 아래 시간순으로 함께 쌓여요. 맨 아래 입력창에 한 줄씩 보내면 카톡처럼 붙고, 형광펜은 <b>☰ 목차 → 형광펜</b>에서 따로 모아 봐요</li>
-        <li>대화방 위 <b>복사</b>를 누르면 말풍선을 톡톡 골라 고른 것만 복사할 수 있어요. <b>전체 선택</b>·<b>취소</b>로 다루고 <b>복사하기</b>를 누르면 구절과 출처가 함께 복사돼요</li>
         <li><b>☰ 목차 → 오늘</b>에서 달력으로 날짜를 골라 그날 읽을 범위(매일 신약 3장 + 잠언 1장)를 보고, 읽은 장은 <b>✓</b>로 표시해 둘 수 있어요. 표지의 <b>오늘의 읽기</b>를 누르면 오늘 첫 장으로 바로 펼쳐져요</li>
-        <li><b>가운데 여백</b>을 누르면 위·아래 도구 막대가 나타나요</li>
         <li>가로로 들면 <b>두 쪽 펼침</b>으로 책장이 넘어가고, 세로로 세우면 <b>한 쪽</b>으로 위아래 스크롤하며 읽어요</li>
         <li><b>⌕ 찾기</b>에서 구절(요3:16)이나 단어(사랑)로 찾고, <b>⌂</b>를 누르면 표지로 돌아와요</li>
         <li><b>☰ 목차</b>에서 책·장 이동, 형광펜·기억·메모를 모아 보기, <b>Aa</b>에서 배경색·글꼴·크기·줄 간격·여백</li>
@@ -1746,7 +1769,7 @@ function renderScrollBook(){
   scInnerEl.appendChild(frag);
   scRenderedBook=curBook;
   buildScrollIndex();
-  if(selectMode) applySel();
+  if(selectMode) selRepaint();
 }
 function buildScrollIndex(){
   scVerses=[];
@@ -1819,6 +1842,7 @@ var pendingSpread=null;   // 바를 끌 때 '켤 때 보던 그 펼침면'으로
    왼쪽 페이지 맨 위에 그대로 남는다 (하단 바가 떠서 쪽나눔이 달라질 때) */
 function layout(anchor, keep){
   if(!SRC) return;
+  if(selA) clearSel(false);         // 쪽나눔·글자 크기가 바뀌면 고른 글자 자리는 새로 잡는다
   topbarMeasure();                 // 스크롤 읽기에서도 상단 바 높이(안전영역·줄바꿈)를 다시 잰다
   var pend=pendingSpread; pendingSpread=null;
   if(!anchor) anchor=currentAnchor();
@@ -1940,7 +1964,7 @@ function renderSlots(){
       e.appendChild(renderPage(pi, pps===1?'single':(p===0?'left':'right')));
     }
   }
-  if(selectMode) applySel();
+  if(selectMode) selRepaint();
 }
 
 /* ── page turn: the same screen, the next words ──────────────
@@ -1951,11 +1975,26 @@ function turn(dir){
   var target=curSpread+dir;
   if(target<0||target>=totalSpreads()) return;
   S.forced=null;
+  if(selA) clearSel(false);          // 쪽이 넘어가면 고른 글자도 함께 닫는다
   curSpread=target;
   renderSlots(); updateChrome(); savePos();
 }
 /* test hook */
 window.__turn=function(d){ turn(d||1); return 'turn'; };
+window.__pt=function(x,y){
+  var r=caretRangeAt(x,y), n=r&&r.startContainer;
+  var p=n?verseOfNode(n):null, vt=p?p.querySelector('.vt'):null;
+  return {node:n?(n.nodeName+'|'+(n.nodeValue||'').slice(0,10)):null, off:r?r.startOffset:null,
+          v:p?(p.dataset.c+':'+p.dataset.v):null, vt:(vt?vt.textContent.slice(0,14):null),
+          base:vt?vtBase(vt):null, pt:pointAt(x,y),
+          el:(function(){var e=document.elementFromPoint(x,y); return e?(e.tagName+'#'+e.id):null;})()};
+};
+/* test hook: 지금 고른 글자 범위와 그 사각형 */
+window.__sel=function(){
+  return {a:selA, b:selB,
+          slices:selSlice().map(function(g){ return {c:g.c,v:g.v,s:g.s,e:g.e,text:(verseText(curBook,g.c,g.v)||'').slice(g.s,g.e)}; }),
+          rects:selRectList().map(function(r){ return [Math.round(r.l),Math.round(r.t),Math.round(r.r),Math.round(r.b)]; })};
+};
 
 function goSpread(idx){
   idx=clamp(idx,0,totalSpreads()-1);
@@ -2216,8 +2255,10 @@ function penHit(x,y){
   return null;
 }
 var penUndoStack=[];
-function updatePenUI(){                 // 하단 바 색 점에 지금 고른 색을 표시
-  $$('#selectbar .sb-sw').forEach(function(x){ x.classList.toggle('on',x.dataset.pc===penColor); });
+function updatePenUI(){                 // 팝오버 색 동그라미·컬러 점에 지금 고른 색을 표시
+  $$('#spColors .sp-sw').forEach(function(x){ x.classList.toggle('on',x.dataset.pc===penColor); });
+  var d=$('#sbColorDot');
+  if(d) d.style.background=({y:'#F2DA85',p:'#EFB6AB',g:'#B9D8BC',s:'#B4CFE7'})[penColor]||'#EFB6AB';
 }
 function pushPenUndo(keys){
   var items=[];
@@ -2242,15 +2283,17 @@ function undoPen(){
   updatePenUI();
   toast('방금 작업을 되돌렸어요');
 }
-/* 선택은 늘 켜져 있다 (상단 바가 늘 붙어 있음) — 고른 절만 비우는 함수 */
+/* 선택은 늘 켜져 있다 — 고른 글자 범위(selA·selB)를 비우고 그리개를 감춘다 */
 function clearSel(save){
   if(stroke) endStroke();
   penClear();
   penDown=null; selPress=null; touchDown=false;
-  selMap={}; selChap=0;                 // 첫 절을 누를 때 그 장으로 정한다
-  applySel();
+  selA=null; selB=null; selAnchor=null;
+  selHold=null; selDragging=false; selHandleDrag=null; mousePress=null;
+  clearTimeout(selHoldT);
+  applySel(); hideSelUI();
   if(save!==false) Store.save(true);
-  updateSelUI(); updateChrome();
+  updateChrome();
 }
 function strokeNodes(c,v){
   var k=c+'|'+v;
@@ -2418,9 +2461,9 @@ function penMoveAt(x,y,ev){
   penDown.px=x; penDown.py=y;
   penMove(x,y);
 }
-/* 선택 모드: 톡 누르면 그 절을 고르고 푼다.
-   여기서는 끌어서 칠하기(형광펜)를 하지 않는다 — 선택하다 손가락이 조금 스쳐도
-   형광펜이 저절로 그려지면 안 되니까. 색은 아래 바의 색 동그라미로만 칠한다. */
+/* 손가락·마우스가 '톡'인지 '끌기'인지 가리는 자리. 톡은 상·하단 바를 여닫고
+   좌우 가장자리에서는 쪽을 넘기며, 본문 글자를 길게 누르거나(마우스는 끌면)
+   드래그 선택이 시작된다. */
 var selPress=null, touchDown=false, selTapGuard=0, SEL_TAP_SLOP=26;
 function selScrollTop(){ var el=$('#scroll'); return (el&&mode==='scroll')?el.scrollTop:null; }
 function selBegin(x,y){ selPress={x:x,y:y,far:false,top:selScrollTop()}; }
@@ -2442,6 +2485,8 @@ function selFinish(x,y){
   }
   selTapAt(x==null?st.x:x, y==null?st.y:y);
 }
+/* 본문을 짧게 톡: 칠해 둔 형광펜 위라면 지우기/색 바꾸기 팝오버를 띄우고,
+   그 밖의 글자·여백은 이어지는 click 핸들러가 상·하단 바를 여닫는다. */
 function selTapAt(x,y){
   if(app.classList.contains('chrome-hidden')){     // 바를 숨겨 읽던 중의 톡 = 바 다시 보이기
     selTapGuard=Date.now()+400;
@@ -2451,17 +2496,37 @@ function selTapAt(x,y){
   var t=null;
   try{ t=document.elementFromPoint(x,y); }catch(e){ t=null; }
   if(t&&t.closest&&t.closest('.nmark')) return;   // ✎ 메모 표시는 click 핸들러가 그 메모 방으로 연다
+  var pm=t&&t.closest?t.closest('.pm'):null;
   var p=t&&t.closest?t.closest('.v'):null;
-  if(!p) return;                       // 여백: 이어지는 click 이 상단 바를 여닫는다
-  selTapGuard=Date.now()+400;          // 이 탭이 만든 click 이 한 번 더 고르지 않게
-  toggleSel(+p.dataset.c,+p.dataset.v);
+  var g=(p&&(pm||verseMarkAt(p)))?hlRangeAt(p,pm):null;
+  if(g){                                          // 칠한 글자를 톡 = 그 부분만 골라 팝오버
+    selTapGuard=Date.now()+400;                   // 이 탭이 만든 click 이 바를 또 여닫지 않게
+    selA={c:g.c,v:g.v,off:g.s}; selB={c:g.c,v:g.v,off:g.e};
+    finishSel();
+    return;
+  }
+  // 그 밖의 글자·여백: 이어지는 click 이 상단 바를 여닫는다
 }
+/* 누른 자리가 어느 절의 글자인가 — 줄 사이 여백을 눌러도 그 절 글자로 본다 */
+function textTarget(el){
+  if(!el||!el.closest) return null;
+  if(el.closest('.nmark')) return null;
+  var vt=el.closest('.vt');
+  if(vt) return vt;
+  var p=el.closest('.v');
+  if(p&&!el.closest('.vn')) return p.querySelector('.vt');
+  return null;
+}
+/* 마우스·트랙패드: 본문 글자에서 끌면 바로 글자 선택 (3px 넘게 움직였을 때만) */
 bookEl.addEventListener('pointerdown',function(e){
-  if(!selectMode||!reading) return;
+  if(!reading) return;
   if(e.pointerType==='touch') return;
-  if(e.target.closest('#selectbar')||e.target.closest('.bar')) return;
-  e.preventDefault();
-  selBegin(e.clientX,e.clientY);
+  if(e.button!==0) return;
+  if(e.target.closest('#selPop')||e.target.closest('.selhd')||e.target.closest('.bar')||
+     e.target.closest('.tz')||e.target.closest('#drawer')||e.target.closest('#scrim')||
+     e.target.closest('#sheet')||e.target.closest('#cover')) return;
+  if(!textTarget(e.target)) return;
+  mousePress={x:e.clientX,y:e.clientY,point:pointAt(e.clientX,e.clientY),moved:false};
 },true);
 function penMove(x,y){
   if(!penMode||!stroke||!penDown) return;
@@ -2493,63 +2558,464 @@ function penEdgeTick(){
 }
 window.addEventListener('pointermove',function(e){
   if(e.pointerType==='touch'||touchDrawing) return;
+  if(mousePress){                              // 마우스 글자 끌기
+    var dx=e.clientX-mousePress.x, dy=e.clientY-mousePress.y;
+    if(!mousePress.moved && (Math.abs(dx)>3||Math.abs(dy)>3)){
+      mousePress.moved=true; selDragging=true; drag=null;
+      hideSelPop();
+      selA=mousePress.point||pointAt(e.clientX,e.clientY);
+      selB=selA;
+      clearTimeout(selHoldT);
+    }
+    if(mousePress.moved){
+      if(e.cancelable) e.preventDefault();
+      var p=pointAt(e.clientX,e.clientY);
+      if(p&&!selHandleDrag){ extendSelTo(p); }
+      return;
+    }
+  }
   if(!selectMode||!selPress) return;
   selMoveTo(e.clientX,e.clientY,e);
 },{passive:false});
 window.addEventListener('pointerup',function(e){
   if(e.pointerType==='touch'||touchDrawing) return;
+  if(mousePress){
+    var mp=mousePress; mousePress=null;
+    if(mp.moved&&selDragging){ selDragging=false; suppressClick=true; finishSel(); return; }
+  }
   selFinish(e.clientX,e.clientY);
 });
 window.addEventListener('pointercancel',function(e){
   if(e.pointerType==='touch'||touchDrawing) return;
+  mousePress=null;
   if(stroke) endStroke();
   selPress=null;
+  if(selDragging){ selDragging=false; selHold=null; }
 });
-/* iPad Safari: 네이티브 터치 이벤트로 '톡 누르기'를 직접 처리한다.
-   손가락을 떼었을 때 그 자리가 처음 누른 자리와 거의 같으면 그 절을 고르고,
-   끌었으면(쪽 넘김·스크롤) 아무 것도 고르지 않는다.
-   여기서 preventDefault 를 하지 않는다 — 스크롤 모드의 세로 스크롤과
-   책넘김 모드의 쪽 넘김 끌기가 막히면 안 된다. */
+/* iPad Safari: 네이티브 터치 이벤트로 '톡'과 '길게 눌러 끌기'를 직접 처리한다.
+   손가락이 430ms 동안 거의 움직이지 않고 머물면 그 낱말을 골라 드래그 선택을
+   시작하고, 그 뒤로는 preventDefault 로 스크롤·쪽 넘김을 막는다. 길게 누르기
+   전에 손가락이 움직이면 스크롤/쪽 넘김으로 넘긴다. */
 bookEl.addEventListener('touchstart',function(e){
-  if(!selectMode||!reading) return;
-  if(e.target.closest('#selectbar')||e.target.closest('.bar')) return;
+  if(!reading) return;
   if(e.touches&&e.touches.length>1) return;
+  if(e.target.closest('#selPop')||e.target.closest('.selhd')||e.target.closest('.bar')||
+     e.target.closest('.tz')||e.target.closest('#drawer')||e.target.closest('#scrim')||
+     e.target.closest('#cover')) return;
   touchDown=true;
   var t=e.changedTouches[0]||e.touches[0];
-  if(t) selBegin(t.clientX,t.clientY);
+  if(!t) return;
+  selBegin(t.clientX,t.clientY);
+  if(!textTarget(e.target)) return;
+  selHold={x:t.clientX,y:t.clientY,point:pointAt(t.clientX,t.clientY),fired:false};
+  clearTimeout(selHoldT);
+  selHoldT=setTimeout(fireLongPress,LP_MS);
 },{passive:true});
 window.addEventListener('touchmove',function(e){
-  if(!selectMode||!touchDown) return;
+  if(!touchDown&&!selHold) return;
   if(e.touches&&e.touches.length>1) return;
   var t=e.changedTouches[0]||e.touches[0];
-  if(t) selMoveTo(t.clientX,t.clientY,e);
-},{passive:true});
+  if(!t) return;
+  if(selHold&&selHold.fired){                 // 길게 눌러 고르는 중 — 화면이 따라 굴러가지 않게 잡는다
+    if(e.cancelable) e.preventDefault();
+    var p=pointAt(t.clientX,t.clientY);
+    if(p&&!selHandleDrag) extendSelTo(p);
+    return;
+  }
+  if(selHold&&!selHold.fired){                // 아직 길게 누르기 전: 손가락이 움직이면 선택을 포기
+    if(Math.abs(t.clientX-selHold.x)>LP_SLOP||Math.abs(t.clientY-selHold.y)>LP_SLOP){
+      clearTimeout(selHoldT); selHold=null;
+    }
+  }
+  selMoveTo(t.clientX,t.clientY,e);
+},{passive:false});
 window.addEventListener('touchend',function(e){
   if(!touchDown) return;
   touchDown=false; touchDrawing=false;
+  clearTimeout(selHoldT);
   var t=e.changedTouches&&e.changedTouches[0];
+  if(selHold&&selHold.fired){                 // 길게 눌러 고른 뒤 손을 뗌 = 팝오버
+    selHold=null; selDragging=false; selPress=null;
+    suppressClick=true; selTapGuard=Date.now()+500;
+    finishSel();
+    return;
+  }
+  selHold=null;
   if(t) selFinish(t.clientX,t.clientY); else selFinish(null,null);
 });
 window.addEventListener('touchcancel',function(){
-  if(!touchDown) return;
+  clearTimeout(selHoldT);
+  if(!touchDown&&!selHold) return;
   touchDown=false; touchDrawing=false;
   if(stroke) endStroke();
   selPress=null;
+  if(selHold&&selHold.fired){ selHold=null; selDragging=false; finishSel(); return; }
+  selHold=null;
 });
 window.addEventListener('pagehide',function(){ if(stroke) endStroke(); Store.save(true); });
 document.addEventListener('visibilitychange',function(){ if(document.hidden){ if(stroke) endStroke(); Store.save(true); } });
-$$('#selectbar .sb-sw').forEach(function(b){
-  b.onclick=function(){
-    penColor=b.dataset.pc;
-    updatePenUI();
-    if(selCount()) selHighlight(penColor);      // 고른 절이 있으면 바로 그 색으로 칠한다
-    else toast('구절을 먼저 골라 주세요');       // 끌어서 긋는 대신, 고른 절에만 칠한다
-  };
-});
-$('#sbErase').onclick=function(){ selHighlight('erase'); };
 $('#sbSave').onclick=function(){ selSave(); };
 $('#sbCopy').onclick=function(){ selCopy(); };
 $('#sbMemo').onclick=function(){ selMemo(); };
+$('#sbErase').onclick=function(){ selHighlight('erase'); };
+$('#sbColor').onclick=function(){                 // 컬러: 같은 팝오버 안에 4색을 연다
+  var pop=$('#selPop'); if(!pop) return;
+  pop.classList.toggle('colors-open');
+  positionSelPop(selRectList());
+};
+$$('#spColors .sp-sw').forEach(function(b){
+  b.onclick=function(){
+    penColor=b.dataset.pc;
+    updatePenUI();
+    selHighlight(penColor);                       // 고른 글자에 바로 칠하고 팝오버를 닫는다
+  };
+});
+
+/* ── 드래그 선택 엔진 ───────────────────────────────────────
+   선택은 '절 + 그 절 안 글자 위치(off)' 두 점으로 기억한다. 화면에 그릴 때만
+   실제 DOM 범위(Range)로 바꾸어 줄마다 사각형을 얻는다 — 글자가 다시 그려지거나
+   쪽이 바뀌어도 선택은 같은 글자를 가리킨다. */
+var selA=null, selB=null, selAnchor=null;
+var selDragging=false, selHandleDrag=null, selHold=null, selHoldT=0, mousePress=null;
+var LP_MS=430, LP_SLOP=9;
+function selLayer(){ return $('#selLayer'); }
+function selChapArr(c){ var bk=SRC&&SRC.books[curBook]; return (bk&&bk.chapters&&bk.chapters[c])||[]; }
+function posCmp(a,b){ return (a.c-b.c)||(a.v-b.v)||(a.off-b.off); }
+function isWordChar(ch){ return !!ch && !/[\s.,;:!?·'"“”‘’()\[\]{}<>~—…]/.test(ch); }
+/* 글자 위치 off 를 감싸는 낱말 범위 — 길게 누르면 이 낱말이 먼저 골라진다 */
+function wordRange(p){
+  var full=verseText(curBook,p.c,p.v)||'', n=full.length;
+  var i=Math.max(0,Math.min(p.off||0,n));
+  if(i>0&&i<n&&!isWordChar(full.charAt(i))&&isWordChar(full.charAt(i-1))) i--;
+  var s=i, e=i;
+  while(s>0&&isWordChar(full.charAt(s-1))) s--;
+  while(e<n&&isWordChar(full.charAt(e))) e++;
+  if(e<=s){ s=Math.min(i,Math.max(0,n-1)); e=Math.min(n,s+1); }
+  return {c:p.c,v:p.v,s:s,e:e};
+}
+/* 두 쪽 읽기에서 나뉜 조각(.v.cont)은 그 조각 글자가 절 글자의 어디서 시작하는지 */
+function vtBase(vt){
+  var p=vt.closest?vt.closest('.v'):null; if(!p) return 0;
+  var full=verseText(curBook,+p.dataset.c,+p.dataset.v)||'', t=vt.textContent||'';
+  if(!t||t===full) return 0;
+  var i=full.indexOf(t);
+  return i<0?0:i;
+}
+function nodeAtOff(vt,off){
+  var w=document.createTreeWalker(vt,NodeFilter.SHOW_TEXT,null,false), n, acc=0;
+  while((n=w.nextNode())){
+    var L=(n.nodeValue||'').length;
+    if(off<=acc+L) return {n:n,o:Math.max(0,off-acc)};
+    acc+=L;
+  }
+  return null;
+}
+function nearestVerse(x,y){
+  var root=(mode==='scroll')?$('#scInner'):$('#track');
+  if(!root) return null;
+  var vs=root.querySelectorAll('.v'), best=null, bs=1e9;
+  for(var i=0;i<vs.length;i++){
+    var v=vs[i], b=v.getBoundingClientRect();
+    if(!b.width||!b.height) continue;
+    var dy=y<b.top?b.top-y:(y>b.bottom?y-b.bottom:0);
+    var dx=x<b.left?b.left-x:(x>b.right?x-b.right:0);
+    var sc=dy*3+dx;
+    if(sc<bs){ bs=sc; best={el:v,b:b}; }
+  }
+  if(!best) return null;
+  var c=+best.el.dataset.c, vv=+best.el.dataset.v;
+  var off=(y>best.b.top+best.b.height/2)?(verseText(curBook,c,vv)||'').length:0;
+  return {c:c,v:vv,off:off};
+}
+/* 화면 좌표 → {c,v,off}. 캐럿(caretRangeFromPoint)을 먼저 믿고, 그게 없으면
+   그 자리의 절과 가로 위치로 정한다. 핸들·선택 사각형처럼 글자 위를 덮은 것이
+   있어도 캐럿이 글자를 짚어 주므로 범위가 튀지 않는다. */
+function caretRangeAt(x,y){
+  try{
+    if(document.caretRangeFromPoint) return document.caretRangeFromPoint(x,y);
+    if(document.caretPositionFromPoint){
+      var cp=document.caretPositionFromPoint(x,y);
+      if(cp){ var r=document.createRange(); r.setStart(cp.offsetNode,cp.offset); r.collapse(true); return r; }
+    }
+  }catch(e){}
+  return null;
+}
+function verseOfNode(node){
+  var n=node&&(node.nodeType===1?node:node.parentElement);
+  return n&&n.closest?n.closest('.v'):null;
+}
+function pointAt(x,y){
+  var r=caretRangeAt(x,y);
+  var p=r?verseOfNode(r.startContainer):null;
+  if(p){
+    var vt=p.querySelector('.vt');
+    if(vt&&vt.contains(r.startContainer)){
+      var off=null, pre=document.createRange();
+      try{ pre.selectNodeContents(vt); pre.setEnd(r.startContainer,r.startOffset); off=pre.toString().length; }catch(e){ off=null; }
+      if(off!=null) return {c:+p.dataset.c,v:+p.dataset.v,off:vtBase(vt)+off};
+    }
+  }
+  var t=null;
+  try{ t=document.elementFromPoint(x,y); }catch(e){ t=null; }
+  p=t&&t.closest?t.closest('.v'):null;
+  var vt2=p?p.querySelector('.vt'):null;
+  if(p&&vt2){
+    var base=vtBase(vt2), bx=vt2.getBoundingClientRect();
+    var o=(x>bx.right+2)?(vt2.textContent||'').length:0;
+    return {c:+p.dataset.c,v:+p.dataset.v,off:base+o};
+  }
+  return nearestVerse(x,y);
+}
+/* 선택을 절별 글자 범위로 편다 */
+function selSlice(){
+  if(!selA||!selB) return [];
+  var a=selA, b=selB;
+  if(posCmp(a,b)>0){ var t=a; a=b; b=t; }
+  var out=[];
+  for(var c=a.c;c<=b.c;c++){
+    var arr=selChapArr(c);
+    for(var i=0;i<arr.length;i++){
+      var it=arr[i]; if(it.h||it.v==null) continue;
+      var v=it.v;
+      if(c===a.c&&v<a.v) continue;
+      if(c===b.c&&v>b.v) continue;
+      var full=it.t||'';
+      var s=(c===a.c&&v===a.v)?a.off:0;
+      var e=(c===b.c&&v===b.v)?b.off:full.length;
+      s=Math.max(0,Math.min(s,full.length)); e=Math.max(0,Math.min(e,full.length));
+      if(e>s) out.push({c:c,v:v,s:s,e:e});
+    }
+  }
+  return out;
+}
+function selIsFull(g){ var f=verseText(curBook,g.c,g.v)||''; return g.s<=0&&g.e>=f.length; }
+function selVerses(){
+  var out=[], seen={};
+  selSlice().forEach(function(g){ if(!seen[g.v]){ seen[g.v]=1; out.push(g.v); } });
+  return out.sort(function(a,b){ return a-b; });
+}
+function selCount(){ return selVerses().length; }
+function selRef(){
+  var sl=selSlice(); if(!sl.length) return '';
+  var f=sl[0], l=sl[sl.length-1];
+  if(f.c===l.c) return abbr(curBook)+' '+f.c+':'+vsRuns(selVerses());
+  return abbr(curBook)+' '+f.c+':'+f.v+'–'+l.c+':'+l.v;
+}
+function selTexts(){
+  return selSlice().map(function(g){
+    return {c:g.c,v:g.v,s:g.s,e:g.e,full:selIsFull(g),
+            text:(verseText(curBook,g.c,g.v)||'').slice(g.s,g.e)};
+  });
+}
+/* 화면에 그릴 사각형들 (보이는 조각만) */
+function selRectList(){
+  var sl=selSlice(), out=[];
+  if(!sl.length) return out;
+  var H=window.innerHeight;
+  for(var i=0;i<sl.length;i++){
+    var g=sl[i];
+    var nodes=$$('#track .v[data-c="'+g.c+'"][data-v="'+g.v+'"], #scroll .v[data-c="'+g.c+'"][data-v="'+g.v+'"]');
+    for(var j=0;j<nodes.length;j++){
+      var p=nodes[j], vt=p.querySelector('.vt'); if(!vt) continue;
+      var nr=p.getBoundingClientRect();
+      if(nr.bottom<-80||nr.top>H+80) continue;
+      var base=vtBase(vt), len=(vt.textContent||'').length;
+      var a=Math.max(g.s,base), b=Math.min(g.e,base+len);
+      if(b<=a) continue;
+      var A=nodeAtOff(vt,a-base), B=nodeAtOff(vt,b-base);
+      if(!A||!B) continue;
+      var r=document.createRange();
+      try{ r.setStart(A.n,A.o); r.setEnd(B.n,B.o); }catch(e){ continue; }
+      var rs=r.getClientRects();
+      for(var q=0;q<rs.length;q++){
+        var x=rs[q];
+        if(x.width<0.5||x.height<1) continue;
+        if(x.bottom<0||x.top>H) continue;
+        out.push({l:x.left,t:x.top,r:x.right,b:x.bottom});
+      }
+    }
+  }
+  return out;
+}
+function placeSelHandles(rects){
+  var a=$('#selHdA'), b=$('#selHdB'); if(!a||!b) return;
+  if(!rects.length){ hideSelHandles(); return; }
+  var f=rects[0], l=rects[rects.length-1];
+  a.style.left=Math.round(f.l)+'px'; a.style.top=Math.round(f.t)+'px';
+  b.style.left=Math.round(l.r)+'px'; b.style.top=Math.round(l.b)+'px';
+  a.classList.add('on'); b.classList.add('on');
+}
+function hideSelHandles(){
+  var a=$('#selHdA'), b=$('#selHdB');
+  if(a) a.classList.remove('on');
+  if(b) b.classList.remove('on');
+}
+function drawSel(){
+  var layer=selLayer(); if(!layer) return;
+  var rects=selRectList();
+  layer.innerHTML='';
+  if(!rects.length){ layer.classList.remove('on'); hideSelHandles(); return; }
+  var frag=document.createDocumentFragment();
+  for(var i=0;i<rects.length;i++){
+    var d=document.createElement('div'); d.className='selrx';
+    d.style.left=rects[i].l+'px'; d.style.top=rects[i].t+'px';
+    d.style.width=Math.max(1,rects[i].r-rects[i].l)+'px';
+    d.style.height=Math.max(1,rects[i].b-rects[i].t)+'px';
+    frag.appendChild(d);
+  }
+  layer.appendChild(frag);
+  layer.classList.add('on');
+  placeSelHandles(rects);
+  applySel();
+}
+function hideSelPop(){
+  var pop=$('#selPop'); if(!pop) return;
+  pop.classList.remove('on'); pop.classList.remove('colors-open');
+}
+/* 고른 글자 바로 위(자리가 모자라면 아래)에 팝오버를 앉힌다 */
+function positionSelPop(rects){
+  var pop=$('#selPop'); if(!pop||!pop.classList.contains('on')) return;
+  rects=rects&&rects.length?rects:selRectList();
+  if(!rects.length) return;
+  var W=window.innerWidth, H=window.innerHeight;
+  var l=1e9,r=-1e9,t=1e9,b=-1e9;
+  for(var i=0;i<rects.length;i++){
+    l=Math.min(l,rects[i].l); r=Math.max(r,rects[i].r);
+    t=Math.min(t,rects[i].t); b=Math.max(b,rects[i].b);
+  }
+  var pw=pop.offsetWidth||240, ph=pop.offsetHeight||46;
+  var cx=Math.max(pw/2+8,Math.min(W-pw/2-8,(l+r)/2));
+  var topLimit=topbarH()+8, bottomLimit=H-10;
+  var top=t-ph-11;
+  if(top<topLimit) top=b+11;
+  if(top+ph>bottomLimit) top=Math.max(topLimit,bottomLimit-ph);
+  pop.style.left=Math.round(cx)+'px';
+  pop.style.top=Math.round(top)+'px';
+}
+function showSelPop(){
+  var pop=$('#selPop'); if(!pop) return;
+  if(!selSlice().length){ hideSelPop(); return; }
+  pop.classList.add('on');
+  positionSelPop(selRectList());
+}
+function finishSel(){
+  if(!selSlice().length){ clearSel(); return; }
+  suppressClick=true; selTapGuard=Date.now()+500;
+  setTimeout(function(){ suppressClick=false; dragMoved=false; },460);
+  drawSel();
+  showSelPop();
+}
+function hideSelUI(){ hideSelHandles(); hideSelPop(); var l=selLayer(); if(l){ l.classList.remove('on'); l.innerHTML=''; } }
+/* 다시 그려진 본문 위에 선택 사각형을 다시 앉힌다 */
+function selRepaint(){
+  if(!selA||!selB) return;
+  drawSel();
+  var pop=$('#selPop');
+  if(pop&&pop.classList.contains('on')) positionSelPop(selRectList());
+}
+/* 끄는 동안 사각형은 프레임마다 한 번만 그린다 (긴 범위를 끌어도 느려지지 않게) */
+var selDrawRaf=0;
+function drawSelSoon(){
+  if(selDrawRaf) return;
+  selDrawRaf=requestAnimationFrame(function(){ selDrawRaf=0; if(selA&&selB) drawSel(); });
+}
+/* 선택을 늘인다 — 처음 누른 자리를 기준으로 앞뒤 어느 쪽이든 */
+function extendSelTo(p){
+  if(!selAnchor) selAnchor=selA||p;
+  var a=selAnchor;
+  if(posCmp(p,a)<0){ selA=p; selB={c:a.c,v:a.v,off:a.off}; }
+  else { selA={c:a.c,v:a.v,off:a.off}; selB=p; }
+  drawSelSoon();
+}
+/* 길게 누르기 성공 — 그 낱말이 골라진 채 드래그 선택 시작 */
+function fireLongPress(){
+  if(!selHold||selHold.fired) return;
+  selHold.fired=true; selDragging=true;
+  drag=null; dragMoved=false;
+  var p=selHold.point||pointAt(selHold.x,selHold.y);
+  if(!p){ selHold=null; selDragging=false; return; }
+  var w=wordRange(p);
+  selAnchor={c:w.c,v:w.v,off:w.s};
+  selA={c:w.c,v:w.v,off:w.s};
+  selB={c:w.c,v:w.v,off:w.e};
+  hideSelPop();
+  drawSel();
+  try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+}
+/* 칠해 둔 형광펜 위인가 — 절 전체를 칠한 경우만 (부분 표시는 .pm 조각을 직접 눌렀을 때) */
+function verseMarkAt(p){
+  var k=piKey(+p.dataset.c,+p.dataset.v);
+  return !!(store.hl&&store.hl[k]);
+}
+function hlRangeAt(p,pm){
+  var c=+p.dataset.c, v=+p.dataset.v, k=piKey(c,v);
+  var full=verseText(curBook,c,v)||'';
+  if(pm&&pm.dataset&&pm.dataset.s!=null)
+    return {c:c,v:v,s:+pm.dataset.s,e:+pm.dataset.e};
+  var list=(store.pi&&store.pi[k])||[];
+  if(list.length) return {c:c,v:v,s:list[0].s,e:list[0].e};
+  if(store.hl&&store.hl[k]) return {c:c,v:v,s:0,e:full.length};
+  return null;
+}
+/* 양끝 물방울 핸들 끌기 */
+function startHandleDrag(which,e){
+  if(!selA||!selB) return;
+  e.preventDefault(); e.stopPropagation();
+  selHandleDrag=which;
+  hideSelPop();
+  var el=$(which==='a'?'#selHdA':'#selHdB');
+  if(el) el.classList.add('drag');      // 끌리는 핸들이 글자를 가리지 않게
+  var fixed=(which==='a')?{c:selB.c,v:selB.v,off:selB.off}:{c:selA.c,v:selA.v,off:selA.off};
+  function move(ev){
+    var p=pointAt(ev.clientX,ev.clientY);
+    if(!p) return;
+    if(which==='a'){
+      if(posCmp(p,fixed)>0) return;      // 시작 핸들은 끝을 넘지 않는다 (넘어가면 그대로 둔다)
+      selA=p;
+    } else {
+      if(posCmp(p,fixed)<0) return;
+      selB=p;
+    }
+    drawSelSoon();
+  }
+  function up(){
+    window.removeEventListener('pointermove',move,true);
+    window.removeEventListener('pointerup',up,true);
+    window.removeEventListener('pointercancel',up,true);
+    selHandleDrag=null;
+    if(el) el.classList.remove('drag');
+    finishSel();
+  }
+  window.addEventListener('pointermove',move,true);
+  window.addEventListener('pointerup',up,true);
+  window.addEventListener('pointercancel',up,true);
+}
+['selHdA','selHdB'].forEach(function(id,i){
+  var b=$('#'+id); if(!b) return;
+  b.addEventListener('pointerdown',function(e){ startHandleDrag(i===0?'a':'b',e); });
+});
+/* 팝오버·핸들 바깥을 누르면 선택을 닫는다 */
+document.addEventListener('pointerdown',function(e){
+  if(!selA) return;
+  if(e.target.closest&&e.target.closest('#selPop,.selhd')) return;
+  clearSel(false);
+  selTapGuard=Date.now()+420;
+},true);
+/* 세로 스크롤 읽기에서 화면이 굴러가면 사각형·핸들을 따라 옮긴다 */
+(function(){
+  var el=$('#scroll'); if(!el) return;
+  var pend=false;
+  el.addEventListener('scroll',function(){
+    if(!selA||pend) return;
+    pend=true;
+    requestAnimationFrame(function(){
+      pend=false;
+      if(!selA) return;
+      drawSel();
+      hideSelPop();
+    });
+  },{passive:true});
+})();
 
 /* ── bookmarks ─────────────────────────────────────────── */
 function isBookmarked(b,c,v){
@@ -3030,40 +3496,19 @@ function vsRuns(vs){            // [1,2,4] → '1–2, 4'
   return out.join(', ');
 }
 
-/* ── 선택 모드: 상단 '선택' · 하단 통합 바(형광펜 · 저장 · 복사 · 메모) ──
-   절을 톡톡 눌러 여러 절을 고르고, 한 바에서 다 한다. */
-/* 상단 바의 구절 도구는 늘 켜져 있다 — 본문을 톡톡 누르면 바로 골라진다 */
-var selectMode=true, selMap={}, selChap=0;
+/* ── 고른 글자로 하는 일: 형광펜 · 저장 · 복사 · 메모 ──
+   선택은 드래그로만 만든다 (짧은 톡은 상·하단 바를 여닫고, 칠한 글자 위의 톡만 팝오버를 연다). */
+var selectMode=true;
+/* '이 절 전체가 골라졌다' 표시 — 실제 반투명 사각형은 #selLayer 가 그린다 */
 function applySel(){
-  var nodes=$$('#track .v, #scroll .v');
-  for(var i=0;i<nodes.length;i++){
-    nodes[i].classList.toggle('sel', !!selMap[nodes[i].dataset.c+':'+nodes[i].dataset.v]);
-  }
-}
-function selVerses(){
-  return Object.keys(selMap).map(function(k){ return +k.split(':')[1]; }).sort(function(a,b){ return a-b; });
-}
-function selCount(){ return selVerses().length; }
-function selRef(){
-  var vs=selVerses();
-  return abbr(curBook)+' '+(selChap||S.chapter||1)+':'+vsRuns(vs);
+  var full={};
+  selSlice().forEach(function(g){ if(selIsFull(g)) full[g.c+':'+g.v]=1; });
+  $$('#track .v, #scroll .v').forEach(function(n){
+    n.classList.toggle('sel', !!full[n.dataset.c+':'+n.dataset.v]);
+  });
 }
 function updateSelUI(){
-  var n=selCount();
-  var c=$('#sbCount'); if(c) c.textContent = n ? (n+'절 선택') : '';   // 0절이면 안내 글자 없이 비운다
-  ['#sbSave','#sbCopy','#sbErase'].forEach(function(s){ var b=$(s); if(b) b.disabled=!n; });
-  var memo=$('#sbMemo'); if(memo) memo.disabled=!n;   // 메모는 고른 구절에 붙는다 (형광펜과 따로)
-  updatePenUI();          // 지금 고른 색 점 표시
-  refreshToolPad();       // 바 높이가 달라지면 본문 아래 여백도 따라 늘린다
-}
-function toggleSel(c,v){
-  var n=selCount();
-  // 고른 절이 없으면 장이 달라도 '새로 시작' 이 아니다 — 조용히 그 장으로 시작한다
-  if(!n) selChap=c;
-  else if(selChap && c!==selChap){ selMap={}; selChap=c; toast('장이 달라 선택을 새로 시작했어요'); }
-  var k=c+':'+v;
-  if(selMap[k]) delete selMap[k]; else selMap[k]=1;
-  applySel(); updateSelUI();
+  if(selSlice().length) showSelPop(); else hideSelPop();
 }
 /* 한 절의 형광펜(전체·부분)을 지금 저장된 상태 그대로 다시 그린다 */
 function paintVerseMark(c,v){
@@ -3076,50 +3521,50 @@ function paintVerseMark(c,v){
     paintPartial(p);
   }
 }
-/* 고른 절 모두에 형광펜을 칠한다 (col==='erase' 면 지운다) */
+/* 컬러: 고른 글자 범위에만 칠한다 (col==='erase' 면 그 범위만 지운다) */
 function selHighlight(col){
-  var vs=selVerses();
-  if(!vs.length){ toast('구절을 먼저 골라 주세요'); return; }
-  var c=selChap||S.chapter||1, n=0, now=Date.now();
-  for(var i=0;i<vs.length;i++){
-    var v=vs[i], full=verseText(curBook,c,v)||'';
-    if(!full) continue;
-    var k=piKey(c,v);
-    if(col==='erase'){ delete store.pi[k]; if(store.hl) delete store.hl[k]; }
-    else {
-      store.pi[k]=[{s:0,e:full.length,c:col,at:now}];   // 절 전체를 한 색으로
-      if(store.hl) delete store.hl[k];
-    }
-    paintVerseMark(c,v); n++;
+  var sl=selSlice();
+  if(!sl.length){ toast('글자를 먼저 골라 주세요'); return; }
+  var keys={}, now=Date.now();
+  for(var i=0;i<sl.length;i++){
+    var g=sl[i], k=piKey(g.c,g.v);
+    if(!keys[k]){ keys[k]=1; pushPenUndo([k]); }
+    var list=subtractSeg(((store.pi&&store.pi[k])||[]).slice(),{s:g.s,e:g.e});
+    if(col!=='erase') list.push({s:g.s,e:g.e,c:col,at:now});
+    list.sort(function(a,b){ return a.s-b.s; });
+    if(list.length) store.pi[k]=list; else if(store.pi) delete store.pi[k];
+    if(store.hl) delete store.hl[k];        // 예전 방식의 절 전체 표시와 겹치지 않게
+    paintVerseMark(g.c,g.v);
   }
   Store.save(true);
-  toast(col==='erase' ? ('고른 '+n+'절의 형광펜을 지웠어요') : ('고른 '+n+'절을 칠했어요'));
-  updateSelUI();
+  toast(col==='erase' ? '형광펜을 지웠어요' : '형광펜을 칠했어요');
+  clearSel();
 }
-/* 저장: 고른 절을 '기억' 방(rv)에 한 묶음으로 담는다 */
+/* 저장: 고른 글자를 '기억' 방에 담는다 — 글자 일부만 골랐으면 그 글자만 보인다 */
 function selSave(){
-  var vs=selVerses();
-  if(!vs.length){ toast('구절을 먼저 골라 주세요'); return; }
-  var c=selChap||S.chapter||1, parts=[];
-  for(var i=0;i<vs.length;i++){ var t=verseText(curBook,c,vs[i]); if(t) parts.push(t); }
-  if(!parts.length){ toast('본문을 찾지 못했어요'); return; }
+  var sl=selSlice();
+  if(!sl.length){ toast('글자를 먼저 골라 주세요'); return; }
+  var vs=selVerses(), text=selTexts().map(function(t){ return t.text; }).join(' ');
+  if(!text){ toast('본문을 찾지 못했어요'); return; }
+  var partial=sl.some(function(g){ return !selIsFull(g); });
   var entry={id:'rv'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
-             b:curBook, c:c, vs:vs, ref:abbr(curBook)+' '+c+':'+vsRuns(vs),
-             text:parts.join(' '), at:Date.now()};
+             b:curBook, c:sl[0].c, vs:vs, ref:selRef(),
+             text:text, at:Date.now()};
+  if(partial) entry.segs=sl.map(function(g){ return {c:g.c,v:g.v,s:g.s,e:g.e}; });
   if(!store.rv) store.rv=[];
   store.rv.push(entry);          // 같은 날 다시 저장해도 덮어쓰지 않고 하나씩 쌓인다
   Store.save(true);
   toast('저장했어요 · '+entry.ref);
-  updateSelUI();
+  clearSel();
 }
-/* 복사: 고른 절을 줄마다 줄바꿈하고 출처는 마지막 줄 끝에 한 번만 */
+/* 복사: 고른 글자를 줄마다 줄바꾼하고 출처는 마지막 줄 끝에 한 번만 */
 function selCopy(){
-  var vs=selVerses();
-  if(!vs.length){ toast('구절을 먼저 골라 주세요'); return; }
-  var c=selChap||S.chapter||1, ref=abbr(curBook)+' '+c+':'+vsRuns(vs), out=[];
-  for(var i=0;i<vs.length;i++){
-    var t=verseText(curBook,c,vs[i]);
-    if(t) out.push(String(t).trim());
+  var sl=selSlice();
+  if(!sl.length){ toast('글자를 먼저 골라 주세요'); return; }
+  var ref=selRef(), out=[];
+  for(var i=0;i<sl.length;i++){
+    var t=(verseText(curBook,sl[i].c,sl[i].v)||'').slice(sl[i].s,sl[i].e);
+    if(String(t).trim()) out.push(String(t).trim());
   }
   if(!out.length){ toast('본문을 찾지 못했어요'); return; }
   out[out.length-1]+=' ('+ref+')';          // 출처는 여러 절이어도 마지막 줄 끝에 한 번만
@@ -3127,8 +3572,8 @@ function selCopy(){
   rvWriteClipboard(out.join('\n'),function(ok){
     if(btn) btn.disabled=false;
     if(!ok){ toast('복사하지 못했어요 · 잠시 뒤 다시 해 주세요'); return; }
-    toast(vs.length+'개 구절을 복사했어요');
-    updateSelUI();
+    toast(selSlice().length+'줄을 복사했어요');
+    clearSel();
   });
 }
 /* 메모: 고른 첫 절에 메모를 남기는 카톡방 모달을 화면 가운데에 연다
@@ -3140,10 +3585,12 @@ function verseBind(c,v,ref){
           text:verseText(curBook,c,v)||''};
 }
 function selMemo(){
-  var vs=selVerses();
-  if(!vs.length){ toast('메모를 남길 구절을 먼저 골라 주세요'); return; }
-  var c=selChap||S.chapter||1;
-  var bind=verseBind(c,vs[0]);
+  var sl=selSlice();
+  if(!sl.length){ toast('메모를 남길 글자를 먼저 골라 주세요'); return; }
+  var g=sl[0];
+  var bind=verseBind(g.c,g.v);
+  bind.ref=abbr(curBook)+' '+g.c+':'+g.v;
+  bind.text=(verseText(curBook,g.c,g.v)||'').slice(g.s,g.e);   // 고른 글자를 그대로 보여 준다
   clearSel();                      // 고른 표시는 비우고 방을 화면 가운데에
   openMemoRoom({noteKey:bind.key, focus:true, bind:bind});
 }
@@ -3360,6 +3807,15 @@ function meDelete(it){
   });
 }
 function rvParts(it){
+  /* 드래그로 고른 글자 일부를 저장한 기억은 그 글자만 보여 준다 */
+  if(it && Array.isArray(it.segs) && it.segs.length){
+    var out=[];
+    it.segs.forEach(function(g){
+      var t=(verseText(it.b||curBook,g.c,g.v)||'').slice(g.s,g.e);
+      if(t) out.push(t);
+    });
+    if(out.length) return out;
+  }
   if(it && Array.isArray(it.vs) && it.vs.length && it.b && it.c){
     var out=[];
     for(var i=0;i<it.vs.length;i++){
@@ -4037,46 +4493,33 @@ function toast(msg){
 }
 
 /* ── events ────────────────────────────────────────────── */
-// chrome toggle by tapping the paper (not on a verse, not a drag)
+// 짧은 톡: 본문 어디든(여백·글자) 상·하단 바를 여닫고, ✎ 메모 표시는 그 방을 연다.
+// 글자를 고르는 일은 길게 눌러 끌기(마우스는 끌기)로만 한다 — 톡으로는 고르지 않는다.
 var suppressClick=false;
 bookEl.addEventListener('click',function(e){
-  if(suppressClick){ suppressClick=false; dragMoved=false; return; }   // 끌어서 넘긴 뒤 따라오는 click 은 끌기 몫
-  if(Date.now()<selTapGuard){ selTapGuard=0; return; }   // 방금 손가락으로 고른 절을 click 이 또 뒤집지 않게
-  if(selectMode){                // 누른 절을 고르거나 푼다 (끌어서 넘길 땐 그대로)
-    if(dragMoved){ dragMoved=false; return; }
-    if(app.classList.contains('chrome-hidden')){ setChrome(false); return; }   // 숨겨 읽던 중의 톡 = 바 다시 보이기
-    var nmEl=e.target.closest('.nmark');
-    if(nmEl){                     // ✎ 메모 표시는 그 메모 방으로 (고르기 대신)
-      var npv=nmEl.closest('.v');
-      if(npv){ var nc2=+npv.dataset.c, nv2=+npv.dataset.v;
-        openMemoRoom({noteKey:memoVerseKey(nc2,nv2), focus:false, bind:verseBind(nc2,nv2)}); }
-      return;
-    }
-    var svEl=e.target.closest('.v');
-    if(svEl){ toggleSel(+svEl.dataset.c,+svEl.dataset.v); return; }
-    if(e.target.closest('.tz')) return;
-    setChrome(!app.classList.contains('chrome-hidden'));   // 여백을 톡 치면 상단 바를 여닫는다
-    return;
-  }
-  if(e.target.closest('.tz')) return;
-  var pmEl=e.target.closest('.pm');
-  if(pmEl){
-    var pv2=pmEl.closest('.v');
-    if(pv2) setPartial(+pv2.dataset.c,+pv2.dataset.v,+pmEl.dataset.s,+pmEl.dataset.e,'');
-    return;
-  }
-  var nmEl=e.target.closest('.nmark');
-  if(nmEl){                       // ✎ 표시를 누르면 그 메모가 있는 카톡방으로
-    var pv=nmEl.closest('.v');
-    if(pv){
-      var nc=+pv.dataset.c, nv=+pv.dataset.v;
-      openMemoRoom({noteKey:memoVerseKey(nc,nv), focus:false, bind:verseBind(nc,nv)});
-    }
-    return;
-  }
-  // 절을 톡 눌러도 메모 창은 열리지 않는다 — 위·아래 도구 막대만 조용히 여닫힌다
+  if(suppressClick){ suppressClick=false; dragMoved=false; return; }   // 끌어서 넘긴 뒤·고른 뒤 따라오는 click 은 그 몫
+  if(Date.now()<selTapGuard){ selTapGuard=0; return; }
   if(dragMoved){ dragMoved=false; return; }
-  setChrome(!app.classList.contains('chrome-hidden'));
+  if(e.target.closest('.tz')) return;
+  if(app.classList.contains('chrome-hidden')){ setChrome(false); return; }   // 숨겨 읽던 중의 톡 = 바 다시 보이기
+  var nmEl=e.target.closest('.nmark');
+  if(nmEl){                     // ✎ 메모 표시는 그 메모 방으로
+    var npv=nmEl.closest('.v');
+    if(npv){ var nc2=+npv.dataset.c, nv2=+npv.dataset.v;
+      openMemoRoom({noteKey:memoVerseKey(nc2,nv2), focus:false, bind:verseBind(nc2,nv2)}); }
+    return;
+  }
+  // 칠해 둔 형광펜 글자를 톡 = 그 부분을 골라 지우기·색 바꾸기 팝오버를 띄운다
+  var pmEl=e.target.closest('.pm');
+  var pvEl=(pmEl||e.target).closest('.v');
+  var g=(pvEl&&(pmEl||verseMarkAt(pvEl)))?hlRangeAt(pvEl,pmEl):null;
+  if(g){
+    selTapGuard=Date.now()+400;
+    selA={c:g.c,v:g.v,off:g.s}; selB={c:g.c,v:g.v,off:g.e};
+    finishSel();
+    return;
+  }
+  setChrome(!app.classList.contains('chrome-hidden'));   // 톡 한 번에 상·하단 바를 여닫는다
 });
 $$('#zones .tz').forEach(function(z){
   z.addEventListener('click',function(){
@@ -4109,6 +4552,7 @@ window.addEventListener('pointermove',function(e){
     else if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){ drag.active=false; return; }
   }
   if(!drag.moved) return;
+  if(selDragging) return;                  // 글자를 고르는 중에는 쪽을 넘기지 않는다
   if(Math.abs(dx)<swipeNeed()) return;
   drag.done=true;
   turn(dx<0?1:-1);
@@ -5409,7 +5853,8 @@ function boot(){
   fixRvFontSettings();                    // 예전 저장값(옛 필기체)이 남아 있으면 기본값으로 바꿔 둔다
   applySettings();
   applyRvTheme();
-  updateSelUI();                          // 구절 도구 바: 처음엔 0절 · 도구는 비활성
+  updateSelUI();                          // 처음엔 고른 글자 없음 · 팝오버는 닫힌 채
+  updatePenUI();                          // 컬러 점은 지금 고른 색(처음엔 피치)
 
   loadCustom().then(function(){
     useSource(store.src==='custom'&&customSrc?'custom':'builtin');
