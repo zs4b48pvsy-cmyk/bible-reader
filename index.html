@@ -953,9 +953,6 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
     <div class="row row-cols"><span class="lb">본문 단</span>
       <div class="seg" id="segCols"><button data-v="1">1단</button><button data-v="2">2단</button></div>
     </div>
-    <div class="row"><span class="lb">글꼴</span>
-      <div class="seg" id="segFont"><button data-v="sans">기본 고딕</button></div>
-    </div>
     <div class="row"><span class="lb">배경</span>
       <div class="swatches" id="segTheme">
         <button data-v="white" title="화이트" aria-label="화이트"></button>
@@ -1071,7 +1068,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
         <li><b>☰ 목차 → 오늘</b>에서 달력으로 날짜를 골라 그날 읽을 범위(매일 신약 3장 + 잠언 1장)를 보고, 읽은 장은 <b>✓</b>로 표시해 둘 수 있어요. 표지의 <b>오늘의 읽기</b>를 누르면 오늘 첫 장으로 바로 펼쳐져요</li>
         <li>가로로 들면 <b>두 쪽 펼침</b>으로 책장이 넘어가고, 세로로 세우면 <b>한 쪽</b>으로 위아래 스크롤하며 읽어요</li>
         <li><b>⌕ 찾기</b>에서 구절(요3:16)이나 단어(사랑)로 찾고, <b>⌂</b>를 누르면 표지로 돌아와요</li>
-        <li><b>☰ 목차</b>에서 책·장 이동, 형광펜·기억·메모를 모아 보기, <b>Aa</b>에서 배경색·글꼴·크기·줄 간격·여백</li>
+        <li><b>☰ 목차</b>에서 책·장 이동, 형광펜·기억·메모를 모아 보기, <b>Aa</b>에서 배경색·글자 크기·줄 간격·여백</li>
       </ul>
       <p class="src">본문 · 성경전서 개역한글판 © 대한성서공회 (1961)</p>
       <button class="go" id="helpGo">읽으러 가기</button>
@@ -1341,7 +1338,7 @@ var THEMES={
 var FONTS={
   sans:{name:'기본 고딕',css:'-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif',w:400,ls:'0'}
 };
-/* 본문 글꼴은 기본 고딕 하나뿐 — 예전 저장값(에스코어드림·고딕·굵게·둥근·명조 등)은 모두 여기로 되돌린다 */
+/* 본문 Aa 에는 글꼴 줄이 없다 — 늘 기본 고딕이고, 예전 저장값(에스코어드림·고딕·굵게·둥근·명조·옛 명조 웹폰트)은 모두 여기로 되돌린다 */
 var FONT_LEGACY={dream:'sans',gothic:'sans',bold:'sans',round:'sans',myeongjo:'sans',chosun:'sans'};
 function normFont(k){ return FONTS[k]?k:(FONT_LEGACY[k]||DEFAULT_SETTINGS.font); }
 var curBook=1, curSpread=0;
@@ -4306,7 +4303,6 @@ function applySettings(){
   document.body.style.background=T.paper;
   $('#fsVal').textContent=S.fs;
   $$('#segCols button').forEach(function(b){ b.classList.toggle('on',+b.dataset.v===S.cols); });
-  $$('#segFont button').forEach(function(b){ b.classList.toggle('on',b.dataset.v===S.font); });
   $$('#segTheme button').forEach(function(b){ b.classList.toggle('on',b.dataset.v===S.theme); });
   $$('#segLh button').forEach(function(b){ b.classList.toggle('on',Math.abs(+b.dataset.v-S.lh)<0.001); });
   $$('#segPad button').forEach(function(b){ b.classList.toggle('on',b.dataset.v===S.pad); });
@@ -4345,7 +4341,7 @@ function useSettings(src){
 function settingsLabel(o){
   var n=normalizeSettings(o);
   var lhName=n.lh===2.15?'넓게':(n.lh===1.65?'좁게':'보통');
-  return FONTS[n.font].name+' '+n.fs+' · 줄 '+lhName+' · '+THEMES[n.theme].name;
+  return '글자 '+n.fs+' · 줄 '+lhName+' · '+THEMES[n.theme].name;
 }
 function updateDefaultHint(){
   var h=$('#defHint'); if(!h) return;
@@ -4652,7 +4648,6 @@ $('#closeSheet').onclick=function(){ sheetEl.classList.remove('show'); };
 $('#fsPlus').onclick=function(){ S.fs=clamp(S.fs+1,14,34); applySettings(); layout(); };
 $('#fsMinus').onclick=function(){ S.fs=clamp(S.fs-1,14,34); applySettings(); layout(); };
 $$('#segCols button').forEach(function(b){ b.onclick=function(){ S.cols=+b.dataset.v; applySettings(); layout(); }; });
-$$('#segFont button').forEach(function(b){ b.onclick=function(){ S.font=b.dataset.v; applySettings(); layout(); }; });
 $$('#segTheme button').forEach(function(b){ b.onclick=function(){ S.theme=b.dataset.v; applySettings(); }; });
 $$('#segLh button').forEach(function(b){ b.onclick=function(){ S.lh=+b.dataset.v; applySettings(); layout(); }; });
 $$('#segPad button').forEach(function(b){ b.onclick=function(){ S.pad=b.dataset.v; applySettings(); layout(); }; });
@@ -4783,7 +4778,7 @@ $('#fileData').onchange=function(e){
 $('#lnkClearData').onclick=function(){
   var syncOn=(typeof Sync!=='undefined' && Sync.active && Sync.active())
     ? '기기 동기화가 켜져 있어 다른 기기의 기록도 함께 지워져요.' : '';
-  var lines=['되돌릴 수 없어요.', '(글꼴·배경 같은 내 기본값 설정은 그대로 남아요.)'];
+  var lines=['되돌릴 수 없어요.', '(글자 크기·배경 같은 내 기본값 설정은 그대로 남아요.)'];
   if(syncOn) lines.push(syncOn);
   askConfirm({title:'저장된 기록을 모두 지울까요?', lines:lines, okLabel:'모두 지우기'})
   .then(function(ok){
