@@ -27,10 +27,10 @@
   --accent:#191919; --rule:rgba(0,0,0,.08); --ui:rgba(255,255,255,.90);
   --hl-y:rgba(255,212,128,.55); --hl-g:rgba(166,224,180,.50); --hl-p:rgba(255,167,159,.42); --hl-s:rgba(178,210,236,.48);
   --sum-bg:rgba(0,0,0,.035); --sum-line:rgba(0,0,0,.06);
-  --fs:15px; --lh:1.9; --fw:400; --ls:0; --gap:28px; --pad-in:34px; --pad-out:46px; --colw:400px; --colh:600px;
+  --fs:15px; --lh:2.18; --fw:400; --ls:0; --gap:28px; --pad-in:34px; --pad-out:46px; --colw:400px; --colh:600px;
   --font-serif:"AppleMyungjo","Nanum Myeongjo","Noto Serif KR","Noto Serif CJK KR","Batang","바탕","Times New Roman",serif;
   --font-sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
-  --font-body:var(--font-sans); --font-ui:var(--font-sans);
+  --font-body:var(--font-serif); --font-ui:var(--font-sans);
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
   --tool-pad:0px;   /* (지금은 늘 0) 본문 아래로 비워 두는 높이 */
   --topbar-h:calc(48px + var(--safe-t));   /* 상단 바 실제 높이 (JS 가 잰다 · 좁은 화면에선 구절 바가 한 줄 더 붙는다) */
@@ -63,12 +63,13 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .col{flex:0 0 var(--colw);width:var(--colw);height:var(--colh);overflow:hidden;}
 
 /* ── text ────────────────────────────────────────────────── */
-.v{margin:0 0 .26em;padding:0;
+.v{margin:0 0 calc(var(--fs) * 1.15);padding:0;
   font-family:var(--font-body);font-size:var(--fs);line-height:var(--lh);font-weight:var(--fw,400);letter-spacing:var(--ls,0);
-  color:var(--ink);text-align:justify;text-justify:inter-word;word-break:normal;line-break:strict;overflow-wrap:break-word;
+  color:var(--ink);text-align:left;word-break:keep-all;line-break:strict;overflow-wrap:break-word;
   -webkit-user-select:none;user-select:none;}
-.v .vn{font-size:.56em;font-weight:500;color:var(--muted);margin-right:.40em;position:relative;top:-.34em;
-  font-family:var(--font-ui);letter-spacing:0;-webkit-font-smoothing:antialiased;}
+/* 절 번호 — 위첨자·작은 회색 글자가 아니라 본문과 같은 크기·글꼴로 앞에 붙인다 */
+.v .vn{font-size:1em;font-weight:400;color:var(--ink);margin-right:.35em;position:static;top:0;
+  font-family:inherit;letter-spacing:0;-webkit-font-smoothing:antialiased;}
 .v .vt{-webkit-box-decoration-break:clone;box-decoration-break:clone;padding:.10em 0;}
 .v.hy .vt{background:var(--hl-y);}
 .v.hg .vt{background:var(--hl-g);}
@@ -119,7 +120,7 @@ body{font-family:var(--font-ui);color:var(--ink);-webkit-text-size-adjust:100%;}
 .sc-inner .ch{margin:36px 0 14px;}
 .sc-inner .sc-ch:first-child .ch{margin-top:0;}
 .sc-inner .ch-num{font-size:1.5em;}
-.sc-inner .v{margin:0 0 .32em;}
+.sc-inner .v{margin:0 0 calc(var(--fs) * 1.15);}
 .sc-inner .sh{margin:26px 0 10px;}
 .sc-inner .v .vn{cursor:default;}
 .app.scroll-mode #sheet .row-cols{display:none;}
@@ -945,7 +946,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
       <div class="stepper"><button id="fsMinus">A−</button><span class="val" id="fsVal">15</span><button id="fsPlus">A+</button></div>
     </div>
     <div class="row"><span class="lb">줄 간격</span>
-      <div class="seg" id="segLh"><button data-v="1.65">좁게</button><button data-v="1.9">보통</button><button data-v="2.15">넓게</button></div>
+      <div class="seg" id="segLh"><button data-v="1.9">좁게</button><button data-v="2.18">보통</button><button data-v="2.5">넓게</button></div>
     </div>
     <div class="row"><span class="lb">좌우 여백</span>
       <div class="seg" id="segPad"><button data-v="narrow">좁게</button><button data-v="normal">보통</button><button data-v="wide">넓게</button></div>
@@ -1327,7 +1328,7 @@ function buildSourceIndex(){
 }
 
 /* ── state ─────────────────────────────────────────────── */
-var S={fs:15,cols:1,font:'sans',theme:'white',lh:1.9,pad:'normal',book:1,chapter:1,curCols:1,flip:'curl'};
+var S={fs:15,cols:1,font:'myungjo',theme:'white',lh:2.18,pad:'normal',book:1,chapter:1,curCols:1,flip:'curl'};
 var THEMES={
   white:{name:'화이트',paper:'#FFFFFF',ink:'#191919',ink2:'#3F3F3F',muted:'#9C9C9C',accent:'#191919',rule:'rgba(0,0,0,.08)',ui:'rgba(255,255,255,.90)',hly:'rgba(255,212,128,.55)',hlg:'rgba(166,224,180,.50)',hlp:'rgba(255,167,159,.42)',hls:'rgba(178,210,236,.48)',sumbg:'rgba(0,0,0,.035)',sumline:'rgba(0,0,0,.06)'},
   ivory:{name:'아이보리',paper:'#FAF6EE',ink:'#2C2824',ink2:'#4A443B',muted:'#9B9182',accent:'#2C2824',rule:'rgba(70,58,40,.13)',ui:'rgba(250,246,238,.90)',hly:'rgba(246,200,110,.50)',hlg:'rgba(158,214,172,.45)',hlp:'rgba(250,160,150,.40)',hls:'rgba(170,202,228,.45)',sumbg:'rgba(122,96,60,.055)',sumline:'rgba(122,96,60,.11)'},
@@ -1336,10 +1337,11 @@ var THEMES={
   dark:{name:'다크',paper:'#18181B',ink:'#E4E4E7',ink2:'#C4C4C9',muted:'#86868C',accent:'#E4E4E7',rule:'rgba(255,255,255,.10)',ui:'rgba(24,24,27,.90)',hly:'rgba(224,188,96,.30)',hlg:'rgba(126,200,150,.28)',hlp:'rgba(232,150,144,.30)',hls:'rgba(140,180,216,.30)',sumbg:'rgba(255,255,255,.05)',sumline:'rgba(255,255,255,.09)'}
 };
 var FONTS={
-  sans:{name:'기본 고딕',css:'-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif',w:400,ls:'0'}
+  myungjo:{name:'명조',css:'"AppleMyungjo","Noto Serif CJK KR","Noto Serif KR",serif',w:400,ls:'0'}
 };
-/* 본문 Aa 에는 글꼴 줄이 없다 — 늘 기본 고딕이고, 예전 저장값(에스코어드림·고딕·굵게·둥근·명조·옛 명조 웹폰트)은 모두 여기로 되돌린다 */
-var FONT_LEGACY={dream:'sans',gothic:'sans',bold:'sans',round:'sans',myeongjo:'sans',chosun:'sans'};
+/* 본문 Aa 에는 글꼴 줄이 없다 — 늘 명조(아이폰·아이패드는 애플명조)이고,
+   예전 저장값(기본 고딕·에스코어드림·고딕·굵게·둥근·명조·옛 명조 웹폰트)은 모두 여기로 옮긴다 */
+var FONT_LEGACY={sans:'myungjo',dream:'myungjo',gothic:'myungjo',bold:'myungjo',round:'myungjo',myeongjo:'myungjo',chosun:'myungjo'};
 function normFont(k){ return FONTS[k]?k:(FONT_LEGACY[k]||DEFAULT_SETTINGS.font); }
 var curBook=1, curSpread=0;
 var blockList=[], blockEls=[], tops=[], colList=[], colOfBlock=[], posIdx={}, chapCol={};
@@ -1599,6 +1601,9 @@ function splitVerseBlock(bi, avail){
   var vt=elNode.querySelector('.vt'); if(!vt||!vt.firstChild) return null;
   var tn=vt.firstChild;
   var lh=lineHeightPx(elNode);
+  /* 아래로 넘길 조각은 다음 열 맨 위에서 시작한다 — 자기 아래 여백까지 높이에 넣어야
+     다음 절이 열 끝을 넘어 잘리지 않는다 */
+  var mb=parseFloat(getComputedStyle(elNode).marginBottom)||0;
   var nLines=Math.floor((avail-3)/lh);
   if(nLines<2) return null;
   var rects=rangeRects(tn);
@@ -1611,7 +1616,7 @@ function splitVerseBlock(bi, avail){
   while(cut<text.length && text.charAt(cut)===' ') cut++;
   if(cut<=0 || cut>=text.length) return null;
   var tailLines=Math.max(1, rects.length-nLines);
-  return {head:text.slice(0,cut), tail:text.slice(cut), headH:nLines*lh+3, tailH:tailLines*lh+3};
+  return {head:text.slice(0,cut), tail:text.slice(cut), headH:nLines*lh+3, tailH:tailLines*lh+3+mb};
 }
 
 /* 절의 off 글자부터 끝까지가 차지하는 높이 — 쪽을 다시 나눌 때 다음 열이 몇 줄을 더 담을지 계산한다 */
@@ -1623,9 +1628,9 @@ function tailHeightAt(bi, off){
   var rects=rangeRects(tn); if(!rects||!rects.length) return null;
   var rr=document.createRange(); rr.setStart(tn,off); rr.setEnd(tn,Math.min(tn.length,off+1));
   var r0=rr.getClientRects()[0]; if(!r0) return null;
-  var lh=lineHeightPx(elNode), nL=0;
+  var lh=lineHeightPx(elNode), mb=parseFloat(getComputedStyle(elNode).marginBottom)||0, nL=0;
   for(var i=0;i<rects.length;i++){ if(rects[i].top>=r0.top-2) nL++; }
-  return Math.max(lh, nL*lh+3);
+  return Math.max(lh, nL*lh+3+mb);
 }
 /* breakAt = {bi, off} — off>0 이면 그 절의 off 글자에서 새 열을 시작한다
    (보던 화면 맨 위가 절 중간에서 시작하던 자리까지 그대로 지키기 위해).
@@ -4308,12 +4313,14 @@ function applySettings(){
   $$('#segPad button').forEach(function(b){ b.classList.toggle('on',b.dataset.v===S.pad); });
   var meta=document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute('content',T.paper);
-  store.settings={cols:S.cols,font:S.font,theme:S.theme,fs:S.fs,lh:S.lh,pad:S.pad,flip:'curl',rvBg:rvBg,rvBubble:rvBubble,rvFont:rvFont,v:3};
+  store.settings={cols:S.cols,font:S.font,theme:S.theme,fs:S.fs,lh:S.lh,pad:S.pad,flip:'curl',rvBg:rvBg,rvBubble:rvBubble,rvFont:rvFont,v:4};
   Store.save();
 }
 
 /* ── 내 기본값 (Aa 설정 저장·복원) ─────────────────────── */
-var DEFAULT_SETTINGS={fs:15,lh:1.9,pad:'normal',cols:1,font:'sans',theme:'white'};
+var DEFAULT_SETTINGS={fs:15,lh:2.18,pad:'normal',cols:1,font:'myungjo',theme:'white'};
+/* Aa '줄 간격' 세 단계 — 보통이 새 기본값 2.18 */
+var LH_STEPS=[1.9,2.18,2.5];
 function hasSettings(o){
   if(!o||typeof o!=='object') return false;
   return !!(o.fs||o.font||o.theme||o.cols||o.lh||o.pad);
@@ -4324,7 +4331,7 @@ function normalizeSettings(src){
   var fs=+o.fs, lh=+o.lh;
   return {
     fs:(fs>=14&&fs<=34)?fs:DEFAULT_SETTINGS.fs,
-    lh:(lh===1.65||lh===1.9||lh===2.15)?lh:DEFAULT_SETTINGS.lh,
+    lh:LH_STEPS.indexOf(lh)>=0?lh:DEFAULT_SETTINGS.lh,
     pad:(o.pad==='narrow'||o.pad==='wide')?o.pad:DEFAULT_SETTINGS.pad,
     cols:o.cols===2?2:DEFAULT_SETTINGS.cols,
     font:normFont(o.font),
@@ -4340,7 +4347,7 @@ function useSettings(src){
 }
 function settingsLabel(o){
   var n=normalizeSettings(o);
-  var lhName=n.lh===2.15?'넓게':(n.lh===1.65?'좁게':'보통');
+  var lhName=n.lh===2.5?'넓게':(n.lh===1.9?'좁게':'보통');
   return '글자 '+n.fs+' · 줄 '+lhName+' · '+THEMES[n.theme].name;
 }
 function updateDefaultHint(){
@@ -5873,12 +5880,16 @@ function boot(){
   topbarMeasure();
   var hideT=setTimeout(function(){ if(!drawerEl.classList.contains('show')&&!selectMode) setChrome(true); },6000);
   app.addEventListener('pointerdown',function(){ clearTimeout(hideT); },{once:true});
-  if(!usingDefault && st.v!==3) st={fs:st.fs};
+  /* v:3·v:4 저장값은 배경·여백·단 수를 그대로 살리고, 그보다 오래된 값은 글자 크기만 살린다 */
+  if(!usingDefault && st.v!==3 && st.v!==4) st={fs:st.fs};
+  /* v<4 로 저장된 예전 값은 옛 줄 간격(1.65·1.9·2.15)을 새 기본(2.18)으로 한 번만 옮긴다 —
+     이후에 Aa 에서 고른 1.9(좁게)·2.5(넓게)는 v:4 로 저장되어 그대로 지켜진다 */
+  if(!usingDefault && (st.v||0)<4 && [1.65,1.9,2.15].indexOf(+st.lh)>=0) st.lh=DEFAULT_SETTINGS.lh;
   S.fs=st.fs||15;
   S.cols=st.cols===2?2:1;
   S.font=normFont(st.font);
   S.theme=THEMES[st.theme]?st.theme:'white';
-  S.lh=st.lh||1.9;
+  S.lh=st.lh||DEFAULT_SETTINGS.lh;
   S.pad=(st.pad==='narrow'||st.pad==='wide')?st.pad:'normal';
   S.flip='curl';
   rvBg=/^#[0-9a-fA-F]{6}$/.test(st.rvBg||'')?st.rvBg:'#FFFFFF';
